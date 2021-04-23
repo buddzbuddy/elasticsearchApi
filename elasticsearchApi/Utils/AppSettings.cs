@@ -9,5 +9,6 @@ namespace elasticsearchApi.Utils
     {
         public string host { get; set; }
         public string logpath { get; set; }
+        public string index_name { get; set; }
     }
 }

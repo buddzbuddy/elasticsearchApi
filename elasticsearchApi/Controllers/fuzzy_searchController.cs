@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Nest;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,7 +27,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex("persons");
+                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.index_name);
                 var client = new ElasticClient(settings);
                 var filters = new List<Func<QueryContainerDescriptor<text_attribute>, QueryContainer>>();
                 if (filter != null && filter.conditions != null && filter.conditions.Length > 0)
@@ -40,7 +41,7 @@ namespace elasticsearchApi.Controllers
                                 filters.Add(fq => fq.Fuzzy(fz =>
                             fz.Field(c.field_name)
                             .Value(c.val)
-                            .Fuzziness(Fuzziness.Auto)
+                            .Fuzziness(Fuzziness.EditDistance(1))
                             .MaxExpansions(50)
                             .PrefixLength(0)
                             .Transpositions(true)
@@ -68,6 +69,97 @@ namespace elasticsearchApi.Controllers
                     return Ok(new { result = true, persons });
                 else
                     return Ok(new { result = false, error = searchResponse.OriginalException.Message });
+            }
+            catch (Exception e)
+            {
+                return Ok(new { result = false, error = e.Message, trace = e.StackTrace });
+            }
+        }
+        [HttpPost]
+        public ActionResult GetAsistPersons([FromBody] FilterModel filter)
+        {
+            try
+            {
+                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.index_name);
+                var client = new ElasticClient(settings);
+                var filters = new List<Func<QueryContainerDescriptor<text_attribute>, QueryContainer>>();
+                if (filter != null && filter.conditions != null && filter.conditions.Length > 0)
+                {
+                    foreach (var c in filter.conditions)
+                    {
+                        if (!string.IsNullOrEmpty(c.val))
+                        {
+                            if (typeof(text_attribute).GetProperty(c.field_name) != null)
+                            {
+                                filters.Add(fq => fq.Match(m =>
+                                    m.Field(c.field_name)
+                                    .Query(c.val)
+                            ));
+                            }
+                            else
+                            {
+                                throw new ApplicationException("Поле " + c.field_name + " не существует");
+                            }
+                        }
+                    }
+                }
+                var searchDescriptor = new SearchDescriptor<text_attribute>()
+                .From(0)
+                .Size(10)
+                .Query(q => q.Bool(b => b.Must(filters)));
+                var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
+                WriteLog(json, true);
+
+                var searchResponse = client.Search<text_attribute>(searchDescriptor);
+
+                var persons = searchResponse.Documents;
+                if (searchResponse.IsValid)
+                    return Ok(new { result = true, persons });
+                else
+                    return Ok(new { result = false, error = searchResponse.OriginalException.Message });
+            }
+            catch (Exception e)
+            {
+                return Ok(new { result = false, error = e.Message, trace = e.StackTrace });
+            }
+        }
+
+        [HttpPost]
+        public ActionResult CreateDocument([FromBody] text_attribute obj)
+        {
+            try
+            {
+                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.index_name);
+                var client = new ElasticClient(settings);
+
+                client.CreateDocument(obj);
+
+                return Ok(new { result = true });
+            }
+            catch (Exception e)
+            {
+                return Ok(new { result = false, error = e.Message, trace = e.StackTrace });
+            }
+        }
+
+        [HttpPost]
+        public ActionResult UpdateDocument([FromBody] text_attribute obj)
+        {
+            try
+            {
+                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.index_name);
+                var client = new ElasticClient(settings);
+
+                client.UpdateByQuery<text_attribute>(u => u
+        .Query(q => q
+            .Term(f => f.personId, obj.personId)
+        )
+        .Script("ctx._source.ln = '" + obj.ln + "'; ctx._source.fn = '" + obj.fn + "'; ctx._source.mn = '" + obj.mn + "'; ctx._source.pNo = '" + obj.pNo + "';")
+        .Conflicts(Conflicts.Proceed)
+        .Refresh(true)
+    );
+
+                return Ok(new { result = true });
             }
             catch (Exception e)
             {
