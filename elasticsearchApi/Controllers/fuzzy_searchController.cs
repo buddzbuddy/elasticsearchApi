@@ -152,9 +152,9 @@ namespace elasticsearchApi.Controllers
 
                 client.UpdateByQuery<text_attribute>(u => u
         .Query(q => q
-            .Term(f => f.personId, obj.personId)
+            .Term(f => f.personid, obj.personid)
         )
-        .Script("ctx._source.ln = '" + obj.ln + "'; ctx._source.fn = '" + obj.fn + "'; ctx._source.mn = '" + obj.mn + "'; ctx._source.pNo = '" + obj.pNo + "';")
+        .Script("ctx._source.ln = '" + obj.ln + "'; ctx._source.fn = '" + obj.fn + "'; ctx._source.mn = '" + obj.mn + "'; ctx._source.pNo = '" + obj.pno + "';")
         .Conflicts(Conflicts.Proceed)
         .Refresh(true)
     );
@@ -187,10 +187,10 @@ namespace elasticsearchApi.Controllers
     }
     public class text_attribute
     {
-        public string personId { get; set; }
+        public string personid { get; set; }
         public string ln { get; set; }
         public string fn { get; set; }
         public string mn { get; set; }
-        public string pNo { get; set; }
+        public string pno { get; set; }
     }
 }
