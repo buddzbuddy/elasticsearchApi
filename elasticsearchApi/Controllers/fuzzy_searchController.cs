@@ -60,7 +60,7 @@ namespace elasticsearchApi.Controllers
                 .Size(10)
                 .Query(q => q.Bool(b => b.Should(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
-                WriteLog(json);
+                WriteLog(json, true);
 
                 var searchResponse = client.Search<text_attribute>(searchDescriptor);
                 
@@ -68,7 +68,7 @@ namespace elasticsearchApi.Controllers
                 if (searchResponse.IsValid)
                     return Ok(new { result = true, persons });
                 else
-                    return Ok(new { result = false, error = searchResponse.OriginalException.Message });
+                    return Ok(new { result = false, error = searchResponse.OriginalException.Message, trace = searchResponse.OriginalException.StackTrace });
             }
             catch (Exception e)
             {
