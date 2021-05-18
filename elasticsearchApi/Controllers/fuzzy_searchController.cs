@@ -29,15 +29,22 @@ namespace elasticsearchApi.Controllers
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.index_name);
                 var client = new ElasticClient(settings);
-                var filters = new List<Func<QueryContainerDescriptor<text_attribute>, QueryContainer>>();
+                var filters = new List<Func<QueryContainerDescriptor<_person>, QueryContainer>>();
                 if (filter != null && filter.conditions != null && filter.conditions.Length > 0)
                 {
                     foreach (var c in filter.conditions)
                     {
                         if (!string.IsNullOrEmpty(c.val))
                         {
-                            if(typeof(text_attribute).GetProperty(c.field_name) != null)
+                            if(typeof(_person).GetProperty(c.field_name) != null)
                             {
+                                if(c.field_name == "pin")
+                                {
+                                    filters.Add(fq => fq.Match(m =>
+                                    m.Field(c.field_name)
+                                    .Query(c.val)));
+                                    continue;
+                                }
                                 filters.Add(fq => fq.Fuzzy(fz =>
                             fz.Field(c.field_name)
                             .Value(c.val)
@@ -55,14 +62,14 @@ namespace elasticsearchApi.Controllers
                         }
                     }
                 }
-                var searchDescriptor = new SearchDescriptor<text_attribute>()
+                var searchDescriptor = new SearchDescriptor<_person>()
                 .From(0)
                 .Size(10)
                 .Query(q => q.Bool(b => b.Should(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
                 WriteLog(json, true);
 
-                var searchResponse = client.Search<text_attribute>(searchDescriptor);
+                var searchResponse = client.Search<_person>(searchDescriptor);
                 
                 var persons = searchResponse.Documents;
                 if (searchResponse.IsValid)
@@ -82,14 +89,14 @@ namespace elasticsearchApi.Controllers
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.index_name);
                 var client = new ElasticClient(settings);
-                var filters = new List<Func<QueryContainerDescriptor<text_attribute>, QueryContainer>>();
+                var filters = new List<Func<QueryContainerDescriptor<_person>, QueryContainer>>();
                 if (filter != null && filter.conditions != null && filter.conditions.Length > 0)
                 {
                     foreach (var c in filter.conditions)
                     {
                         if (!string.IsNullOrEmpty(c.val))
                         {
-                            if (typeof(text_attribute).GetProperty(c.field_name) != null)
+                            if (typeof(_person).GetProperty(c.field_name) != null)
                             {
                                 filters.Add(fq => fq.Match(m =>
                                     m.Field(c.field_name)
@@ -103,14 +110,14 @@ namespace elasticsearchApi.Controllers
                         }
                     }
                 }
-                var searchDescriptor = new SearchDescriptor<text_attribute>()
+                var searchDescriptor = new SearchDescriptor<_person>()
                 .From(0)
                 .Size(10)
                 .Query(q => q.Bool(b => b.Must(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
                 WriteLog(json, true);
 
-                var searchResponse = client.Search<text_attribute>(searchDescriptor);
+                var searchResponse = client.Search<_person>(searchDescriptor);
 
                 var persons = searchResponse.Documents;
                 if (searchResponse.IsValid)
@@ -125,7 +132,7 @@ namespace elasticsearchApi.Controllers
         }
 
         [HttpPost]
-        public ActionResult CreateDocument([FromBody] text_attribute obj)
+        public ActionResult CreateDocument([FromBody] _person obj)
         {
             try
             {
@@ -143,18 +150,18 @@ namespace elasticsearchApi.Controllers
         }
 
         [HttpPost]
-        public ActionResult UpdateDocument([FromBody] text_attribute obj)
+        public ActionResult UpdateDocument([FromBody] _person obj)
         {
             try
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.index_name);
                 var client = new ElasticClient(settings);
 
-                client.UpdateByQuery<text_attribute>(u => u
+                client.UpdateByQuery<_person>(u => u
         .Query(q => q
             .Term(f => f.personid, obj.personid)
         )
-        .Script("ctx._source.ln = '" + obj.ln + "'; ctx._source.fn = '" + obj.fn + "'; ctx._source.mn = '" + obj.mn + "'; ctx._source.pNo = '" + obj.pno + "';")
+        .Script("ctx._source.ln = '" + obj.ln + "'; ctx._source.fn = '" + obj.fn + "'; ctx._source.mn = '" + obj.mn + "'; ctx._source.pno = '" + obj.pno + "'; ctx._source.pin = '" + obj.pin + "';")
         .Conflicts(Conflicts.Proceed)
         .Refresh(true)
     );
@@ -185,9 +192,10 @@ namespace elasticsearchApi.Controllers
             }
         }
     }
-    public class text_attribute
+    public class _person
     {
         public string personid { get; set; }
+        public string pin { get; set; }
         public string ln { get; set; }
         public string fn { get; set; }
         public string mn { get; set; }
