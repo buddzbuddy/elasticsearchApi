@@ -9,6 +9,7 @@ namespace elasticsearchApi.Utils
     {
         public string host { get; set; }
         public string logpath { get; set; }
-        public string index_name { get; set; }
+        public string asist_persons_index_name { get; set; }
+        public string nrsz_persons_index_name { get; set; }
     }
 }

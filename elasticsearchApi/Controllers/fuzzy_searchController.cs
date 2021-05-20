@@ -27,16 +27,16 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.index_name);
+                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
                 var client = new ElasticClient(settings);
-                var filters = new List<Func<QueryContainerDescriptor<_person>, QueryContainer>>();
+                var filters = new List<Func<QueryContainerDescriptor<_asist_person>, QueryContainer>>();
                 if (filter != null && filter.conditions != null && filter.conditions.Length > 0)
                 {
                     foreach (var c in filter.conditions)
                     {
                         if (!string.IsNullOrEmpty(c.val))
                         {
-                            if(typeof(_person).GetProperty(c.field_name) != null)
+                            if(typeof(_asist_person).GetProperty(c.field_name) != null)
                             {
                                 if(c.field_name == "pin")
                                 {
@@ -62,14 +62,14 @@ namespace elasticsearchApi.Controllers
                         }
                     }
                 }
-                var searchDescriptor = new SearchDescriptor<_person>()
+                var searchDescriptor = new SearchDescriptor<_asist_person>()
                 .From(0)
                 .Size(10)
                 .Query(q => q.Bool(b => b.Should(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
                 WriteLog(json, true);
 
-                var searchResponse = client.Search<_person>(searchDescriptor);
+                var searchResponse = client.Search<_asist_person>(searchDescriptor);
                 
                 var persons = searchResponse.Documents;
                 if (searchResponse.IsValid)
@@ -87,16 +87,16 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.index_name);
+                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
                 var client = new ElasticClient(settings);
-                var filters = new List<Func<QueryContainerDescriptor<_person>, QueryContainer>>();
+                var filters = new List<Func<QueryContainerDescriptor<_asist_person>, QueryContainer>>();
                 if (filter != null && filter.conditions != null && filter.conditions.Length > 0)
                 {
                     foreach (var c in filter.conditions)
                     {
                         if (!string.IsNullOrEmpty(c.val))
                         {
-                            if (typeof(_person).GetProperty(c.field_name) != null)
+                            if (typeof(_asist_person).GetProperty(c.field_name) != null)
                             {
                                 filters.Add(fq => fq.Match(m =>
                                     m.Field(c.field_name)
@@ -110,14 +110,14 @@ namespace elasticsearchApi.Controllers
                         }
                     }
                 }
-                var searchDescriptor = new SearchDescriptor<_person>()
+                var searchDescriptor = new SearchDescriptor<_asist_person>()
                 .From(0)
                 .Size(10)
                 .Query(q => q.Bool(b => b.Must(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
                 WriteLog(json, true);
 
-                var searchResponse = client.Search<_person>(searchDescriptor);
+                var searchResponse = client.Search<_asist_person>(searchDescriptor);
 
                 var persons = searchResponse.Documents;
                 if (searchResponse.IsValid)
@@ -132,11 +132,11 @@ namespace elasticsearchApi.Controllers
         }
 
         [HttpPost]
-        public ActionResult CreateDocument([FromBody] _person obj)
+        public ActionResult CreateAsistPerson([FromBody] _asist_person obj)
         {
             try
             {
-                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.index_name);
+                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
                 var client = new ElasticClient(settings);
 
                 client.CreateDocument(obj);
@@ -150,14 +150,14 @@ namespace elasticsearchApi.Controllers
         }
 
         [HttpPost]
-        public ActionResult UpdateDocument([FromBody] _person obj)
+        public ActionResult UpdateAsistPerson([FromBody] _asist_person obj)
         {
             try
             {
-                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.index_name);
+                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
                 var client = new ElasticClient(settings);
 
-                client.UpdateByQuery<_person>(u => u
+                client.UpdateByQuery<_asist_person>(u => u
         .Query(q => q
             .Term(f => f.personid, obj.personid)
         )
@@ -167,6 +167,123 @@ namespace elasticsearchApi.Controllers
     );
 
                 return Ok(new { result = true });
+            }
+            catch (Exception e)
+            {
+                return Ok(new { result = false, error = e.Message, trace = e.StackTrace });
+            }
+        }
+
+
+        [HttpPost]
+        public ActionResult FindNrszPersons([FromBody] FilterModel filter)
+        {
+            try
+            {
+                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.nrsz_persons_index_name);
+                var client = new ElasticClient(settings);
+                var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+                if (filter != null && filter.conditions != null && filter.conditions.Length > 0)
+                {
+                    foreach (var c in filter.conditions)
+                    {
+                        if (!string.IsNullOrEmpty(c.val))
+                        {
+                            if (typeof(_nrsz_person).GetProperty(c.field_name) != null)
+                            {
+                                if (c.field_name == "pin")
+                                {
+                                    filters.Add(fq => fq.Match(m =>
+                                    m.Field(c.field_name)
+                                    .Query(c.val)));
+                                    continue;
+                                }
+                                if(string.IsNullOrEmpty(c.operation))
+                                filters.Add(fq => fq.Fuzzy(fz =>
+                            fz.Field(c.field_name)
+                            .Value(c.val)
+                            .Fuzziness(Fuzziness.EditDistance(1))
+                            .MaxExpansions(50)
+                            .PrefixLength(0)
+                            .Transpositions(true)
+                            .Rewrite(MultiTermQueryRewrite.ConstantScore)
+                            ));
+                                else if (c.operation == "match")
+                                {
+                                    filters.Add(fq => fq.Match(m =>
+                                    m.Field(c.field_name)
+                                    .Query(c.val)));
+                                }
+                            }
+                            else
+                            {
+                                throw new ApplicationException("Поле " + c.field_name + " не существует");
+                            }
+                        }
+                    }
+                }
+                var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+                .From(0)
+                .Size(10)
+                .Query(q => q.Bool(b => b.Should(filters)));
+                var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
+                WriteLog(json, true);
+
+                var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+
+                var persons = searchResponse.Documents;
+                if (searchResponse.IsValid)
+                    return Ok(new { result = true, persons });
+                else
+                    return Ok(new { result = false, error = searchResponse.OriginalException.Message, trace = searchResponse.OriginalException.StackTrace });
+            }
+            catch (Exception e)
+            {
+                return Ok(new { result = false, error = e.Message, trace = e.StackTrace });
+            }
+        }
+        [HttpPost]
+        public ActionResult GetNrszPersons([FromBody] FilterModel filter)
+        {
+            try
+            {
+                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.nrsz_persons_index_name);
+                var client = new ElasticClient(settings);
+                var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+                if (filter != null && filter.conditions != null && filter.conditions.Length > 0)
+                {
+                    foreach (var c in filter.conditions)
+                    {
+                        if (!string.IsNullOrEmpty(c.val))
+                        {
+                            if (typeof(_nrsz_person).GetProperty(c.field_name) != null)
+                            {
+                                filters.Add(fq => fq.Match(m =>
+                                    m.Field(c.field_name)
+                                    .Query(c.val)
+                            ));
+                            }
+                            else
+                            {
+                                throw new ApplicationException("Поле " + c.field_name + " не существует");
+                            }
+                        }
+                    }
+                }
+                var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+                .From(0)
+                .Size(10)
+                .Query(q => q.Bool(b => b.Must(filters)));
+                var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
+                WriteLog(json, true);
+
+                var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+
+                var persons = searchResponse.Documents;
+                if (searchResponse.IsValid)
+                    return Ok(new { result = true, persons });
+                else
+                    return Ok(new { result = false, error = searchResponse.OriginalException.Message });
             }
             catch (Exception e)
             {
@@ -192,7 +309,7 @@ namespace elasticsearchApi.Controllers
             }
         }
     }
-    public class _person
+    public class _asist_person
     {
         public string personid { get; set; }
         public string pin { get; set; }
@@ -200,5 +317,21 @@ namespace elasticsearchApi.Controllers
         public string fn { get; set; }
         public string mn { get; set; }
         public string pno { get; set; }
+    }
+    public class _nrsz_person
+    {
+        public string personid { get; set; }
+        public string iin { get; set; }
+        public string ln { get; set; }
+        public string fn { get; set; }
+        public string mn { get; set; }
+        public string bd { get; set; }
+        public string gender { get; set; }
+        public string passporttype { get; set; }
+        public string passportseries { get; set; }
+        public string passportno { get; set; }
+        public string date_of_issue { get; set; }
+        public string issuing_authority { get; set; }
+        public string familystate { get; set; }
     }
 }
