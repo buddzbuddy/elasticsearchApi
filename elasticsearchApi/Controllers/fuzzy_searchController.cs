@@ -137,6 +137,7 @@ namespace elasticsearchApi.Controllers
             try
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
+                
                 var client = new ElasticClient(settings);
 
                 client.CreateDocument(obj);
@@ -157,7 +158,7 @@ namespace elasticsearchApi.Controllers
                 var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
                 var client = new ElasticClient(settings);
 
-                client.UpdateByQuery<_asist_person>(u => u
+                var res = client.UpdateByQuery<_asist_person>(u => u
         .Query(q => q
             .Term(f => f.personid, obj.personid)
         )
@@ -165,7 +166,8 @@ namespace elasticsearchApi.Controllers
         .Conflicts(Conflicts.Proceed)
         .Refresh(true)
     );
-
+                var json = client.RequestResponseSerializer.SerializeToString(res);
+                WriteLog(json, true);
                 return Ok(new { result = true });
             }
             catch (Exception e)
