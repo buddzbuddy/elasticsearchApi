@@ -11,5 +11,7 @@ namespace elasticsearchApi.Utils
         public string logpath { get; set; }
         public string asist_persons_index_name { get; set; }
         public string nrsz_persons_index_name { get; set; }
+        public string cissa_data_connection { get; set; }
+        public string cissa_meta_connection { get; set; }
     }
 }

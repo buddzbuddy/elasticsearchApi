@@ -134,8 +134,10 @@ namespace elasticsearchApi.Controllers
         [HttpPost]
         public ActionResult CreateAsistPerson([FromBody] _asist_person obj)
         {
+
             try
             {
+
                 var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
                 
                 var client = new ElasticClient(settings);
