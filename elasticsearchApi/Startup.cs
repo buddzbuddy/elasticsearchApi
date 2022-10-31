@@ -36,7 +36,8 @@ namespace elasticsearchApi
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseAuthentication();
+            app.UseAuthorization();
             app.UseHttpsRedirection();
 
             app.UseRouting();
