@@ -156,6 +156,29 @@ namespace elasticsearchApi.Controllers
         }
 
         [HttpPost]
+        public ActionResult UpdateAsistPerson2([FromBody] Person obj)
+        {
+            var nrsz_connection_string = _appSettings.Value.cissa_data_connection;
+            AttributeStorage attributeStorage = new AttributeStorage(nrsz_connection_string);
+            attributeStorage.UpdatePerson(obj);
+            //try
+            //{
+
+            //    var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
+
+            //    var client = new ElasticClient(settings);
+
+            //    client.CreateDocument(obj);
+
+            return Ok(new { result = true });
+            //}
+            //catch (Exception e)
+            //{
+            //    return Ok(new { result = false, error = e.Message, trace = e.StackTrace });
+            //}
+        }
+
+        [HttpPost]
         public ActionResult UpdateAsistPerson([FromBody] _asist_person obj)
         {
             try
