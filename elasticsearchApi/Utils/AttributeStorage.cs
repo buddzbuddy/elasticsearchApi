@@ -179,7 +179,7 @@ namespace elasticsearchApi.Utils
             {
                 index++;
                 var attribute = attributeList.Where(x => x.AttributeName.Equals(property.Name)).FirstOrDefault();
-                var tableName = GeTableNameByAttributeType(attribute.AttributeType);
+                var tableName = GetTableNameByAttributeType(attribute.AttributeType);
                 sqlBuilder1.AppendFormat(" {0}.[{1}], {2}", p, property.Name, Environment.NewLine);
                 sqlBuilder2.AppendFormat(" [a{0}].[Value] as [{1}], {2}", index, property.Name, Environment.NewLine);
                 sqlBuilder3.AppendFormat(" LEFT OUTER JOIN {0} a{1} WITH(NOLOCK) on (a{1}.Document_Id = d.Id and a{1}.Def_Id = '{2}' and a{1}.Expired = '99991231') {3}", tableName,index, attribute.AttributeId, Environment.NewLine);
@@ -245,7 +245,7 @@ namespace elasticsearchApi.Utils
             
         }
 
-        private string GeTableNameByAttributeType(string attributeType)
+        private string GetTableNameByAttributeType(string attributeType)
         {
             if (attributeType == "Int")
                 return "Int_Attributes";
