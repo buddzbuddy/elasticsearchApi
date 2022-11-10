@@ -13,5 +13,6 @@ namespace elasticsearchApi.Utils
         public string nrsz_persons_index_name { get; set; }
         public string cissa_data_connection { get; set; }
         public string cissa_meta_connection { get; set; }
+        public string nrsz_temp_connection { get; set; }
     }
 }
