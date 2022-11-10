@@ -89,15 +89,50 @@ namespace elasticsearchApi.Utils
             }
         }
 
-        public void UpdatePerson(Person person)
+        public void UpdateDocument(Person personNew, Guid documentId)
         {
+            Person personOld = new Person();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
+                var personAttributeList = GetPersonAttributeList(connection);
+                var SelectDocumentSQL = BuildSelectPersonSQL(connection, personOld, personAttributeList);
+                
+                using (SqlCommand command = new SqlCommand(SelectDocumentSQL, connection))
+                {
+                    AddParamWithValue(command, "@DocId", documentId);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var properties = GetProperties(personNew);
+                            foreach (PropertyInfo property in properties)
+                            {
+                                var attribute = personAttributeList.Where(x => x.AttributeName.Equals(property.Name)).FirstOrDefault();
+                                if (attribute == null) continue;
+                                var attributeId = attribute.AttributeId;
+                                var objValue = property.GetValue(personNew, null);
+                                if (!String.IsNullOrEmpty(property.Name))
+                                {
+                                    var newObjectValue = objValue!=null ? objValue.ToString():"";
+                                    var oldObjectValue = reader[property.Name].ToString();
+                                    if (!newObjectValue.Equals(oldObjectValue))
+                                    {
+                                        InsertAttribute(connection, documentId, attributeId, property, newObjectValue);
+                                    }
 
-                var sqlString = BuildSelectPersonSQL(connection, person);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
+
+        
+
+
+
 
         private Guid InsertDocument(SqlConnection connection)
         {
@@ -127,10 +162,11 @@ namespace elasticsearchApi.Utils
                 var objValue = property.GetValue(person, null);
                 if (!String.IsNullOrEmpty(property.Name)  && (objValue != null))
                 {
-                    var tableName = GetAttributeTableName(property);
+                   
                     var attribute = personAttributeList.Where(x => x.AttributeName.Equals(property.Name)).FirstOrDefault();
                     if (attribute == null) continue;
                     var attributeId = attribute.AttributeId;
+                    var tableName = GetAttributeTableName(property);
                     using (SqlCommand command = new SqlCommand(String.Format(SaveAttrSql, tableName), connection))
                     {
                         AddParamWithValue(command, "@DocId", documentId);
@@ -150,6 +186,25 @@ namespace elasticsearchApi.Utils
            
         }
 
+
+        private void InsertAttribute(SqlConnection connection, Guid documentId, Guid attributeId, PropertyInfo property, object objValue)
+        {
+
+            var tableName = GetAttributeTableName(property);
+            using (SqlCommand command = new SqlCommand(String.Format(SaveAttrSql, tableName), connection))
+            {
+                AddParamWithValue(command, "@DocId", documentId);
+                AddParamWithValue(command, "@DefId", attributeId);
+                AddParamWithValue(command, "@Created", DateTime.Now);
+                if (objValue != null)
+                    AddParamWithValue(command, "@Value", objValue, SqlDbType.NVarChar);
+                else
+                    AddParamWithValue(command, "@Value", objValue);
+                AddParamWithValue(command, "@UserId", UserId);
+                command.ExecuteNonQuery();
+            }
+        }
+
         private PropertyInfo[] GetProperties(Person person)
         {
             Type type = person.GetType();
@@ -158,7 +213,7 @@ namespace elasticsearchApi.Utils
 
         }
 
-        private string BuildSelectPersonSQL(SqlConnection connection, Person person)
+        private string BuildSelectPersonSQL(SqlConnection connection, Person person, List<PersonAttribute> attributeList)
         {
             string p = "[Person]";
             int index = 1;
@@ -173,7 +228,6 @@ namespace elasticsearchApi.Utils
 
             sqlBuilder3.AppendLine(" FROM Documents d WITH(NOLOCK) ");
 
-            var attributeList = GetPersonAttributeList(connection);
             var properties = GetProperties(person);
             foreach (var property in properties)
             {
