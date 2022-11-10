@@ -132,17 +132,20 @@ namespace elasticsearchApi.Controllers
         }
 
         [HttpPost]
-        public ActionResult CreateAsistPerson([FromBody] _asist_person obj)
+        public ActionResult CreateNrszPerson([FromBody] _nrsz_person obj)
         {
 
             try
             {
 
-                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
-                
+                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.nrsz_persons_index_name);
+
                 var client = new ElasticClient(settings);
 
-                client.CreateDocument(obj);
+                var res = client.Index(obj, request => request);
+
+                var json = client.RequestResponseSerializer.SerializeToString(res);
+                //WriteLog(json, true);
 
                 return Ok(new { result = true });
             }
@@ -153,18 +156,18 @@ namespace elasticsearchApi.Controllers
         }
 
         [HttpPost]
-        public ActionResult UpdateAsistPerson([FromBody] _asist_person obj)
+        public ActionResult UpdateNrszPerson([FromBody] _nrsz_person obj)
         {
             try
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
                 var client = new ElasticClient(settings);
 
-                var res = client.UpdateByQuery<_asist_person>(u => u
+                var res = client.UpdateByQuery<_nrsz_person>(u => u
         .Query(q => q
-            .Term(f => f.personid, obj.personid)
+            .Term(f => f.id1, obj.id1)
         )
-        .Script("ctx._source.ln = '" + obj.ln + "'; ctx._source.fn = '" + obj.fn + "'; ctx._source.mn = '" + obj.mn + "'; ctx._source.pno = '" + obj.pno + "'; ctx._source.pin = '" + obj.pin + "';")
+        .Script("ctx._source.ln = '" + obj.last_name + "'; ctx._source.fn = '" + obj.first_name + "'; ctx._source.mn = '" + obj.middle_name + "'; ctx._source.passportno = '" + obj.passportno + "'; ctx._source.iin = '" + obj.iin + "';")
         .Conflicts(Conflicts.Proceed)
         .Refresh(true)
     );
@@ -294,7 +297,7 @@ namespace elasticsearchApi.Controllers
                 return Ok(new { result = false, error = e.Message, trace = e.StackTrace });
             }
         }
-        public void WriteLog(string src, bool withLog = false)
+        private void WriteLog(string src, bool withLog = false)
         {
             if(withLog)
             using (StreamWriter sw = new StreamWriter(_appSettings.Value.logpath, true))
@@ -324,18 +327,19 @@ namespace elasticsearchApi.Controllers
     }
     public class _nrsz_person
     {
-        public string personid { get; set; }
+        public string id1 { get; set; }
         public string iin { get; set; }
-        public string ln { get; set; }
-        public string fn { get; set; }
-        public string mn { get; set; }
-        public string bd { get; set; }
-        public string gender { get; set; }
-        public string passporttype { get; set; }
+        public string last_name { get; set; }
+        public string first_name { get; set; }
+        public string middle_name { get; set; }
+        public DateTime? date_of_birth { get; set; }
+        public Guid? sex { get; set; }
+        public Guid? passporttype { get; set; }
         public string passportseries { get; set; }
         public string passportno { get; set; }
-        public string date_of_issue { get; set; }
+        public DateTime? date_of_issue { get; set; }
         public string issuing_authority { get; set; }
-        public string familystate { get; set; }
+        public Guid? familystate { get; set; }
+        public DateTime? modified { get; set; }
     }
 }
