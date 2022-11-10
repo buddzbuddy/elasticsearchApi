@@ -44,7 +44,8 @@ namespace elasticsearchApi
                 });
 
             }
-
+            app.UseAuthentication();
+            app.UseAuthorization();
             app.UseHttpsRedirection();
 
             app.UseRouting();

@@ -1,10 +1,12 @@
 ﻿using elasticsearchApi.Models;
-using Microsoft.Data.SqlClient;
+
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace elasticsearchApi.Utils
@@ -28,9 +30,45 @@ namespace elasticsearchApi.Utils
            "VALUES (@Id, @DefId, @Created, @UserId, @OrgId, @PositionId, @Modified);\n" +
            "END";
 
-        private const string PersonListSql = "SELECT od.Id, od.Name, od.Full_Name, 1, od.Parent_Id" +
-            "FROM Object_Defs AS od" +
+        private const string PersonListSql = "SELECT od.Id, od.Name, dt.Name as Type_Name " +
+            "FROM Object_Defs AS od " +
+            "INNER JOIN Attribute_Defs ad ON ad.Id = od.Id "+
+            "INNER JOIN Data_Types dt ON dt.Id = ad.Type_Id " +
             "WHERE od.Parent_Id =@PersonDefId AND (od.Deleted is NULL OR od.Deleted = 0)";
+
+        private const string SelectDocumentAttributeSql =
+            "SELECT 1 AS AttrType, " +
+            "Value AS Int_Value, " + // 1
+            "null AS Currency_Type, " + // 2
+            "null AS Text_Type, " + // 3
+            "null AS Float_Type, " + // 4
+            "null AS Guid_Type, " + // 5
+            "null AS Bool_Type, " + // 6
+            "null AS Date_Type, Created, Def_Id " + // 7
+            "FROM Int_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n" +
+            "UNION ALL SELECT 2, null, Value, null, null, null, null, null, Created, Def_Id " +
+            "FROM Currency_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n" +
+            "UNION ALL SELECT 3, null, null, Value, null, null, null, null, Created, Def_Id " +
+            "FROM Text_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n" +
+            "UNION ALL SELECT 4, null, null, null, Value, null, null, null, Created, Def_Id " +
+            "FROM Float_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n" +
+            "UNION ALL SELECT 5, null, null, null, null, Value, null, null, Created, Def_Id " +
+            "FROM Enum_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n" +
+            "UNION ALL SELECT 6, null, null, null, null, Value, null, null, Created, Def_Id " +
+            "FROM Document_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n" +
+            "UNION ALL SELECT 8, null, null, null, null, null, Value, null, Created, Def_Id " +
+            "FROM Boolean_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n" +
+            "UNION ALL SELECT 9, null, null, null, null, null, null, Value, Created, Def_Id " +
+            "FROM Date_Time_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n" +
+            "UNION ALL SELECT 12, null, null, null, null, Value, null, null, Created, Def_Id " +
+            "FROM Org_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n" +
+            "UNION ALL SELECT 13, null, null, null, null, Value, null, null, Created, Def_Id " +
+            "FROM Doc_State_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n" +
+            "UNION ALL SELECT 14, null, null, null, null, Value, null, null, Created, Def_Id " +
+            "FROM Object_Def_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n" +
+            "UNION ALL SELECT 15, null, null, File_Name, null, null, null, null, Created, Def_Id " +
+            "FROM Image_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n";
+
         private string connectionString;
         public AttributeStorage(string _connectionString)
         {
@@ -48,6 +86,16 @@ namespace elasticsearchApi.Utils
                 var documentId=InsertDocument(connection);
                 var personAttributeList = GetPersonAttributeList(connection);
                 InsertAttributes(connection, person, documentId, personAttributeList);
+            }
+        }
+
+        public void UpdatePerson(Person person)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var sqlString = BuildSelectPersonSQL(connection, person);
             }
         }
 
@@ -71,26 +119,27 @@ namespace elasticsearchApi.Utils
 
         
 
-        private void InsertAttributes(SqlConnection connection,  Person obj, Guid documentId, List<Guid> personAttributeList)
+        private void InsertAttributes(SqlConnection connection,  Person person, Guid documentId, List<PersonAttribute> personAttributeList)
         {
-            Type type = obj.GetType();
-            PropertyInfo[] properties = type.GetProperties();
+            var properties = GetProperties(person);
             foreach (PropertyInfo property in properties)
             {
-                if (!String.IsNullOrEmpty(property.Name)  && (property.GetValue(obj, null)!=null))
+                var objValue = property.GetValue(person, null);
+                if (!String.IsNullOrEmpty(property.Name)  && (objValue != null))
                 {
                     var tableName = GetAttributeTableName(property);
-                  
-                    foreach (var attributeId in personAttributeList)
+                    var attribute = personAttributeList.Where(x => x.AttributeName.Equals(property.Name)).FirstOrDefault();
+                    if (attribute == null) continue;
+                    var attributeId = attribute.AttributeId;
                     using (SqlCommand command = new SqlCommand(String.Format(SaveAttrSql, tableName), connection))
                     {
                         AddParamWithValue(command, "@DocId", documentId);
                         AddParamWithValue(command, "@DefId", attributeId);
                         AddParamWithValue(command, "@Created", DateTime.Now);
-                        if (property.GetValue(obj, null) != null)
-                            AddParamWithValue(command, "@Value", property.GetValue(obj, null), SqlDbType.NVarChar);
+                        if (property.GetValue(person, null) != null)
+                            AddParamWithValue(command, "@Value", objValue, SqlDbType.NVarChar);
                         else
-                            AddParamWithValue(command, "@Value", property.GetValue(obj, null));
+                            AddParamWithValue(command, "@Value", objValue);
                         AddParamWithValue(command, "@UserId", UserId);
                         command.ExecuteNonQuery();
                     }
@@ -101,9 +150,52 @@ namespace elasticsearchApi.Utils
            
         }
 
-        private List<Guid> GetPersonAttributeList(SqlConnection connection)
+        private PropertyInfo[] GetProperties(Person person)
         {
-            List<Guid> personAttributeList = new List<Guid>();
+            Type type = person.GetType();
+            BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
+            return type.GetProperties(flags).Where(x=> !x.Name.Equals("Id")).ToArray();
+
+        }
+
+        private string BuildSelectPersonSQL(SqlConnection connection, Person person)
+        {
+            string p = "[Person]";
+            int index = 1;
+            StringBuilder sqlBuilder1 = new StringBuilder();
+            StringBuilder sqlBuilder2 = new StringBuilder();
+            StringBuilder sqlBuilder3 = new StringBuilder();
+            sqlBuilder1.AppendLine("SELECT TOP 1 ");
+            sqlBuilder1.AppendFormat("{0}.[id1], ", p);
+
+            sqlBuilder2.AppendLine(" FROM (SELECT d.Id, ");
+            sqlBuilder2.AppendLine("d.Id as [Id1], ");
+
+            sqlBuilder3.AppendLine(" FROM Documents d WITH(NOLOCK) ");
+
+            var attributeList = GetPersonAttributeList(connection);
+            var properties = GetProperties(person);
+            foreach (var property in properties)
+            {
+                index++;
+                var attribute = attributeList.Where(x => x.AttributeName.Equals(property.Name)).FirstOrDefault();
+                var tableName = GetTableNameByAttributeType(attribute.AttributeType);
+                sqlBuilder1.AppendFormat(" {0}.[{1}], {2}", p, property.Name, Environment.NewLine);
+                sqlBuilder2.AppendFormat(" [a{0}].[Value] as [{1}], {2}", index, property.Name, Environment.NewLine);
+                sqlBuilder3.AppendFormat(" LEFT OUTER JOIN {0} a{1} WITH(NOLOCK) on (a{1}.Document_Id = d.Id and a{1}.Def_Id = '{2}' and a{1}.Expired = '99991231') {3}", tableName,index, attribute.AttributeId, Environment.NewLine);
+            }
+            sqlBuilder1.AppendLine("[Person].[tempId] ");
+            sqlBuilder2.AppendLine("'0' as [tempId], ");
+            sqlBuilder2.AppendLine("d.Last_Modified as [Modified] ");
+            sqlBuilder3.AppendLine("WHERE d.Id =@DocId AND ([d].[Deleted] is null OR [d].[Deleted] = 0)");
+            sqlBuilder3.AppendFormat(") as {0}", p);
+
+            return sqlBuilder1.ToString() + sqlBuilder2.ToString() + sqlBuilder3.ToString();
+        }
+
+        private List<PersonAttribute> GetPersonAttributeList(SqlConnection connection)
+        {
+            List<PersonAttribute> attributeList = new List<PersonAttribute>();
             using (SqlCommand command = new SqlCommand(PersonListSql, connection))
             {
                 AddParamWithValue(command, "@PersonDefId", PersonDefId);
@@ -111,11 +203,12 @@ namespace elasticsearchApi.Utils
                 {
                     while (reader.Read())
                     {
-                        personAttributeList.Add(reader.GetGuid(0));
+                        PersonAttribute personAttribute = new PersonAttribute { AttributeId = reader.GetGuid(0), AttributeName = reader.GetString(1), AttributeType=reader.GetString(2) };
+                        attributeList.Add(personAttribute);
                     }
                 }
             }
-            return personAttributeList;
+            return attributeList;
         }
 
 
@@ -152,7 +245,25 @@ namespace elasticsearchApi.Utils
             
         }
 
-      
+        private string GetTableNameByAttributeType(string attributeType)
+        {
+            if (attributeType == "Int")
+                return "Int_Attributes";
+            else if (attributeType == "Text")
+                return "Text_Attributes";
+            else if (attributeType == "Float")
+                return "Float_Attributes";
+            else if (attributeType == "Enum")
+                return "Enum_Attributes";
+            else if (attributeType == "Boolean")
+                return "Boolean_Attributes";
+            else if (attributeType == "DateTime")
+                return "Date_Time_Attributes";
+            else return String.Empty;
+
+        }
+
+
 
     }
 }

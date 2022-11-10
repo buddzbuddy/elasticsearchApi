@@ -1,4 +1,5 @@
 ﻿using Elasticsearch.Net;
+using elasticsearchApi.Models;
 using elasticsearchApi.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -132,27 +133,49 @@ namespace elasticsearchApi.Controllers
         }
 
         [HttpPost]
-        public ActionResult CreateNrszPerson([FromBody] _nrsz_person obj)
+        public ActionResult CreateAsistPerson([FromBody] Person obj)
         {
+            var nrsz_connection_string = _appSettings.Value.cissa_data_connection;
+            AttributeStorage attributeStorage = new AttributeStorage(nrsz_connection_string);
+            attributeStorage.SavePerson(obj);
+            //try
+            //{
 
-            try
-            {
+            //    var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
+                
+            //    var client = new ElasticClient(settings);
 
-                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.nrsz_persons_index_name);
-
-                var client = new ElasticClient(settings);
-
-                var res = client.Index(obj, request => request);
-
-                var json = client.RequestResponseSerializer.SerializeToString(res);
-                //WriteLog(json, true);
+            //    client.CreateDocument(obj);
 
                 return Ok(new { result = true });
-            }
-            catch (Exception e)
-            {
-                return Ok(new { result = false, error = e.Message, trace = e.StackTrace });
-            }
+            //}
+            //catch (Exception e)
+            //{
+            //    return Ok(new { result = false, error = e.Message, trace = e.StackTrace });
+            //}
+        }
+
+        [HttpPost]
+        public ActionResult UpdateAsistPerson2([FromBody] Person obj)
+        {
+            var nrsz_connection_string = _appSettings.Value.cissa_data_connection;
+            AttributeStorage attributeStorage = new AttributeStorage(nrsz_connection_string);
+            attributeStorage.UpdatePerson(obj);
+            //try
+            //{
+
+            //    var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
+
+            //    var client = new ElasticClient(settings);
+
+            //    client.CreateDocument(obj);
+
+            return Ok(new { result = true });
+            //}
+            //catch (Exception e)
+            //{
+            //    return Ok(new { result = false, error = e.Message, trace = e.StackTrace });
+            //}
         }
 
         [HttpPost]
