@@ -39,11 +39,11 @@ namespace elasticsearchApi.Controllers
             }
         }
         [HttpPost]
-        public IActionResult FindPersons([FromBody] Person person)
+        public IActionResult FindPersons([FromBody] SearchPersonModel person)
         {
             try
             {
-                var result = executor.FindPersons(person);
+                var result = executor.FindPersons2(person);
                 return Ok(result);
             }
             catch (Exception e)

@@ -185,37 +185,6 @@ namespace elasticsearchApi.Utils
                         context["ResultCount"] = dupPersonList.Count();
                     }
                 }
-                /*var db = new QueryFactory(connection, compiler);
-
-                var query = db.Query("Persons");
-
-                if (!String.IsNullOrEmpty(person.IIN)) _ = query.Where("IIN", person.IIN); //qb.Where("IIN").Eq(person.IIN);
-                if (!String.IsNullOrEmpty(person.SIN)) _ = query.Where("SIN", person.SIN); //qb.Where("SIN").Eq(person.SIN);
-
-                if ((passportType != null) && hasPassportNo && hasPassportSeries)
-                {
-                    _ = query.Where("PassportType", passportType)
-                        .Where("PassportSeries", passportSeries)
-                        .Where("PassportNo",passportNo);
-                }
-                _ = query.Where("Last_Name", person.Last_Name).Where("First_Name", person.First_Name)
-                    .Where("Sex", person.Sex).Where("Date_of_Birth", person.Date_of_Birth);
-                if (!String.IsNullOrEmpty(person.Middle_Name))
-                    _ = query.Where("Middle_Name", person.Middle_Name);
-                //TODO: Use NATIVE SQL COMMAND
-
-                var dupPersonList = query.Get();
-                if (dupPersonList.Count() == 1)
-                {
-                    context["Exactly"] = true;
-                    context["ResultCount"] = 1;
-                    context["Result"] = dupPersonList.First();
-                }
-                else
-                {
-                    context["Exactly"] = false;
-                    context["ResultCount"] = dupPersonList.Count();
-                }*/
             }
             return context;
         }
@@ -329,6 +298,43 @@ namespace elasticsearchApi.Utils
                 //TODO: Use NATIVE SQL COMMAND
                 var personList = query.Get();
                 context["Persons"] = personList;
+            }
+            return context;
+        }
+
+        public ServiceContext FindPersons2(SearchPersonModel person)
+        {
+            ServiceContext context = new ServiceContext();
+
+            context.SuccessFlag = context.ErrorMessages == null || context.ErrorMessages.Count == 0;
+            verifyData(context, person);
+            if (context.SuccessFlag)
+            {
+                var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.nrsz_persons_index_name);
+                var client = new ElasticClient(settings);
+                var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+                foreach (var propInfo in person.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase))
+                {
+                    var field_name = propInfo.Name.ToLower();
+                    if (field_name != "id" && propInfo.GetValue(person) != null && !string.IsNullOrEmpty(propInfo.GetValue(person).ToString()))
+                        filters.Add(fq => fq.Match(m => m.Field(field_name).Query(propInfo.GetValue(person).ToString())));
+                }
+                if (filters.Count == 0)
+                    throw new ApplicationException("Данные для поиска не переданы!");
+                var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+                .From(0)
+                .Size(10)
+                .Query(q => q.Bool(b => b.Must(filters)));
+                var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
+                WriteLog(json, "D:\\temp\\elastic-new-api.txt");
+
+                var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+
+                var persons = searchResponse.Documents;
+                if (searchResponse.IsValid)
+                {
+                    context["Persons"] = persons;
+                }
             }
             return context;
         }
