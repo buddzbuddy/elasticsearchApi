@@ -9,6 +9,9 @@ using elasticsearchApi.Models;
 using SqlKata.Compilers;
 using SqlKata.Execution;
 using System.Data;
+using Nest;
+using elasticsearchApi.Controllers;
+using Elasticsearch.Net;
 
 namespace elasticsearchApi.Utils
 {
@@ -91,7 +94,7 @@ namespace elasticsearchApi.Utils
             ServiceContext context = new ServiceContext();
             
             context.SuccessFlag = context.ErrorMessages == null || context.ErrorMessages.Count == 0;
-            verifyData(context, person);
+            //verifyData(context, person);
             if (context.SuccessFlag)
             {
                 var passportType = person.PassportType;
@@ -136,12 +139,92 @@ namespace elasticsearchApi.Utils
             }
             return context;
         }
+        public ServiceContext FindSamePerson2(SearchPersonModel person)
+        {
+            //WorkflowContext context = CreateContext("asist2nrsz", new Guid("{05EEF54F-5BFE-4E2B-82C7-6AB6CD59D488}"));
+            ServiceContext context = new();
+            
+            
+            verifyData(context, person);
+            context.SuccessFlag = context.ErrorMessages == null || context.ErrorMessages.Count == 0;
+            if (context.SuccessFlag)
+            {
+                var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.nrsz_persons_index_name);
+                var client = new ElasticClient(settings);
+                var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+                foreach (var propInfo in person.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase))
+                {
+                    var field_name = propInfo.Name.ToLower();
+                    if (field_name != "id" && propInfo.GetValue(person) != null && !string.IsNullOrEmpty(propInfo.GetValue(person).ToString()))
+                        filters.Add(fq => fq.Match(m => m.Field(field_name).Query(propInfo.GetValue(person).ToString())));
+                }
+                if (filters.Count == 0)
+                    throw new ApplicationException("Данные для поиска не переданы!");
+                var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+                .From(0)
+                .Size(10)
+                .Query(q => q.Bool(b => b.Must(filters)));
+                var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
+                WriteLog(json, "D:\\temp\\elastic-new-api.txt");
 
-        private static void verifyData(ServiceContext context, Person person)
+                var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+
+                var persons = searchResponse.Documents;
+                if (searchResponse.IsValid)
+                {
+                    var dupPersonList = persons;
+                    if (dupPersonList.Count() == 1)
+                    {
+                        context["Exactly"] = true;
+                        context["ResultCount"] = 1;
+                        context["Result"] = dupPersonList.First();
+                    }
+                    else
+                    {
+                        context["Exactly"] = false;
+                        context["ResultCount"] = dupPersonList.Count();
+                    }
+                }
+                /*var db = new QueryFactory(connection, compiler);
+
+                var query = db.Query("Persons");
+
+                if (!String.IsNullOrEmpty(person.IIN)) _ = query.Where("IIN", person.IIN); //qb.Where("IIN").Eq(person.IIN);
+                if (!String.IsNullOrEmpty(person.SIN)) _ = query.Where("SIN", person.SIN); //qb.Where("SIN").Eq(person.SIN);
+
+                if ((passportType != null) && hasPassportNo && hasPassportSeries)
+                {
+                    _ = query.Where("PassportType", passportType)
+                        .Where("PassportSeries", passportSeries)
+                        .Where("PassportNo",passportNo);
+                }
+                _ = query.Where("Last_Name", person.Last_Name).Where("First_Name", person.First_Name)
+                    .Where("Sex", person.Sex).Where("Date_of_Birth", person.Date_of_Birth);
+                if (!String.IsNullOrEmpty(person.Middle_Name))
+                    _ = query.Where("Middle_Name", person.Middle_Name);
+                //TODO: Use NATIVE SQL COMMAND
+
+                var dupPersonList = query.Get();
+                if (dupPersonList.Count() == 1)
+                {
+                    context["Exactly"] = true;
+                    context["ResultCount"] = 1;
+                    context["Result"] = dupPersonList.First();
+                }
+                else
+                {
+                    context["Exactly"] = false;
+                    context["ResultCount"] = dupPersonList.Count();
+                }*/
+            }
+            return context;
+        }
+
+        private static void verifyData(ServiceContext context, SearchPersonModel person)
         {
             System.Text.RegularExpressions.Regex nameRegex =
                 new System.Text.RegularExpressions.Regex("[0-9]");
-            object s = person.Last_Name;
+            object s = person.last_name;
             string lastName = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
 
             if (String.IsNullOrEmpty(lastName)) //message = "Заполните фамилию!\n";
@@ -149,12 +232,12 @@ namespace elasticsearchApi.Utils
             else
             {
                 lastName = char.ToUpper(lastName[0]) + lastName.Substring(1);
-                person.Last_Name = lastName;
+                person.last_name = lastName;
                 if (nameRegex.IsMatch(lastName))
                     context.AddErrorMessage("Last_Name", "Ошибка в формате фамилии! Должны быть только буквы.");
             }
 
-            s = person.First_Name;
+            s = person.first_name;
             var firstName = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
 
             if (String.IsNullOrEmpty(firstName))
@@ -162,25 +245,25 @@ namespace elasticsearchApi.Utils
             else
             {
                 firstName = char.ToUpper(firstName[0]) + firstName.Substring(1);
-                person.First_Name = firstName;
+                person.first_name = firstName;
                 if (nameRegex.IsMatch(firstName))
                     context.AddErrorMessage("First_Name", "Ошибка в формате имени! Должны быть только буквы.");
             }
 
-            s = person.Middle_Name;
+            s = person.middle_name;
             var middleName = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
 
             if (!String.IsNullOrEmpty(middleName))
             {
                 middleName = char.ToUpper(middleName[0]) + middleName.Substring(1);
-                person.Middle_Name = middleName;
+                person.middle_name = middleName;
                 if (nameRegex.IsMatch(middleName))
                     context.AddErrorMessage("Middle_Name", "Ошибка в формате отчества! Должны быть только буквы.");
             }
 
             System.Text.RegularExpressions.Regex regex =
                 new System.Text.RegularExpressions.Regex("[^0-9]");
-            s = person.IIN;
+            s = person.iin;
             var pin = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
 
             if (!String.IsNullOrEmpty(pin))
@@ -192,23 +275,21 @@ namespace elasticsearchApi.Utils
                 context["PIN"] = pin;
             }
 
-            s = person.SIN;
+            /*s = person.SIN;
             var sin = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
 
             if (!String.IsNullOrEmpty(sin))
             {
-                /*if (sin.Length != 14)  
-                    context.AddErrorMessage("IIN", "Ошибка в длине СИН");*/
                 if (regex.IsMatch(sin.Substring(1)))
                     context.AddErrorMessage("SIN", "Ошибка в формате номера СИН!");
                 context["SIN"] = sin;
-            }
+            }*/
 
-            s = person.Sex;
+            s = person.sex;
             if (s == null) //message += "Введите пол!\n"; 
                 context.AddErrorMessage("Sex", "Введите пол");
 
-            s = person.Date_of_Birth;
+            s = person.date_of_birth;
             if (s == null) //message += "Введите дату рождения!\n"; 
                 context.AddErrorMessage("Date_of_Birth", "Введите дату рождения");
 
@@ -219,7 +300,7 @@ namespace elasticsearchApi.Utils
             ServiceContext context = new ServiceContext();
 
             context.SuccessFlag = context.ErrorMessages == null || context.ErrorMessages.Count == 0;
-            verifyData(context, person);
+            //verifyData(context, person);
             if (context.SuccessFlag)
             {
                 var passportType = person.PassportType;
@@ -338,9 +419,9 @@ FROM
         }
         internal ServiceContext AddNewPerson(Person person, int regionNo, int districtNo)
         {
-            ServiceContext context = new ServiceContext();
+            ServiceContext context = new ();
             
-            verifyData(context, person);
+            //verifyData(context, person);
             if (context.ErrorMessages != null && context.ErrorMessages.Count > 0) return context;
 
             InitRegionDistricts();

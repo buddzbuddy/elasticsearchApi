@@ -23,14 +23,14 @@ namespace elasticsearchApi.Controllers
         public NrszPersonsController(IOptions<AppSettings> appSettings)
         {
             _appSettings = appSettings;
-            executor = new NewScriptExecutor(_appSettings.Value);
+            executor = new (_appSettings.Value);
         }
         [HttpPost]
-        public IActionResult FindSamePerson([FromBody] Person person)
+        public IActionResult FindSamePerson([FromBody] SearchPersonModel person)
         {
             try
             {
-                var result = executor.FindSamePerson(person);
+                var result = executor.FindSamePerson2(person);
                 return Ok(result);
             }
             catch (Exception e)
@@ -108,7 +108,7 @@ namespace elasticsearchApi.Controllers
 
         static void WriteLog(object text)
         {
-            using (StreamWriter sw = new StreamWriter("c:\\distr\\cissa\\nrsz-rest-api.log", true))
+            using (StreamWriter sw = new("c:\\distr\\cissa\\nrsz-rest-api.log", true))
             {
                 sw.WriteLine(text.ToString());
             }
