@@ -52,11 +52,11 @@ namespace elasticsearchApi.Controllers
             }
         }
         [HttpPost]
-        public IActionResult FindPersonByPIN([FromBody]Person nrszPerson)
+        public IActionResult FindPersonByPIN([FromBody] SearchPersonModel nrszPerson)
         {
             try
             {
-                var result = executor.FindPersonByPIN(nrszPerson);
+                var result = executor.FindPersonByPIN2(nrszPerson);
                 return Ok(result);
             }
             catch (Exception e)
