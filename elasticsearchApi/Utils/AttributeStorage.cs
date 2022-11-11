@@ -13,8 +13,8 @@ namespace elasticsearchApi.Utils
 {
     public class AttributeStorage
     {
-        private static readonly Guid UserId = new Guid ("05EEF54F-5BFE-4E2B-82C7-6AB6CD59D488");
-        private static readonly Guid  OrgId = new Guid("B0E44CB2-0E06-4212-87CA-EC11F9D4E18E");
+        private static readonly Guid UserId = new Guid("05EEF54F-5BFE-4E2B-82C7-6AB6CD59D488");
+        private static readonly Guid OrgId = new Guid("B0E44CB2-0E06-4212-87CA-EC11F9D4E18E");
         private static readonly Guid PositionId = new Guid("AAE0CF72-775F-476F-A476-B5DAE32A4C3D");
         private static readonly Guid PersonDefId = new Guid("{6052978A-1ECB-4F96-A16B-93548936AFC0}");
         private const string SaveAttrSql =
@@ -32,7 +32,7 @@ namespace elasticsearchApi.Utils
 
         private const string PersonListSql = "SELECT od.Id, od.Name, dt.Name as Type_Name " +
             "FROM Object_Defs AS od " +
-            "INNER JOIN Attribute_Defs ad ON ad.Id = od.Id "+
+            "INNER JOIN Attribute_Defs ad ON ad.Id = od.Id " +
             "INNER JOIN Data_Types dt ON dt.Id = ad.Type_Id " +
             "WHERE od.Parent_Id =@PersonDefId AND (od.Deleted is NULL OR od.Deleted = 0)";
 
@@ -83,54 +83,90 @@ namespace elasticsearchApi.Utils
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                var documentId=InsertDocument(connection);
+                var documentId = InsertDocument(connection);
                 var personAttributeList = GetPersonAttributeList(connection);
                 InsertAttributes(connection, person, documentId, personAttributeList);
             }
         }
 
-        public void UpdatePerson(Person person)
+        public void UpdateDocument(Person personNew, Guid documentId)
         {
+            Person personOld = new Person();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
+                var personAttributeList = GetPersonAttributeList(connection);
+                var SelectDocumentSQL = BuildSelectPersonSQL(connection, personOld, personAttributeList);
 
-                var sqlString = BuildSelectPersonSQL(connection, person);
+                using (SqlCommand command = new SqlCommand(SelectDocumentSQL, connection))
+                {
+                    AddParamWithValue(command, "@DocId", documentId);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var properties = GetProperties(personNew);
+                            foreach (PropertyInfo property in properties)
+                            {
+                                var attribute = personAttributeList.Where(x => x.AttributeName.Equals(property.Name)).FirstOrDefault();
+                                if (attribute == null) continue;
+                                var attributeId = attribute.AttributeId;
+                                var objValue = property.GetValue(personNew, null);
+                                if (!String.IsNullOrEmpty(property.Name))
+                                {
+                                    var newObjectValue = objValue != null ? objValue.ToString() : "";
+                                    var oldObjectValue = reader[property.Name].ToString();
+                                    if (!newObjectValue.Equals(oldObjectValue))
+                                    {
+                                        InsertAttribute(connection, documentId, attributeId, property, newObjectValue);
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
+
+
+
+
+
 
         private Guid InsertDocument(SqlConnection connection)
         {
             var newDocumentId = Guid.NewGuid();
-           
-                using (SqlCommand command = new SqlCommand(SaveDocumentSql, connection))
-                {
-                    AddParamWithValue(command, "@Id", newDocumentId);
-                    AddParamWithValue(command, "@DefId", PersonDefId);
-                    AddParamWithValue(command, "@Created", DateTime.Now);
-                    AddParamWithValue(command, "@UserId", UserId);
-                    AddParamWithValue(command, "@OrgId", OrgId);
-                    AddParamWithValue(command, "@PositionId", PositionId);
-                    AddParamWithValue(command, "@Modified", DateTime.Now);
-                    command.ExecuteNonQuery();
-                }
+
+            using (SqlCommand command = new SqlCommand(SaveDocumentSql, connection))
+            {
+                AddParamWithValue(command, "@Id", newDocumentId);
+                AddParamWithValue(command, "@DefId", PersonDefId);
+                AddParamWithValue(command, "@Created", DateTime.Now);
+                AddParamWithValue(command, "@UserId", UserId);
+                AddParamWithValue(command, "@OrgId", OrgId);
+                AddParamWithValue(command, "@PositionId", PositionId);
+                AddParamWithValue(command, "@Modified", DateTime.Now);
+                command.ExecuteNonQuery();
+            }
             return newDocumentId;
         }
 
-        
 
-        private void InsertAttributes(SqlConnection connection,  Person person, Guid documentId, List<PersonAttribute> personAttributeList)
+
+        private void InsertAttributes(SqlConnection connection, Person person, Guid documentId, List<PersonAttribute> personAttributeList)
         {
             var properties = GetProperties(person);
             foreach (PropertyInfo property in properties)
             {
                 var objValue = property.GetValue(person, null);
-                if (!String.IsNullOrEmpty(property.Name)  && (objValue != null))
+                if (!String.IsNullOrEmpty(property.Name) && (objValue != null))
                 {
-                    var tableName = GetAttributeTableName(property);
+
                     var attribute = personAttributeList.Where(x => x.AttributeName.Equals(property.Name)).FirstOrDefault();
                     if (attribute == null) continue;
                     var attributeId = attribute.AttributeId;
+                    var tableName = GetAttributeTableName(property);
                     using (SqlCommand command = new SqlCommand(String.Format(SaveAttrSql, tableName), connection))
                     {
                         AddParamWithValue(command, "@DocId", documentId);
@@ -144,21 +180,40 @@ namespace elasticsearchApi.Utils
                         command.ExecuteNonQuery();
                     }
                 }
-                
+
 
             }
-           
+
+        }
+
+
+        private void InsertAttribute(SqlConnection connection, Guid documentId, Guid attributeId, PropertyInfo property, object objValue)
+        {
+
+            var tableName = GetAttributeTableName(property);
+            using (SqlCommand command = new SqlCommand(String.Format(SaveAttrSql, tableName), connection))
+            {
+                AddParamWithValue(command, "@DocId", documentId);
+                AddParamWithValue(command, "@DefId", attributeId);
+                AddParamWithValue(command, "@Created", DateTime.Now);
+                if (objValue != null)
+                    AddParamWithValue(command, "@Value", objValue, SqlDbType.NVarChar);
+                else
+                    AddParamWithValue(command, "@Value", objValue);
+                AddParamWithValue(command, "@UserId", UserId);
+                command.ExecuteNonQuery();
+            }
         }
 
         private PropertyInfo[] GetProperties(Person person)
         {
             Type type = person.GetType();
             BindingFlags flags = BindingFlags.Public | BindingFlags.Instance;
-            return type.GetProperties(flags).Where(x=> !x.Name.Equals("Id")).ToArray();
+            return type.GetProperties(flags).Where(x => !x.Name.Equals("Id")).ToArray();
 
         }
 
-        private string BuildSelectPersonSQL(SqlConnection connection, Person person)
+        private string BuildSelectPersonSQL(SqlConnection connection, Person person, List<PersonAttribute> attributeList)
         {
             string p = "[Person]";
             int index = 1;
@@ -173,7 +228,6 @@ namespace elasticsearchApi.Utils
 
             sqlBuilder3.AppendLine(" FROM Documents d WITH(NOLOCK) ");
 
-            var attributeList = GetPersonAttributeList(connection);
             var properties = GetProperties(person);
             foreach (var property in properties)
             {
@@ -182,7 +236,7 @@ namespace elasticsearchApi.Utils
                 var tableName = GetTableNameByAttributeType(attribute.AttributeType);
                 sqlBuilder1.AppendFormat(" {0}.[{1}], {2}", p, property.Name, Environment.NewLine);
                 sqlBuilder2.AppendFormat(" [a{0}].[Value] as [{1}], {2}", index, property.Name, Environment.NewLine);
-                sqlBuilder3.AppendFormat(" LEFT OUTER JOIN {0} a{1} WITH(NOLOCK) on (a{1}.Document_Id = d.Id and a{1}.Def_Id = '{2}' and a{1}.Expired = '99991231') {3}", tableName,index, attribute.AttributeId, Environment.NewLine);
+                sqlBuilder3.AppendFormat(" LEFT OUTER JOIN {0} a{1} WITH(NOLOCK) on (a{1}.Document_Id = d.Id and a{1}.Def_Id = '{2}' and a{1}.Expired = '99991231') {3}", tableName, index, attribute.AttributeId, Environment.NewLine);
             }
             sqlBuilder1.AppendLine("[Person].[tempId] ");
             sqlBuilder2.AppendLine("'0' as [tempId], ");
@@ -203,7 +257,7 @@ namespace elasticsearchApi.Utils
                 {
                     while (reader.Read())
                     {
-                        PersonAttribute personAttribute = new PersonAttribute { AttributeId = reader.GetGuid(0), AttributeName = reader.GetString(1), AttributeType=reader.GetString(2) };
+                        PersonAttribute personAttribute = new PersonAttribute { AttributeId = reader.GetGuid(0), AttributeName = reader.GetString(1), AttributeType = reader.GetString(2) };
                         attributeList.Add(personAttribute);
                     }
                 }
@@ -242,7 +296,7 @@ namespace elasticsearchApi.Utils
             else if (property.PropertyType == typeof(DateTime))
                 return "Date_Time_Attributes";
             else return String.Empty;
-            
+
         }
 
         private string GetTableNameByAttributeType(string attributeType)
