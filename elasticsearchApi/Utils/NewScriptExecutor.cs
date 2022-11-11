@@ -139,7 +139,7 @@ namespace elasticsearchApi.Utils
             }
             return context;
         }
-        public ServiceContext FindSamePerson2(SearchPersonModel person)
+        public ServiceContext FindSamePersonES(SearchPersonModel person)
         {
             //WorkflowContext context = CreateContext("asist2nrsz", new Guid("{05EEF54F-5BFE-4E2B-82C7-6AB6CD59D488}"));
             ServiceContext context = new();
@@ -302,7 +302,7 @@ namespace elasticsearchApi.Utils
             return context;
         }
 
-        public ServiceContext FindPersons2(SearchPersonModel person)
+        public ServiceContext FindPersonsES(SearchPersonModel person)
         {
             ServiceContext context = new ServiceContext();
 
@@ -364,7 +364,7 @@ namespace elasticsearchApi.Utils
             }
             return context;
         }
-        public ServiceContext FindPersonByPIN2(SearchPersonModel person)
+        public ServiceContext FindPersonByPINES(SearchPersonModel person)
         {
             ServiceContext context = new()
             {
@@ -517,6 +517,75 @@ FROM
                     person.SIN
                 });
                 if(tempId > 0) //Successfully created, create async job to copy in db NRSZ-DATA
+                {
+                    WriteLog($"[NRSZ-TEMP] saved at {DateTime.Now:HH:mm:ss.fff} newPin: {newPin} tempid:{tempId}");
+                    person.Id = tempId;
+                    //var ctx = CreateContext("asist2nrsz", new Guid("{05EEF54F-5BFE-4E2B-82C7-6AB6CD59D488}"));
+                    WriteLog($"[API] has sent to [NRSZ-DATA] at {DateTime.Now:HH:mm:ss.fff} pin: {newPin}");
+                    //Task.Run(() => SaveInNrszData(person, ctx));
+                }
+
+                //COMPLETE PROCESS
+                //TOD: ASYNC Save person in NRSZ DB linked with Id
+                return context;
+            }
+        }
+
+        internal ServiceContext AddNewPersonES(Person person, int regionNo, int districtNo)
+        {
+            ServiceContext context = new();
+
+            //verifyData(context, person);
+            if (context.ErrorMessages != null && context.ErrorMessages.Count > 0) return context;
+
+            InitRegionDistricts();
+            if (!Refs.RegionDistricts.Any(x => x.RegionNo == regionNo && x.DistrictNo == districtNo))
+                throw new ApplicationException(string.Format("Номера области и района отсутствуют в справочнике: regionNo - {0}, districtNo - {1}", regionNo, districtNo));
+
+            /*var districtCode = districtNo.ToString();
+            while (districtCode.Length < 3) districtCode = '0' + districtCode;*/
+            var regCode = regionNo * 1000 + districtNo;//regionNo.ToString() + districtCode;
+
+            var db = new QueryFactory(connection, compiler);
+            lock (PinLock)
+            {
+                var maxPin = db.Query("Persons").WhereLike("IIN", regCode + "__________").Max<long?>("IIN");
+                //var no = 0;
+                //ss = maxPin.ToString();
+                /*if (!String.IsNullOrWhiteSpace(ss) && ss.Length > 4)
+                {
+                    var sTemp = ss.Substring(4);
+                    no = int.Parse(sTemp.Substring(0, (sTemp.Length - 1)));
+                }*/
+                var newPin = (maxPin + 1).ToString();
+                //while (newPinCounter.Length < 10) newPinCounter = '0' + newPinCounter;
+                context["NewPIN"] = newPin;//startPin + newPinCounter;//14-ти значное число
+                context.SuccessFlag = true;
+                context["Result"] = person;
+                //CalcControlSum(context);
+                context["ResultPIN"] = newPin;//startPin + newPinCounter;
+                //var newPin = startPin + newPinCounter;//context["ResultPIN"].ToString();
+
+
+                person.IIN = newPin;
+
+                int tempId = db.Query("Persons").InsertGetId<int>(new
+                {
+                    person.Date_of_Birth,
+                    person.Date_of_Issue,
+                    person.FamilyState,
+                    person.First_Name,
+                    person.IIN,
+                    person.Issuing_Authority,
+                    person.Last_Name,
+                    person.Middle_Name,
+                    person.PassportNo,
+                    person.PassportSeries,
+                    person.PassportType,
+                    person.Sex,
+                    person.SIN
+                });
+                if (tempId > 0) //Successfully created, create async job to copy in db NRSZ-DATA
                 {
                     WriteLog($"[NRSZ-TEMP] saved at {DateTime.Now:HH:mm:ss.fff} newPin: {newPin} tempid:{tempId}");
                     person.Id = tempId;

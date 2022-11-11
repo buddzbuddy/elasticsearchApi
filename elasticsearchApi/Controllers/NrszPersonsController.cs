@@ -30,7 +30,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = executor.FindSamePerson2(person);
+                var result = executor.FindSamePersonES(person);
                 return Ok(result);
             }
             catch (Exception e)
@@ -43,7 +43,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = executor.FindPersons2(person);
+                var result = executor.FindPersonsES(person);
                 return Ok(result);
             }
             catch (Exception e)
@@ -56,7 +56,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = executor.FindPersonByPIN2(nrszPerson);
+                var result = executor.FindPersonByPINES(nrszPerson);
                 return Ok(result);
             }
             catch (Exception e)
