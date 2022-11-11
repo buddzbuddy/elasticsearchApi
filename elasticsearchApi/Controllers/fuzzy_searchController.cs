@@ -158,10 +158,9 @@ namespace elasticsearchApi.Controllers
         [HttpPost]
         public ActionResult UpdateAsistPerson2([FromBody] Person obj)
         {
-            var documentId = new Guid("640B5431-24AC-4E62-A5C6-67B68FBB157B");
             var nrsz_connection_string = _appSettings.Value.cissa_data_connection;
             AttributeStorage attributeStorage = new AttributeStorage(nrsz_connection_string);
-            attributeStorage.UpdateDocument(obj, documentId);
+            attributeStorage.UpdatePerson(obj);
             //try
             //{
 
