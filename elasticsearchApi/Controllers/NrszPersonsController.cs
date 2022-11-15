@@ -1,4 +1,5 @@
-﻿using Elasticsearch.Net;
+﻿using AutoMapper;
+using Elasticsearch.Net;
 using elasticsearchApi.Models;
 using elasticsearchApi.Utils;
 using Microsoft.AspNetCore.Http;
@@ -18,19 +19,72 @@ namespace elasticsearchApi.Controllers
     [ApiController]
     public class NrszPersonsController : ControllerBase
     {
-        private NewScriptExecutor executor;
+        private readonly NrszService svc;
         private readonly IOptions<AppSettings> _appSettings;
-        public NrszPersonsController(IOptions<AppSettings> appSettings)
+        private readonly IMapper _mapper;
+        public NrszPersonsController(IOptions<AppSettings> appSettings, IMapper mapper)
         {
             _appSettings = appSettings;
-            executor = new (_appSettings.Value);
+            _mapper = mapper;
+            svc = new (_appSettings.Value, mapper);
+        }
+        [HttpGet]
+        public IActionResult SomePerson()
+        {
+            try
+            {
+                var result = svc.SomePersons();
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.GetBaseException().Message);
+            }
+        }
+        [HttpGet]
+        public IActionResult RegCounters()
+        {
+            try
+            {
+                return Ok(FakeDb.RegCounters);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.GetBaseException().Message);
+            }
+        }
+        [HttpGet]
+        public IActionResult IncreaseTest(int regCode)
+        {
+            try
+            {
+                FakeDb.Increase(regCode);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.GetBaseException().Message);
+            }
         }
         [HttpPost]
         public IActionResult FindSamePerson([FromBody] SearchPersonModel person)
         {
             try
             {
-                var result = executor.FindSamePersonES(person);
+                var result = svc.FindSamePersonES(person);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.GetBaseException().Message);
+            }
+        }
+        [HttpPost]
+        public IActionResult FindSamePersonOld([FromBody] Person person)
+        {
+            try
+            {
+                var result = svc.FindSamePerson(person);
                 return Ok(result);
             }
             catch (Exception e)
@@ -43,7 +97,20 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = executor.FindPersonsES(person);
+                var result = svc.FindPersonsES(person);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.GetBaseException().Message);
+            }
+        }
+        [HttpPost]
+        public IActionResult FindPersonsOld([FromBody] Person person)
+        {
+            try
+            {
+                var result = svc.FindPersons(person);
                 return Ok(result);
             }
             catch (Exception e)
@@ -56,7 +123,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = executor.FindPersonByPINES(nrszPerson);
+                var result = svc.FindPersonByPINES(nrszPerson);
                 return Ok(result);
             }
             catch (Exception e)
@@ -69,7 +136,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = executor.AddNewPerson(nrszPerson, regionNo, districtNo);
+                var result = svc.AddNewPerson(nrszPerson, regionNo, districtNo);
                 return Ok(result);
             }
             catch (Exception e)
@@ -83,7 +150,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                executor.InitRegionDistricts();
+                //svc.InitRegionDistricts();
                 return Ok(Refs.RegionDistricts);
             }
             catch (Exception e)

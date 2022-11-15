@@ -12,6 +12,8 @@ using System.Data;
 using Nest;
 using elasticsearchApi.Controllers;
 using Elasticsearch.Net;
+using SqlKata;
+using AutoMapper;
 
 namespace elasticsearchApi.Utils
 {
@@ -25,37 +27,18 @@ namespace elasticsearchApi.Utils
         }
         public static List<RegionDistrictItem> RegionDistricts { get; set; } = new List<RegionDistrictItem>();
     }
-    public class NewScriptExecutor
+    public class NrszService
     {
-        private AppSettings _appSettings;
-        SqlConnection connection;
-        SqlServerCompiler compiler = new();
-        public NewScriptExecutor(AppSettings appSettings)
+        private readonly AppSettings _appSettings;
+        private readonly IMapper _mapper;
+        private readonly SqlConnection connection;
+        private readonly SqlServerCompiler compiler = new();
+        public NrszService(AppSettings appSettings, IMapper mapper)
         {
             _appSettings = appSettings;
-            connection = new SqlConnection(_appSettings.nrsz_temp_connection);
+            _mapper = mapper;
+            connection = new (_appSettings.nrsz_temp_connection);
         }
-        /*IAppServiceProvider InitProvider(string username, Guid userId)
-        {
-            var dataContextFactory = DataContextFactoryProvider.GetFactory();
-
-            var dataContext = dataContextFactory.CreateMultiDc("DataContexts");
-            BaseServiceFactory.CreateBaseServiceFactories();
-            var providerFactory = AppServiceProviderFactoryProvider.GetFactory();
-            var provider = providerFactory.Create(dataContext);
-            var serviceRegistrator = provider.Get<IAppServiceProviderRegistrator>();
-            serviceRegistrator.AddService(new UserDataProvider(userId, username));
-            return provider;
-        }
-
-        public WorkflowContext CreateContext(string username, Guid? userId)
-        {
-            if(userId == null)
-            {
-                userId = new Guid("{DCED7BEA-8A93-4BAF-964B-232E75A758C5}");
-            }
-            return new WorkflowContext(new WorkflowContextData(Guid.Empty, userId.Value), InitProvider(username, userId.Value));
-        }*/
 
         public class ServiceContext
         {
@@ -87,7 +70,15 @@ namespace elasticsearchApi.Utils
             }
         }
 
-        
+        public _nrsz_person[] SomePersons()
+        {
+            var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.nrsz_persons_index_name);
+            var client = new ElasticClient(settings);
+            
+            var searchResponse = client.Search<_nrsz_person>(new SearchRequest { Size = 10 });
+            var persons = searchResponse.Documents;
+            return persons.ToArray();
+        }
         public ServiceContext FindSamePerson(Person person)
         {
             //WorkflowContext context = CreateContext("asist2nrsz", new Guid("{05EEF54F-5BFE-4E2B-82C7-6AB6CD59D488}"));
@@ -118,10 +109,18 @@ namespace elasticsearchApi.Utils
                         .Where("PassportSeries", passportSeries)
                         .Where("PassportNo",passportNo);
                 }
-                _ = query.Where("Last_Name", person.Last_Name).Where("First_Name", person.First_Name)
-                    .Where("Sex", person.Sex).Where("Date_of_Birth", person.Date_of_Birth);
+                _ = query.Where("Last_Name", person.Last_Name).Where("First_Name", person.First_Name);
+                /*if (person.Date_of_Birth != null)
+                    _ = query.Where("Sex", person.Sex).Where("Date_of_Birth", person.Date_of_Birth.Value.ToString("yyyyMMdd"));*/
                 if (!String.IsNullOrEmpty(person.Middle_Name))
                     _ = query.Where("Middle_Name", person.Middle_Name);
+
+                SqlResult result = compiler.Compile(query);
+
+                string sql = result.Sql;
+                var b = result.NamedBindings;
+                WriteLog(sql, _appSettings.logpath);
+                WriteLog(string.Join(",", b.Select(x => $"{x.Key}:{x.Value}")), _appSettings.logpath);
                 //TODO: Use NATIVE SQL COMMAND
 
                 var dupPersonList = query.Get();
@@ -173,7 +172,7 @@ namespace elasticsearchApi.Utils
                 if (searchResponse.IsValid)
                 {
                     var dupPersonList = persons;
-                    if (dupPersonList.Count() == 1)
+                    if (dupPersonList.Count == 1)
                     {
                         context["Exactly"] = true;
                         context["ResultCount"] = 1;
@@ -182,7 +181,7 @@ namespace elasticsearchApi.Utils
                     else
                     {
                         context["Exactly"] = false;
-                        context["ResultCount"] = dupPersonList.Count();
+                        context["ResultCount"] = dupPersonList.Count;
                     }
                 }
             }
@@ -304,7 +303,7 @@ namespace elasticsearchApi.Utils
 
         public ServiceContext FindPersonsES(SearchPersonModel person)
         {
-            ServiceContext context = new ServiceContext();
+            ServiceContext context = new();
 
             context.SuccessFlag = context.ErrorMessages == null || context.ErrorMessages.Count == 0;
             verifyData(context, person);
@@ -469,7 +468,7 @@ FROM
             //verifyData(context, person);
             if (context.ErrorMessages != null && context.ErrorMessages.Count > 0) return context;
 
-            InitRegionDistricts();
+            //InitRegionDistricts();
             if (!Refs.RegionDistricts.Any(x => x.RegionNo == regionNo && x.DistrictNo == districtNo))
                 throw new ApplicationException(string.Format("Номера области и района отсутствуют в справочнике: regionNo - {0}, districtNo - {1}", regionNo, districtNo));
 
@@ -531,73 +530,46 @@ FROM
             }
         }
 
-        internal ServiceContext AddNewPersonES(Person person, int regionNo, int districtNo)
+        internal ServiceContext AddNewPersonES(SearchPersonModel p, int regionNo, int districtNo)
         {
             ServiceContext context = new();
-
-            //verifyData(context, person);
-            if (context.ErrorMessages != null && context.ErrorMessages.Count > 0) return context;
-
-            InitRegionDistricts();
-            if (!Refs.RegionDistricts.Any(x => x.RegionNo == regionNo && x.DistrictNo == districtNo))
-                throw new ApplicationException(string.Format("Номера области и района отсутствуют в справочнике: regionNo - {0}, districtNo - {1}", regionNo, districtNo));
-
-            /*var districtCode = districtNo.ToString();
-            while (districtCode.Length < 3) districtCode = '0' + districtCode;*/
-            var regCode = regionNo * 1000 + districtNo;//regionNo.ToString() + districtCode;
-
-            var db = new QueryFactory(connection, compiler);
-            lock (PinLock)
+            try
             {
-                var maxPin = db.Query("Persons").WhereLike("IIN", regCode + "__________").Max<long?>("IIN");
-                //var no = 0;
-                //ss = maxPin.ToString();
-                /*if (!String.IsNullOrWhiteSpace(ss) && ss.Length > 4)
-                {
-                    var sTemp = ss.Substring(4);
-                    no = int.Parse(sTemp.Substring(0, (sTemp.Length - 1)));
-                }*/
-                var newPin = (maxPin + 1).ToString();
-                //while (newPinCounter.Length < 10) newPinCounter = '0' + newPinCounter;
-                context["NewPIN"] = newPin;//startPin + newPinCounter;//14-ти значное число
-                context.SuccessFlag = true;
-                context["Result"] = person;
-                //CalcControlSum(context);
-                context["ResultPIN"] = newPin;//startPin + newPinCounter;
-                //var newPin = startPin + newPinCounter;//context["ResultPIN"].ToString();
+                verifyData(context, p);
+                if (context.ErrorMessages != null && context.ErrorMessages.Count > 0) return context;
 
+                if (!Refs.RegionDistricts.Any(x => x.RegionNo == regionNo && x.DistrictNo == districtNo))
+                    throw new ApplicationException(string.Format("Номера области и района отсутствуют в справочнике: regionNo - {0}, districtNo - {1}", regionNo, districtNo));
 
-                person.IIN = newPin;
+                /*var districtCode = districtNo.ToString();
+                while (districtCode.Length < 3) districtCode = '0' + districtCode;*/
+                var regCode = regionNo * 1000 + districtNo;//regionNo.ToString() + districtCode;
 
-                int tempId = db.Query("Persons").InsertGetId<int>(new
+                lock (PinLock)
                 {
-                    person.Date_of_Birth,
-                    person.Date_of_Issue,
-                    person.FamilyState,
-                    person.First_Name,
-                    person.IIN,
-                    person.Issuing_Authority,
-                    person.Last_Name,
-                    person.Middle_Name,
-                    person.PassportNo,
-                    person.PassportSeries,
-                    person.PassportType,
-                    person.Sex,
-                    person.SIN
-                });
-                if (tempId > 0) //Successfully created, create async job to copy in db NRSZ-DATA
-                {
-                    WriteLog($"[NRSZ-TEMP] saved at {DateTime.Now:HH:mm:ss.fff} newPin: {newPin} tempid:{tempId}");
-                    person.Id = tempId;
-                    //var ctx = CreateContext("asist2nrsz", new Guid("{05EEF54F-5BFE-4E2B-82C7-6AB6CD59D488}"));
-                    WriteLog($"[API] has sent to [NRSZ-DATA] at {DateTime.Now:HH:mm:ss.fff} pin: {newPin}");
-                    //Task.Run(() => SaveInNrszData(person, ctx));
+                    var maxPin = FakeDb.RegCounters[regCode];
+                    var newPin = (maxPin + 1).ToString();
+                    //while (newPinCounter.Length < 10) newPinCounter = '0' + newPinCounter;
+                    context["NewPIN"] = newPin;//startPin + newPinCounter;//14-ти значное число
+                    context.SuccessFlag = true;
+                    //CalcControlSum(context);
+                    context["ResultPIN"] = newPin;//startPin + newPinCounter;
+                                                  //var newPin = startPin + newPinCounter;//context["ResultPIN"].ToString();
+
+                    var person = _mapper.Map<Person>(p);
+                    person.IIN = newPin;
+                    context["Result"] = person;
+
+                    //Async save to DB
+                    Task.Run(() => SaveInNrszData2(person));
                 }
-
-                //COMPLETE PROCESS
-                //TOD: ASYNC Save person in NRSZ DB linked with Id
-                return context;
             }
+            catch (Exception e)
+            {
+                context.SuccessFlag = false;
+                context.AddErrorMessage("System", $"{e.Message}; trace: {e.StackTrace}");
+            }
+            return context;
         }
         static void CalcControlSum(ServiceContext context)
         {
@@ -657,6 +629,45 @@ FROM
                 WriteLog(string.Format("[ERROR] Async Task-SaveInNrszData() {2} - Error: {0}; trace: {1}", e.Message, e.StackTrace, DateTime.Now.ToString("HH:mm:ss.fff")));
             }
         }*/
+        private void SaveInNrszData2(Person person)
+        {
+            try
+            {
+                var db = new QueryFactory(connection, compiler);
+                int tempId = db.Query("Persons").InsertGetId<int>(new
+                {
+                    person.Date_of_Birth,
+                    person.Date_of_Issue,
+                    person.FamilyState,
+                    person.First_Name,
+                    person.IIN,
+                    person.Issuing_Authority,
+                    person.Last_Name,
+                    person.Middle_Name,
+                    person.PassportNo,
+                    person.PassportSeries,
+                    person.PassportType,
+                    person.Sex,
+                    person.SIN
+                });
+                if (tempId > 0) //Successfully created, create async job to copy in db NRSZ-DATA
+                {
+                    WriteLog($"[NRSZ-TEMP] saved at {DateTime.Now:HH:mm:ss.fff} newPin: {person.IIN} tempid:{tempId}", _appSettings.logpath);
+                    person.Id = tempId;
+                    WriteLog($"[API] has sent to [NRSZ-DATA] at {DateTime.Now:HH:mm:ss.fff} pin: {person.IIN}", _appSettings.logpath);
+                    var nrsz_connection_string = _appSettings.cissa_data_connection;
+                    var attributeStorage = new AttributeStorage(nrsz_connection_string);
+                    attributeStorage.SavePerson(person);
+                    WriteLog($"[NRSZ-DATA] PIN-{person.IIN} saved at {DateTime.Now:HH:mm:ss.fff}", _appSettings.logpath);
+                }
+                else
+                    WriteLog($"Гражданин не сохранился: tempId={tempId} person:\n{System.Text.Json.JsonSerializer.Serialize(person)}", _appSettings.logpath);
+            }
+            catch (Exception e)
+            {
+                WriteLog(string.Format("[ERROR] Async Task-SaveInNrszData2() {2} - Error: {0}; trace: {1}", e.Message, e.StackTrace, DateTime.Now.ToString("HH:mm:ss.fff")), _appSettings.logpath);
+            }
+        }
 
         public static readonly object PinLock = new Object();
 
@@ -736,7 +747,7 @@ FROM
         //private static readonly Guid AddressDefId = new Guid("{1C2DD4D9-73B5-4BB7-9B33-1D715B0773CE}");
 
 
-
+        
         static object lockObj = new object();
         public static void WriteLog(string text, string pathToFile = "c:\\distr\\cissa\\new-nrsz-rest-api.log")
         {
