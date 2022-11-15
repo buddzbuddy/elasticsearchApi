@@ -561,7 +561,15 @@ FROM
                     context["Result"] = person;
 
                     //Async save to DB
-                    Task.Run(() => SaveInNrszData2(person));
+                    //Task.Run(() => SaveInNrszData2(person));
+                    var res = SaveInNrszData2(person);
+                    if(res == 2)
+                    {
+                        var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.nrsz_persons_index_name);
+                        var client = new ElasticClient(settings);
+                        client.Index(person, i => i.Refresh(Refresh.True));
+                        FakeDb.RegCounters[regCode]++;
+                    }
                 }
             }
             catch (Exception e)
@@ -629,7 +637,7 @@ FROM
                 WriteLog(string.Format("[ERROR] Async Task-SaveInNrszData() {2} - Error: {0}; trace: {1}", e.Message, e.StackTrace, DateTime.Now.ToString("HH:mm:ss.fff")));
             }
         }*/
-        private void SaveInNrszData2(Person person)
+        private int SaveInNrszData2(Person person)
         {
             try
             {
@@ -659,13 +667,18 @@ FROM
                     var attributeStorage = new AttributeStorage(nrsz_connection_string);
                     attributeStorage.SavePerson(person);
                     WriteLog($"[NRSZ-DATA] PIN-{person.IIN} saved at {DateTime.Now:HH:mm:ss.fff}", _appSettings.logpath);
+                    return 2;
                 }
                 else
+                {
                     WriteLog($"Гражданин не сохранился: tempId={tempId} person:\n{System.Text.Json.JsonSerializer.Serialize(person)}", _appSettings.logpath);
+                    return 1;
+                }
             }
             catch (Exception e)
             {
                 WriteLog(string.Format("[ERROR] Async Task-SaveInNrszData2() {2} - Error: {0}; trace: {1}", e.Message, e.StackTrace, DateTime.Now.ToString("HH:mm:ss.fff")), _appSettings.logpath);
+                return 0;
             }
         }
 

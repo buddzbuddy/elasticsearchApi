@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace elasticsearchApi.Controllers
@@ -19,25 +20,9 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                int taskCount = 10;
-                var tasks = new List<Task>();
-                var r = new Random(1);
-                for (int i = 0; i < taskCount; i++)
-                {
-                    string regCode = r.Next(1, 3).ToString();
-                    //NewScriptExecutor.WriteLog($"regCode{regCode} | task{i} started at {DateTime.Now:ss.fff}", logFilePath);
-                    tasks.Add(Task.Factory.StartNew(() =>
-                    {
-                        lock (locker[regCode])
-                        {
-                            NrszService.WriteLog($"regCode{regCode} | task{i} v={v}", logFilePath);
-                            //NewScriptExecutor.WriteLog($"regCode{r} | task{idx} locked at {DateTime.Now:ss.fff}", logFilePath);
-                            makeLongProcess();
-                            //NewScriptExecutor.WriteLog($"regCode{r} | task{idx} released at {DateTime.Now:ss.fff}", logFilePath);
-                        }
-                    }));
-                }
-                Task.WaitAll(tasks.ToArray());
+                Enumerable.Range(1, 1000)
+                    .AsParallel()
+                    .ForAll(async i => await ManageConcurrency($"{i % 2}", async () => await Task.Delay(TimeSpan.FromSeconds(10))));
                 return Ok(new { result = true });
             }
             catch (Exception e)
@@ -45,11 +30,42 @@ namespace elasticsearchApi.Controllers
                 return Ok(new { result = false, error = e.GetBaseException().Message, trace = e.StackTrace });
             }
         }
-        static int v = 0;
-        private void makeLongProcess(int ms = 500)
+
+        private static async Task<bool> ManageConcurrency(string taskId, Func<Task> task)
         {
-            Task.Delay(ms).GetAwaiter().GetResult();
-            v++;
+            Lazy<SemaphoreSlim> taskLock = locker[taskId];
+            Console.WriteLine($"CurrentCount:{taskLock.Value.CurrentCount}");
+            try
+            {
+                if (taskLock.Value.CurrentCount == 0)
+                {
+                    Console.WriteLine($"{DateTime.Now:hh:mm:ss.ffffff},  {taskId}, I didn't find, and then found/created. None available.. Thread Id: {Thread.CurrentThread.ManagedThreadId}");
+                    return false;
+                }
+                else
+                {
+                    taskLock.Value.Wait(TimeSpan.FromSeconds(1));
+
+                    Console.WriteLine($"{DateTime.Now:hh:mm:ss.ffffff},  {taskId}, I didn't find, then found/created, and took. Thread Id: {Thread.CurrentThread.ManagedThreadId}");
+                }
+
+                Console.WriteLine($"{DateTime.Now:hh:mm:ss.ffffff},  {taskId}, Lock pulled for TaskId {taskId}, Thread Id: {Thread.CurrentThread.ManagedThreadId}");
+
+                await task.Invoke();
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                ;
+                return false;
+            }
+            finally
+            {
+                //taskLock?.Release();
+                //locker._dictionary.Remove(taskId, out _);
+                //Console.WriteLine($"I released. Thread Id: {Thread.CurrentThread.ManagedThreadId}");
+            }
         }
     }
 }

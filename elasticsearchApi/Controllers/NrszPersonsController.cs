@@ -53,6 +53,21 @@ namespace elasticsearchApi.Controllers
                 return BadRequest(e.GetBaseException().Message);
             }
         }
+        [HttpPost]
+        public IActionResult IndexDoc([FromBody] SearchPersonModel person)
+        {
+            try
+            {
+                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex("nrsz_persons2");
+                var client = new ElasticClient(settings);
+                client.Index(person, i => i.Refresh(Refresh.True));
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.GetBaseException().Message);
+            }
+        }
         [HttpGet]
         public IActionResult IncreaseTest(int regCode)
         {
