@@ -562,14 +562,19 @@ FROM
 
                     //Async save to DB
                     //Task.Run(() => SaveInNrszData2(person));
-                    var res = SaveInNrszData2(person);
-                    if(res == 2)
+                    var res = SaveInNrszData1(person, out Exception ex);
+                    if(res)
                     {
                         var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.nrsz_persons_index_name);
                         var client = new ElasticClient(settings);
-                        client.Index(person, i => i.Refresh(Refresh.True));
-                        FakeDb.RegCounters[regCode]++;
+                        var resp = client.Index(person, i => i.Refresh(Refresh.True));
+                        if (resp.IsValid)
+                            FakeDb.RegCounters[regCode]++;
+                        else
+                            throw new("Ошибка при сохранении данных в ElasticSearch (see inner)", resp.OriginalException);
                     }
+                    else
+                        throw new("Ошибка при сохранении данных в основную БД NRSZ-DATA (see inner)", ex);
                 }
             }
             catch (Exception e)
@@ -637,6 +642,24 @@ FROM
                 WriteLog(string.Format("[ERROR] Async Task-SaveInNrszData() {2} - Error: {0}; trace: {1}", e.Message, e.StackTrace, DateTime.Now.ToString("HH:mm:ss.fff")));
             }
         }*/
+        private bool SaveInNrszData1(Person person, out Exception ex)
+        {
+            ex = null;
+            try
+            {
+                var nrsz_connection_string = _appSettings.cissa_data_connection;
+                var attributeStorage = new AttributeStorage(nrsz_connection_string);
+                attributeStorage.SavePerson(person);
+                WriteLog($"[NRSZ-DATA] PIN-{person.IIN} saved at {DateTime.Now:HH:mm:ss.fff}", _appSettings.logpath);
+                return true;
+            }
+            catch (Exception e)
+            {
+                WriteLog(string.Format("[ERROR] Async Task-SaveInNrszData2() {2} - Error: {0}; trace: {1}", e.Message, e.StackTrace, DateTime.Now.ToString("HH:mm:ss.fff")), _appSettings.logpath);
+                ex = e;
+                return false;
+            }
+        }
         private int SaveInNrszData2(Person person)
         {
             try
