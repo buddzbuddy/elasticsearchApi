@@ -97,6 +97,8 @@ namespace elasticsearchApi
                 while (reader.Read()) Refs.RegionDistricts.Add(new Refs.RegionDistrictItem { RegionNo = reader.GetInt32(0), DistrictNo = reader.GetInt32(1) });
             }
             connection.Close();
+
+            Console.WriteLine("STARTUP CODE EXECUTED SUCCESSFUL");
         }
         const string getRegCounterSql = @"
 SELECT CAST(SUBSTRING([iin], 0, 5) as int) as regCode, CAST(MAX(SUBSTRING([iin], 5, 10)) as int) as maxPin

@@ -273,6 +273,53 @@ namespace elasticsearchApi.Utils
             }
         }
 
+        public bool Fuzzy(IDictionary<string, string> filter, out _nrsz_person[] data, out string[] errorMessages)
+        {
+            errorMessages = Array.Empty<string>();
+            data = null;//Array.Empty<_nrsz_person>();
+            var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
+            var client = new ElasticClient(settings);
+            var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+            foreach (var f in filter)
+            {
+                filters.Add(fq => fq.Fuzzy(fz =>
+                            fz.Field(f.Key)
+                            .Value(f.Value)
+                            .Fuzziness(Fuzziness.Auto)
+                            .MaxExpansions(50)
+                            .PrefixLength(0)
+                            .Transpositions(true)
+                            .Rewrite(MultiTermQueryRewrite.ConstantScore)
+                            ));
+            }
+
+            if (filters.Count == 0)
+            {
+                errorMessages[0] = "Пустой поиск запрещен!";
+                return false;
+            }
+            var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+            /*.From(0)
+            .Size(10)*/
+            .Query(q => q.Bool(b => b.Must(filters)));
+            var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
+            WriteLog(json, _appSettings.logpath);
+
+            var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+
+            var persons = searchResponse.Documents;
+            if (searchResponse.IsValid)
+            {
+                data = persons.ToArray();
+                return true;
+            }
+            else
+            {
+                errorMessages[0] = searchResponse.OriginalException.Message;
+                return false;
+            }
+        }
+
         public ServiceContext FindPersonByPINES(SearchPersonModel person)
         {
             ServiceContext context = new()

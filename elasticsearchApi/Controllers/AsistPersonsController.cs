@@ -96,6 +96,19 @@ namespace elasticsearchApi.Controllers
             }
         }
         [HttpPost]
+        public IActionResult Fuzzy([FromBody] IDictionary<string, string> filter)
+        {
+            try
+            {
+                var result = svc.Fuzzy(filter, out _nrsz_person[] data, out string[] errorMessages);
+                return Ok(new { result, data, errorMessages });
+            }
+            catch (Exception e)
+            {
+                return Ok(new { result = false, errorMessages = new[] { e.GetBaseException().Message } });
+            }
+        }
+        [HttpPost]
         public IActionResult FindPersonByPIN([FromBody] SearchPersonModel nrszPerson)
         {
             try
