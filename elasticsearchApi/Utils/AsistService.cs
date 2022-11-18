@@ -243,7 +243,13 @@ namespace elasticsearchApi.Utils
             var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
             foreach (var f in filter)
             {
-                filters.Add(fq => fq.Match(m => m.Field(f.Key).Query(f.Value)));
+                if (Guid.TryParse(f.Value, out Guid g) && g != Guid.Empty)
+                {
+                    filters.Add(fq => fq.MatchPhrase(tq =>
+                        tq.Field(f.Key).Query(f.Value)));
+                }
+                else
+                    filters.Add(fq => fq.Match(m => m.Field(f.Key).Query(f.Value)));
             }
 
             if (filters.Count == 0)
