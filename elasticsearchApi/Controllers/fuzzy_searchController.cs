@@ -22,7 +22,6 @@ namespace elasticsearchApi.Controllers
         public fuzzy_searchController(IOptions<AppSettings> appSettings)
         {
             _appSettings = appSettings;
-            var r = "";
         }
         [HttpPost]
         public ActionResult FindAsistPersons([FromBody] FilterModel filter)

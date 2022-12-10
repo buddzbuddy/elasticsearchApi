@@ -57,7 +57,7 @@ namespace elasticsearchApi.Controllers
             }
             catch (Exception e)
             {
-                ;
+                Console.WriteLine($"{e.Message}; trace: {e.StackTrace}");
                 return false;
             }
             finally
