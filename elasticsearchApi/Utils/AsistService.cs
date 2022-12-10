@@ -52,12 +52,12 @@ namespace elasticsearchApi.Utils
             }
         }
 
-        public _nrsz_person[] SomePersons()
+        public personDTO[] SomePersons()
         {
             var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
             var client = new ElasticClient(settings);
             
-            var searchResponse = client.Search<_nrsz_person>(new SearchRequest { Size = 10 });
+            var searchResponse = client.Search<personDTO>(new SearchRequest { Size = 10 });
             var persons = searchResponse.Documents;
             return persons.ToArray();
         }
@@ -73,7 +73,7 @@ namespace elasticsearchApi.Utils
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
                 var client = new ElasticClient(settings);
-                var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+                var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
                 foreach (var propInfo in person.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase))
                 {
                     var field_name = propInfo.Name.ToLower();
@@ -82,14 +82,14 @@ namespace elasticsearchApi.Utils
                 }
                 if (filters.Count == 0)
                     throw new ApplicationException("Данные для поиска не переданы!");
-                var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+                var searchDescriptor = new SearchDescriptor<personDTO>()
                 .From(0)
                 .Size(10)
                 .Query(q => q.Bool(b => b.Must(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
                 WriteLog(json, _appSettings.logpath);
 
-                var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+                var searchResponse = client.Search<personDTO>(searchDescriptor);
 
                 var persons = searchResponse.Documents;
                 if (searchResponse.IsValid)
@@ -196,7 +196,7 @@ namespace elasticsearchApi.Utils
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
                 var client = new ElasticClient(settings);
-                var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+                var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
                 foreach (var propInfo in person.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase))
                 {
                     var field_name = propInfo.Name.ToLower();
@@ -211,14 +211,14 @@ namespace elasticsearchApi.Utils
                     context["Persons"] = new List<object>();
                     return context;
                 }
-                var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+                var searchDescriptor = new SearchDescriptor<personDTO>()
                 .From(0)
                 .Size(10)
                 .Query(q => q.Bool(b => b.Must(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
                 WriteLog(json, _appSettings.logpath);
 
-                var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+                var searchResponse = client.Search<personDTO>(searchDescriptor);
 
                 var persons = searchResponse.Documents;
                 if (searchResponse.IsValid)
@@ -234,13 +234,13 @@ namespace elasticsearchApi.Utils
             return context;
         }
 
-        public bool FilterES(IDictionary<string, string> filter, out _nrsz_person[] data, out string[] errorMessages)
+        public bool FilterES(IDictionary<string, string> filter, out personDTO[] data, out string[] errorMessages)
         {
             errorMessages = Array.Empty<string>();
             data = null;//Array.Empty<_nrsz_person>();
             var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
             var client = new ElasticClient(settings);
-            var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+            var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
             foreach (var f in filter)
             {
                 //Convert input date to UTC date like in ES
@@ -264,14 +264,14 @@ namespace elasticsearchApi.Utils
                 errorMessages[0] = "Пустой поиск запрещен!";
                 return false;
             }
-            var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+            var searchDescriptor = new SearchDescriptor<personDTO>()
             /*.From(0)
             .Size(10)*/
             .Query(q => q.Bool(b => b.Must(filters)));
             var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
             WriteLog(json, _appSettings.logpath);
 
-            var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+            var searchResponse = client.Search<personDTO>(searchDescriptor);
 
             var persons = searchResponse.Documents;
             if (searchResponse.IsValid)
@@ -285,14 +285,53 @@ namespace elasticsearchApi.Utils
                 return false;
             }
         }
+        public bool FilterDocumentES(documentDTO filter, out documentDTO[] data, out string[] errorMessages)
+        {
+            errorMessages = Array.Empty<string>();
+            data = Array.Empty<documentDTO>();
+            var dict = new Dictionary<string, string>();
+            foreach (var attr in filter.attributes)
+            {
+                if(attr.value.IsEmpty()) continue;
+                if(!dict.ContainsKey(attr.name))
+                {
+                    dict[attr.name] = attr.value.ToString();
+                }
+                else
+                {
+                    errorMessages[0] = $"Поле {attr.name} дублируется в теле запроса! Дубликаты полей недопустимы!";
+                    return false;
+                }
+            }
+            FilterES(dict, out personDTO[] personDatas, out errorMessages);
+            foreach (var p in personDatas)
+            {
+                var document = new documentDTO
+                {
+                    id = p.id
+                };
+                foreach (var propInfo in typeof(personDTO).GetProperties(System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public))
+                {
+                    var attr = new attributeDTO { name = propInfo.Name, value = propInfo.GetValue(p) };
+                    document.attributes.Append(attr);
+                    /*var val = propInfo.GetValue(p);
+                    if(propInfo.PropertyType == typeof(Guid))
+                    {
+                        attr.value = 
+                    }*/
+                }
+                data.Append(document);
+            }
+            return true;
+        }
 
-        public bool Fuzzy(IDictionary<string, string> filter, out _nrsz_person[] data, out string[] errorMessages)
+        public bool Fuzzy(IDictionary<string, string> filter, out personDTO[] data, out string[] errorMessages)
         {
             errorMessages = Array.Empty<string>();
             data = null;//Array.Empty<_nrsz_person>();
             var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
             var client = new ElasticClient(settings);
-            var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+            var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
             foreach (var f in filter)
             {
                 filters.Add(fq => fq.Fuzzy(fz =>
@@ -311,14 +350,14 @@ namespace elasticsearchApi.Utils
                 errorMessages[0] = "Пустой поиск запрещен!";
                 return false;
             }
-            var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+            var searchDescriptor = new SearchDescriptor<personDTO>()
             /*.From(0)
             .Size(10)*/
             .Query(q => q.Bool(b => b.Must(filters)));
             var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
             WriteLog(json, _appSettings.logpath);
 
-            var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+            var searchResponse = client.Search<personDTO>(searchDescriptor);
 
             var persons = searchResponse.Documents;
             if (searchResponse.IsValid)
@@ -347,20 +386,20 @@ namespace elasticsearchApi.Utils
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
                 var client = new ElasticClient(settings);
-                var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>
+                var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>
                 {
                     fq => fq.Match(m => m.Field("iin").Query(person.iin))
                 };
                 if (filters.Count == 0)
                     throw new ApplicationException("Данные для поиска не переданы!");
-                var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+                var searchDescriptor = new SearchDescriptor<personDTO>()
                 .From(0)
                 .Size(1)
                 .Query(q => q.Bool(b => b.Must(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
                 WriteLog(json, _appSettings.logpath);
 
-                var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+                var searchResponse = client.Search<personDTO>(searchDescriptor);
 
                 var persons = searchResponse.Documents;
                 if (searchResponse.IsValid)

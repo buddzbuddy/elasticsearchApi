@@ -87,7 +87,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = svc.FilterES(filter, out _nrsz_person[] data, out string[] errorMessages);
+                var result = svc.FilterES(filter, out personDTO[] data, out string[] errorMessages);
                 return Ok(new { result, data, errorMessages });
             }
             catch (Exception e)
@@ -96,11 +96,26 @@ namespace elasticsearchApi.Controllers
             }
         }
         [HttpPost]
+        public IActionResult FilterDocumentES([FromBody] documentDTO filter)
+        {
+            try
+            {
+                var result = svc.FilterDocumentES(filter, out documentDTO[] data, out string[] errorMessages);
+                return Ok(new { result, data, errorMessages });
+            }
+            catch (Exception e)
+            {
+                return Ok(new { result = false, errorMessages = new[] { e.GetBaseException().Message } });
+            }
+        }
+        
+        
+        [HttpPost]
         public IActionResult Fuzzy([FromBody] IDictionary<string, string> filter)
         {
             try
             {
-                var result = svc.Fuzzy(filter, out _nrsz_person[] data, out string[] errorMessages);
+                var result = svc.Fuzzy(filter, out personDTO[] data, out string[] errorMessages);
                 return Ok(new { result, data, errorMessages });
             }
             catch (Exception e)

@@ -10,8 +10,8 @@ namespace Web
         {
             /*CreateMap<UserForUpdateDto, user>()
                 .ForMember(u => u.PhoneNumber, opt => opt.MapFrom(x => x.phone));*/
-            CreateMap<_nrsz_person, Person>();
-            CreateMap<Person, _nrsz_person>();
+            CreateMap<personDTO, Person>();
+            CreateMap<Person, personDTO>();
             CreateMap<SearchPersonModel, Person>();
         }
     }

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Nest;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -179,16 +180,16 @@ namespace elasticsearchApi.Controllers
         }
 
         [HttpPost]
-        public ActionResult UpdateNrszPerson([FromBody] _nrsz_person obj)
+        public ActionResult UpdateNrszPerson([FromBody] personDTO obj)
         {
             try
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.asist_persons_index_name);
                 var client = new ElasticClient(settings);
 
-                var res = client.UpdateByQuery<_nrsz_person>(u => u
+                var res = client.UpdateByQuery<personDTO>(u => u
         .Query(q => q
-            .Term(f => f.id1, obj.id1)
+            .Term(f => f.id, obj.id)
         )
         .Script("ctx._source.ln = '" + obj.last_name + "'; ctx._source.fn = '" + obj.first_name + "'; ctx._source.mn = '" + obj.middle_name + "'; ctx._source.passportno = '" + obj.passportno + "'; ctx._source.iin = '" + obj.iin + "';")
         .Conflicts(Conflicts.Proceed)
@@ -212,14 +213,14 @@ namespace elasticsearchApi.Controllers
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.nrsz_persons_index_name);
                 var client = new ElasticClient(settings);
-                var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+                var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
                 if (filter != null && filter.conditions != null && filter.conditions.Length > 0)
                 {
                     foreach (var c in filter.conditions)
                     {
                         if (!string.IsNullOrEmpty(c.val))
                         {
-                            if (typeof(_nrsz_person).GetProperty(c.field_name) != null)
+                            if (typeof(personDTO).GetProperty(c.field_name) != null)
                             {
                                 if (c.field_name == "pin")
                                 {
@@ -252,14 +253,14 @@ namespace elasticsearchApi.Controllers
                         }
                     }
                 }
-                var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+                var searchDescriptor = new SearchDescriptor<personDTO>()
                 .From(0)
                 .Size(10)
                 .Query(q => q.Bool(b => b.Should(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
                 WriteLog(json, true);
 
-                var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+                var searchResponse = client.Search<personDTO>(searchDescriptor);
 
                 var persons = searchResponse.Documents;
                 if (searchResponse.IsValid)
@@ -279,14 +280,14 @@ namespace elasticsearchApi.Controllers
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex(_appSettings.Value.nrsz_persons_index_name);
                 var client = new ElasticClient(settings);
-                var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+                var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
                 if (filter != null && filter.conditions != null && filter.conditions.Length > 0)
                 {
                     foreach (var c in filter.conditions)
                     {
                         if (!string.IsNullOrEmpty(c.val))
                         {
-                            if (typeof(_nrsz_person).GetProperty(c.field_name) != null)
+                            if (typeof(personDTO).GetProperty(c.field_name) != null)
                             {
                                 filters.Add(fq => fq.Match(m =>
                                     m.Field(c.field_name)
@@ -300,14 +301,14 @@ namespace elasticsearchApi.Controllers
                         }
                     }
                 }
-                var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+                var searchDescriptor = new SearchDescriptor<personDTO>()
                 .From(0)
                 .Size(10)
                 .Query(q => q.Bool(b => b.Must(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
                 WriteLog(json, true);
 
-                var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+                var searchResponse = client.Search<personDTO>(searchDescriptor);
 
                 var persons = searchResponse.Documents;
                 if (searchResponse.IsValid)
@@ -348,21 +349,32 @@ namespace elasticsearchApi.Controllers
         public string mn { get; set; }
         public string pno { get; set; }
     }
-    public class _nrsz_person
+    public class personDTO
     {
-        public string id1 { get; set; }
+        public Guid id { get; set; }
+        [Description("IIN")]
         public string iin { get; set; }
+        [Description("Last_Name")]
         public string last_name { get; set; }
+        [Description("First_Name")]
         public string first_name { get; set; }
+        [Description("Middle_Name")]
         public string middle_name { get; set; }
+        [Description("Date_of_Birth")]
         public DateTime? date_of_birth { get; set; }
+        [Description("Sex")]
         public Guid? sex { get; set; }
+        [Description("PassportType")]
         public Guid? passporttype { get; set; }
+        [Description("PassportSeries")]
         public string passportseries { get; set; }
+        [Description("PassportNo")]
         public string passportno { get; set; }
+        [Description("Date_of_Issue")]
         public DateTime? date_of_issue { get; set; }
+        [Description("Issuing_Authority")]
         public string issuing_authority { get; set; }
+        [Description("FamilyState")]
         public Guid? familystate { get; set; }
-        public DateTime? modified { get; set; }
     }
 }

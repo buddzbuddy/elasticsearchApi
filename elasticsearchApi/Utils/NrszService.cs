@@ -70,12 +70,12 @@ namespace elasticsearchApi.Utils
             }
         }
 
-        public _nrsz_person[] SomePersons()
+        public personDTO[] SomePersons()
         {
             var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.nrsz_persons_index_name);
             var client = new ElasticClient(settings);
             
-            var searchResponse = client.Search<_nrsz_person>(new SearchRequest { Size = 10 });
+            var searchResponse = client.Search<personDTO>(new SearchRequest { Size = 10 });
             var persons = searchResponse.Documents;
             return persons.ToArray();
         }
@@ -150,7 +150,7 @@ namespace elasticsearchApi.Utils
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.nrsz_persons_index_name);
                 var client = new ElasticClient(settings);
-                var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+                var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
                 foreach (var propInfo in person.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase))
                 {
                     var field_name = propInfo.Name.ToLower();
@@ -159,14 +159,14 @@ namespace elasticsearchApi.Utils
                 }
                 if (filters.Count == 0)
                     throw new ApplicationException("Данные для поиска не переданы!");
-                var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+                var searchDescriptor = new SearchDescriptor<personDTO>()
                 .From(0)
                 .Size(10)
                 .Query(q => q.Bool(b => b.Must(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
                 WriteLog(json, _appSettings.logpath);
 
-                var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+                var searchResponse = client.Search<personDTO>(searchDescriptor);
 
                 var persons = searchResponse.Documents;
                 if (searchResponse.IsValid)
@@ -311,7 +311,7 @@ namespace elasticsearchApi.Utils
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.nrsz_persons_index_name);
                 var client = new ElasticClient(settings);
-                var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
+                var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
                 foreach (var propInfo in person.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase))
                 {
                     var field_name = propInfo.Name.ToLower();
@@ -320,14 +320,14 @@ namespace elasticsearchApi.Utils
                 }
                 if (filters.Count == 0)
                     throw new ApplicationException("Данные для поиска не переданы!");
-                var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+                var searchDescriptor = new SearchDescriptor<personDTO>()
                 .From(0)
                 .Size(10)
                 .Query(q => q.Bool(b => b.Must(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
                 WriteLog(json, _appSettings.logpath);
 
-                var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+                var searchResponse = client.Search<personDTO>(searchDescriptor);
 
                 var persons = searchResponse.Documents;
                 if (searchResponse.IsValid)
@@ -377,20 +377,20 @@ namespace elasticsearchApi.Utils
             {
                 var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.nrsz_persons_index_name);
                 var client = new ElasticClient(settings);
-                var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>
+                var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>
                 {
                     fq => fq.Match(m => m.Field("iin").Query(person.iin))
                 };
                 if (filters.Count == 0)
                     throw new ApplicationException("Данные для поиска не переданы!");
-                var searchDescriptor = new SearchDescriptor<_nrsz_person>()
+                var searchDescriptor = new SearchDescriptor<personDTO>()
                 .From(0)
                 .Size(1)
                 .Query(q => q.Bool(b => b.Must(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
                 WriteLog(json, _appSettings.logpath);
 
-                var searchResponse = client.Search<_nrsz_person>(searchDescriptor);
+                var searchResponse = client.Search<personDTO>(searchDescriptor);
 
                 var persons = searchResponse.Documents;
                 if (searchResponse.IsValid)
