@@ -100,7 +100,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = svc.FilterDocumentES(filter, out documentDTO[] data, out string[] errorMessages);
+                var result = svc.FilterDocumentES(filter, out IEnumerable<documentDTO> data, out string[] errorMessages);
                 return Ok(new { result, data, errorMessages });
             }
             catch (Exception e)

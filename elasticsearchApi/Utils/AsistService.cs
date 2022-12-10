@@ -14,6 +14,8 @@ using elasticsearchApi.Controllers;
 using Elasticsearch.Net;
 using SqlKata;
 using AutoMapper;
+using System.ComponentModel;
+using System.Text.Json;
 
 namespace elasticsearchApi.Utils
 {
@@ -285,7 +287,7 @@ namespace elasticsearchApi.Utils
                 return false;
             }
         }
-        public bool FilterDocumentES(documentDTO filter, out documentDTO[] data, out string[] errorMessages)
+        public bool FilterDocumentES(documentDTO filter, out IEnumerable<documentDTO> data, out string[] errorMessages)
         {
             errorMessages = Array.Empty<string>();
             data = Array.Empty<documentDTO>();
@@ -293,9 +295,10 @@ namespace elasticsearchApi.Utils
             foreach (var attr in filter.attributes)
             {
                 if(attr.value.IsEmpty()) continue;
-                if(!dict.ContainsKey(attr.name))
+                var attrname = attr.name.ToLower();
+                if(!dict.ContainsKey(attrname))
                 {
-                    dict[attr.name] = attr.value.ToString();
+                    dict[attrname] = attr.value.ToString();
                 }
                 else
                 {
@@ -303,26 +306,30 @@ namespace elasticsearchApi.Utils
                     return false;
                 }
             }
-            FilterES(dict, out personDTO[] personDatas, out errorMessages);
-            foreach (var p in personDatas)
+            if(FilterES(dict, out personDTO[] personDatas, out errorMessages))
             {
-                var document = new documentDTO
+                //Console.Write(JsonSerializer.Serialize(personDatas));
+                foreach (var p in personDatas)
                 {
-                    id = p.id
-                };
-                foreach (var propInfo in typeof(personDTO).GetProperties(System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public))
-                {
-                    var attr = new attributeDTO { name = propInfo.Name, value = propInfo.GetValue(p) };
-                    document.attributes.Append(attr);
-                    /*var val = propInfo.GetValue(p);
-                    if(propInfo.PropertyType == typeof(Guid))
+                    var document = new documentDTO
                     {
-                        attr.value = 
-                    }*/
+                        id = p.id,
+                        attributes = Array.Empty<attributeDTO>()
+                    };
+                    foreach (var propInfo in typeof(personDTO).GetProperties(System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public))
+                    {
+                        var v = propInfo.GetValue(p);
+                        if(propInfo.Name == "id" || v.IsEmpty()) continue;
+                        var attr = new attributeDTO { name = (propInfo.GetCustomAttributes(true)[0] as DescriptionAttribute).Description, value = v };
+                        //Console.Write(JsonSerializer.Serialize(attr));
+                        document.attributes = document.attributes.Append(attr);
+                    }
+                    data = data.Append(document);
+                    //Console.Write(JsonSerializer.Serialize(document));
                 }
-                data.Append(document);
+                return true;   
             }
-            return true;
+            else return false;
         }
 
         public bool Fuzzy(IDictionary<string, string> filter, out personDTO[] data, out string[] errorMessages)
