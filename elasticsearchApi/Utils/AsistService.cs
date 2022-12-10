@@ -243,10 +243,17 @@ namespace elasticsearchApi.Utils
             var filters = new List<Func<QueryContainerDescriptor<_nrsz_person>, QueryContainer>>();
             foreach (var f in filter)
             {
-                if (Guid.TryParse(f.Value, out Guid g) && g != Guid.Empty)
+                //Convert input date to UTC date like in ES
+                if (DateTime.TryParseExact(f.Value, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime d))
                 {
-                    filters.Add(fq => fq.MatchPhrase(tq =>
-                        tq.Field(f.Key).Query(f.Value)));
+                    //Console.WriteLine(d.ToString());
+                    var utcDate = d.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ");
+                    //Console.WriteLine(utcDate);
+                    filters.Add(fq => fq.Match(m => m.Field(f.Key).Query(utcDate)));
+                }
+                else if (Guid.TryParse(f.Value, out Guid g) && g != Guid.Empty)
+                {
+                    filters.Add(fq => fq.MatchPhrase(tq => tq.Field(f.Key).Query(f.Value)));
                 }
                 else
                     filters.Add(fq => fq.Match(m => m.Field(f.Key).Query(f.Value)));
