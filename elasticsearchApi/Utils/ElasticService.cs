@@ -16,13 +16,27 @@ using SqlKata;
 using AutoMapper;
 using System.ComponentModel;
 using System.Text.Json;
+using System.Threading;
 
 namespace elasticsearchApi.Utils
 {
-    public class AsistService
+    public class ElasticService
     {
+        private readonly string host;
+        private readonly string index;
+        private readonly bool logEnabled;
+        private readonly string logPath;
+        private readonly IMapper _mapper;
         private readonly AppSettings _appSettings;
-        public AsistService(AppSettings appSettings) => _appSettings = appSettings;
+        public ElasticService(string _host, string _index, bool _logEnabled, string _logPath, IMapper mapper, AppSettings appSettings)
+        {
+            host = _host;
+            index = _index;
+            logEnabled = _logEnabled;
+            logPath = _logPath;
+            _mapper = mapper;
+            _appSettings = appSettings;
+        }
 
         public class ServiceContext
         {
@@ -56,7 +70,7 @@ namespace elasticsearchApi.Utils
 
         public personDTO[] SomePersons()
         {
-            var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
+            var settings = new ConnectionSettings(new Uri(host)).DefaultIndex(index);
             var client = new ElasticClient(settings);
             
             var searchResponse = client.Search<personDTO>(new SearchRequest { Size = 10 });
@@ -73,7 +87,7 @@ namespace elasticsearchApi.Utils
             context.SuccessFlag = context.ErrorMessages == null || context.ErrorMessages.Count == 0;
             if (context.SuccessFlag)
             {
-                var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
+                var settings = new ConnectionSettings(new Uri(host)).DefaultIndex(index);
                 var client = new ElasticClient(settings);
                 var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
                 foreach (var propInfo in person.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase))
@@ -89,7 +103,8 @@ namespace elasticsearchApi.Utils
                 .Size(10)
                 .Query(q => q.Bool(b => b.Must(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
-                WriteLog(json, _appSettings.logpath);
+                if (logEnabled)
+                    WriteLog($"[{index}]-[{index}]-[FindSamePersonES] at [{DateTime.Now}]:\n{json}", logPath);
 
                 var searchResponse = client.Search<personDTO>(searchDescriptor);
 
@@ -196,7 +211,7 @@ namespace elasticsearchApi.Utils
             //verifyData(context, person);
             //if (context.SuccessFlag)
             {
-                var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
+                var settings = new ConnectionSettings(new Uri(host)).DefaultIndex(index);
                 var client = new ElasticClient(settings);
                 var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
                 foreach (var propInfo in person.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase))
@@ -218,7 +233,8 @@ namespace elasticsearchApi.Utils
                 .Size(10)
                 .Query(q => q.Bool(b => b.Must(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
-                WriteLog(json, _appSettings.logpath);
+                if (logEnabled)
+                    WriteLog($"[{index}]-[FindPersonES] at [{DateTime.Now}]:\n{json}", logPath);
 
                 var searchResponse = client.Search<personDTO>(searchDescriptor);
 
@@ -240,7 +256,7 @@ namespace elasticsearchApi.Utils
         {
             errorMessages = Array.Empty<string>();
             data = null;//Array.Empty<_nrsz_person>();
-            var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
+            var settings = new ConnectionSettings(new Uri(host)).DefaultIndex(index);
             var client = new ElasticClient(settings);
             var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
             foreach (var f in filter)
@@ -271,7 +287,8 @@ namespace elasticsearchApi.Utils
             .Size(10)*/
             .Query(q => q.Bool(b => b.Must(filters)));
             var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
-            WriteLog(json, _appSettings.logpath);
+            if (logEnabled)
+                WriteLog($"[{index}]-[FilterES] at [{DateTime.Now}]:\n{json}", logPath);
 
             var searchResponse = client.Search<personDTO>(searchDescriptor);
 
@@ -321,7 +338,6 @@ namespace elasticsearchApi.Utils
                         var v = propInfo.GetValue(p);
                         if(propInfo.Name == "id" || v.IsEmpty()) continue;
                         var attr = new attributeDTO { name = (propInfo.GetCustomAttributes(true)[0] as DescriptionAttribute).Description, value = v };
-                        //Console.Write(JsonSerializer.Serialize(attr));
                         document.attributes = document.attributes.Append(attr);
                     }
                     data = data.Append(document);
@@ -336,7 +352,7 @@ namespace elasticsearchApi.Utils
         {
             errorMessages = Array.Empty<string>();
             data = null;//Array.Empty<_nrsz_person>();
-            var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
+            var settings = new ConnectionSettings(new Uri(host)).DefaultIndex(index);
             var client = new ElasticClient(settings);
             var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
             foreach (var f in filter)
@@ -362,7 +378,8 @@ namespace elasticsearchApi.Utils
             .Size(10)*/
             .Query(q => q.Bool(b => b.Must(filters)));
             var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
-            WriteLog(json, _appSettings.logpath);
+            if (logEnabled)
+                WriteLog($"[{index}]-[Fuzzy] at [{DateTime.Now}]:\n{json}", logPath);
 
             var searchResponse = client.Search<personDTO>(searchDescriptor);
 
@@ -391,7 +408,7 @@ namespace elasticsearchApi.Utils
 
             if (!string.IsNullOrEmpty(person.iin))
             {
-                var settings = new ConnectionSettings(new Uri(_appSettings.host)).DefaultIndex(_appSettings.asist_persons_index_name);
+                var settings = new ConnectionSettings(new Uri(host)).DefaultIndex(index);
                 var client = new ElasticClient(settings);
                 var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>
                 {
@@ -404,7 +421,8 @@ namespace elasticsearchApi.Utils
                 .Size(1)
                 .Query(q => q.Bool(b => b.Must(filters)));
                 var json = client.RequestResponseSerializer.SerializeToString(searchDescriptor);
-                WriteLog(json, _appSettings.logpath);
+                if (logEnabled)
+                    WriteLog($"[{index}]-[FindPersonByPINES] at [{DateTime.Now}]:\n{json}", logPath);
 
                 var searchResponse = client.Search<personDTO>(searchDescriptor);
 
@@ -418,16 +436,96 @@ namespace elasticsearchApi.Utils
             }
             return context;
         }
-        static object lockObj = new object();
-        public static void WriteLog(string text, string pathToFile = "c:\\distr\\cissa\\new-nrsz-rest-api.log")
+
+
+        private static SemaphoreSlim semaphore = new(1, 1);
+
+        internal ServiceContext AddNewPersonES(SearchPersonModel p, int regionNo, int districtNo)
         {
-            lock (lockObj)
+            ServiceContext context = new();
+            try
+            {
+                verifyData(context, p);
+                if (context.ErrorMessages != null && context.ErrorMessages.Count > 0) return context;
+
+                if (!Refs.RegionDistricts.Any(x => x.RegionNo == regionNo && x.DistrictNo == districtNo))
+                    throw new ApplicationException(string.Format("Номера области и района отсутствуют в справочнике: regionNo - {0}, districtNo - {1}", regionNo, districtNo));
+
+                /*var districtCode = districtNo.ToString();
+                while (districtCode.Length < 3) districtCode = '0' + districtCode;*/
+                var regCode = regionNo * 1000 + districtNo;//regionNo.ToString() + districtCode;
+                semaphore.Wait();
+                //lock (PinLock)
+                {
+                    var maxPin = FakeDb.RegCounters[regCode];
+                    var newPin = (maxPin + 1).ToString();
+                    //while (newPinCounter.Length < 10) newPinCounter = '0' + newPinCounter;
+                    context["NewPIN"] = newPin;//startPin + newPinCounter;//14-ти значное число
+                    context.SuccessFlag = true;
+                    //CalcControlSum(context);
+                    context["ResultPIN"] = newPin;//startPin + newPinCounter;
+                                                  //var newPin = startPin + newPinCounter;//context["ResultPIN"].ToString();
+
+                    var person = _mapper.Map<Person>(p);
+                    person.IIN = newPin;
+                    context["Result"] = person;
+
+                    var res = CreateInNrszData(person, out string errorMessage);
+                    if (res)
+                    {
+                        var settings = new ConnectionSettings(new Uri(host)).DefaultIndex(index);
+                        var client = new ElasticClient(settings);
+                        var resp = client.Index(person, i => i.Refresh(Refresh.True));
+                        if (resp.IsValid)
+                            FakeDb.RegCounters[regCode]++;
+                        else
+                            throw new("Ошибка при сохранении данных в ElasticSearch (see inner)", resp.OriginalException);
+                    }
+                    else
+                        throw new(string.Format("Ошибка при сохранении данных в основную БД NRSZ-DATA: {0}", errorMessage));
+                }
+                semaphore.Release();
+            }
+            catch (Exception e)
+            {
+                context.SuccessFlag = false;
+                context.AddErrorMessage("System", $"{e.Message}; trace: {e.StackTrace}");
+            }
+            return context;
+        }
+        private bool CreateInNrszData(Person person, out string errorMessage)
+        {
+            errorMessage = "";
+            try
+            {
+                var nrsz_connection_string = _appSettings.cissa_data_connection;
+                var attributeStorage = new AttributeStorage(nrsz_connection_string);
+                attributeStorage.InsertPerson(person);
+                if (logEnabled)
+                    WriteLog($"[{index}][CreateInNrszData] PIN-{person.IIN} saved at {DateTime.Now:HH:mm:ss.fff}", logPath);
+                return true;
+            }
+            catch (Exception e)
+            {
+                WriteLog($"[{index}] [CreateInNrszData] {DateTime.Now:HH:mm:ss.fff} - Error: {e.Message}; trace: {e.StackTrace}", _appSettings.logpath);
+                errorMessage = e.GetBaseException().Message;
+                return false;
+            }
+        }
+
+        private static SemaphoreSlim semaphoreLog = new(1, 1);
+        static object lockObj = new object();
+        public static void WriteLog(string text, string pathToFile)
+        {
+            semaphoreLog.Wait();
+            //lock (lockObj)
             {
                 using (StreamWriter sw = new StreamWriter(pathToFile, true))
                 {
                     sw.WriteLine(text);
                 }
             }
+            semaphoreLog.Release();
         }
     }
 

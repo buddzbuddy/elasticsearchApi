@@ -19,27 +19,14 @@ namespace elasticsearchApi.Controllers
     [ApiController]
     public class AsistPersonsController : ControllerBase
     {
-        private readonly AsistService svc;
+        private readonly ElasticService es;
         private readonly IOptions<AppSettings> _appSettings;
         private readonly IMapper _mapper;
         public AsistPersonsController(IOptions<AppSettings> appSettings, IMapper mapper)
         {
             _appSettings = appSettings;
             _mapper = mapper;
-            svc = new (_appSettings.Value);
-        }
-        [HttpGet]
-        public IActionResult SomePerson()
-        {
-            try
-            {
-                var result = svc.SomePersons();
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.GetBaseException().Message);
-            }
+            es = new (_appSettings.Value.host, _appSettings.Value.asist_persons_index_name, _appSettings.Value.log_enabled, _appSettings.Value.logpath, _mapper, appSettings.Value);
         }
         [HttpPost]
         public IActionResult IndexDoc([FromBody] SearchPersonModel person)
@@ -61,7 +48,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = svc.FindSamePersonES(person);
+                var result = es.FindSamePersonES(person);
                 return Ok(result);
             }
             catch (Exception e)
@@ -74,7 +61,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = svc.FindPersonsES(person);
+                var result = es.FindPersonsES(person);
                 return Ok(result);
             }
             catch (Exception e)
@@ -87,7 +74,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = svc.FilterES(filter, out personDTO[] data, out string[] errorMessages);
+                var result = es.FilterES(filter, out personDTO[] data, out string[] errorMessages);
                 return Ok(new { result, data, errorMessages });
             }
             catch (Exception e)
@@ -100,7 +87,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = svc.FilterDocumentES(filter, out IEnumerable<documentDTO> data, out string[] errorMessages);
+                var result = es.FilterDocumentES(filter, out IEnumerable<documentDTO> data, out string[] errorMessages);
                 return Ok(new { result, data, errorMessages });
             }
             catch (Exception e)
@@ -115,7 +102,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = svc.Fuzzy(filter, out personDTO[] data, out string[] errorMessages);
+                var result = es.Fuzzy(filter, out personDTO[] data, out string[] errorMessages);
                 return Ok(new { result, data, errorMessages });
             }
             catch (Exception e)
@@ -128,7 +115,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = svc.FindPersonByPINES(nrszPerson);
+                var result = es.FindPersonByPINES(nrszPerson);
                 return Ok(result);
             }
             catch (Exception e)

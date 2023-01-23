@@ -78,52 +78,44 @@ namespace elasticsearchApi.Utils
             connectionString = _connectionString;
         }
 
-        public void SavePerson(Person person)
+        public void InsertPerson(Person person)
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-                var documentId = InsertDocument(connection);
-                var personAttributeList = GetPersonAttributeList(connection);
-                InsertAttributes(connection, person, documentId, personAttributeList);
-            }
+            using SqlConnection connection = new SqlConnection(connectionString);
+            connection.Open();
+            var documentId = InsertDocument(connection);
+            var personAttributeList = GetPersonAttributeList(connection);
+            InsertAttributes(connection, person, documentId, personAttributeList);
         }
 
         public void UpdateDocument(Person personNew, Guid documentId)
         {
             Person personOld = new Person();
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using SqlConnection connection = new SqlConnection(connectionString);
+            connection.Open();
+            var personAttributeList = GetPersonAttributeList(connection);
+            var SelectDocumentSQL = BuildSelectPersonSQL(connection, personOld, personAttributeList);
+
+            using SqlCommand command = new(SelectDocumentSQL, connection);
+            AddParamWithValue(command, "@DocId", documentId);
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
             {
-                connection.Open();
-                var personAttributeList = GetPersonAttributeList(connection);
-                var SelectDocumentSQL = BuildSelectPersonSQL(connection, personOld, personAttributeList);
-
-                using (SqlCommand command = new SqlCommand(SelectDocumentSQL, connection))
+                var properties = GetProperties(personNew);
+                foreach (PropertyInfo property in properties)
                 {
-                    AddParamWithValue(command, "@DocId", documentId);
-                    using (var reader = command.ExecuteReader())
+                    var attribute = personAttributeList.Where(x => x.AttributeName.Equals(property.Name)).FirstOrDefault();
+                    if (attribute == null) continue;
+                    var attributeId = attribute.AttributeId;
+                    var objValue = property.GetValue(personNew, null);
+                    if (!String.IsNullOrEmpty(property.Name))
                     {
-                        while (reader.Read())
+                        var newObjectValue = objValue != null ? objValue.ToString() : "";
+                        var oldObjectValue = reader[property.Name].ToString();
+                        if (!newObjectValue.Equals(oldObjectValue))
                         {
-                            var properties = GetProperties(personNew);
-                            foreach (PropertyInfo property in properties)
-                            {
-                                var attribute = personAttributeList.Where(x => x.AttributeName.Equals(property.Name)).FirstOrDefault();
-                                if (attribute == null) continue;
-                                var attributeId = attribute.AttributeId;
-                                var objValue = property.GetValue(personNew, null);
-                                if (!String.IsNullOrEmpty(property.Name))
-                                {
-                                    var newObjectValue = objValue != null ? objValue.ToString() : "";
-                                    var oldObjectValue = reader[property.Name].ToString();
-                                    if (!newObjectValue.Equals(oldObjectValue))
-                                    {
-                                        InsertAttribute(connection, documentId, attributeId, property, newObjectValue);
-                                    }
-
-                                }
-                            }
+                            InsertAttribute(connection, documentId, attributeId, property, newObjectValue);
                         }
+
                     }
                 }
             }
@@ -138,17 +130,17 @@ namespace elasticsearchApi.Utils
         {
             var newDocumentId = Guid.NewGuid();
 
-            using (SqlCommand command = new SqlCommand(SaveDocumentSql, connection))
-            {
-                AddParamWithValue(command, "@Id", newDocumentId);
-                AddParamWithValue(command, "@DefId", PersonDefId);
-                AddParamWithValue(command, "@Created", DateTime.Now);
-                AddParamWithValue(command, "@UserId", UserId);
-                AddParamWithValue(command, "@OrgId", OrgId);
-                AddParamWithValue(command, "@PositionId", PositionId);
-                AddParamWithValue(command, "@Modified", DateTime.Now);
-                command.ExecuteNonQuery();
-            }
+            using SqlCommand command = new(SaveDocumentSql, connection);
+            
+            AddParamWithValue(command, "@Id", newDocumentId);
+            AddParamWithValue(command, "@DefId", PersonDefId);
+            AddParamWithValue(command, "@Created", DateTime.Now);
+            AddParamWithValue(command, "@UserId", UserId);
+            AddParamWithValue(command, "@OrgId", OrgId);
+            AddParamWithValue(command, "@PositionId", PositionId);
+            AddParamWithValue(command, "@Modified", DateTime.Now);
+            command.ExecuteNonQuery();
+            
             return newDocumentId;
         }
 
@@ -167,18 +159,16 @@ namespace elasticsearchApi.Utils
                     if (attribute == null) continue;
                     var attributeId = attribute.AttributeId;
                     var tableName = GetAttributeTableName(property);
-                    using (SqlCommand command = new SqlCommand(String.Format(SaveAttrSql, tableName), connection))
-                    {
-                        AddParamWithValue(command, "@DocId", documentId);
-                        AddParamWithValue(command, "@DefId", attributeId);
-                        AddParamWithValue(command, "@Created", DateTime.Now);
-                        if (property.GetValue(person, null) != null)
-                            AddParamWithValue(command, "@Value", objValue, SqlDbType.NVarChar);
-                        else
-                            AddParamWithValue(command, "@Value", objValue);
-                        AddParamWithValue(command, "@UserId", UserId);
-                        command.ExecuteNonQuery();
-                    }
+                    using SqlCommand command = new(String.Format(SaveAttrSql, tableName), connection);
+                    AddParamWithValue(command, "@DocId", documentId);
+                    AddParamWithValue(command, "@DefId", attributeId);
+                    AddParamWithValue(command, "@Created", DateTime.Now);
+                    if (property.GetValue(person, null) != null)
+                        AddParamWithValue(command, "@Value", objValue, SqlDbType.NVarChar);
+                    else
+                        AddParamWithValue(command, "@Value", objValue);
+                    AddParamWithValue(command, "@UserId", UserId);
+                    command.ExecuteNonQuery();
                 }
 
 
@@ -191,18 +181,16 @@ namespace elasticsearchApi.Utils
         {
 
             var tableName = GetAttributeTableName(property);
-            using (SqlCommand command = new SqlCommand(String.Format(SaveAttrSql, tableName), connection))
-            {
-                AddParamWithValue(command, "@DocId", documentId);
-                AddParamWithValue(command, "@DefId", attributeId);
-                AddParamWithValue(command, "@Created", DateTime.Now);
-                if (objValue != null)
-                    AddParamWithValue(command, "@Value", objValue, SqlDbType.NVarChar);
-                else
-                    AddParamWithValue(command, "@Value", objValue);
-                AddParamWithValue(command, "@UserId", UserId);
-                command.ExecuteNonQuery();
-            }
+            using SqlCommand command = new(String.Format(SaveAttrSql, tableName), connection);
+            AddParamWithValue(command, "@DocId", documentId);
+            AddParamWithValue(command, "@DefId", attributeId);
+            AddParamWithValue(command, "@Created", DateTime.Now);
+            if (objValue != null)
+                AddParamWithValue(command, "@Value", objValue, SqlDbType.NVarChar);
+            else
+                AddParamWithValue(command, "@Value", objValue);
+            AddParamWithValue(command, "@UserId", UserId);
+            command.ExecuteNonQuery();
         }
 
         private PropertyInfo[] GetProperties(Person person)
@@ -250,17 +238,13 @@ namespace elasticsearchApi.Utils
         private List<PersonAttribute> GetPersonAttributeList(SqlConnection connection)
         {
             List<PersonAttribute> attributeList = new List<PersonAttribute>();
-            using (SqlCommand command = new SqlCommand(PersonListSql, connection))
+            using SqlCommand command = new(PersonListSql, connection);
+            AddParamWithValue(command, "@PersonDefId", PersonDefId);
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
             {
-                AddParamWithValue(command, "@PersonDefId", PersonDefId);
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        PersonAttribute personAttribute = new PersonAttribute { AttributeId = reader.GetGuid(0), AttributeName = reader.GetString(1), AttributeType = reader.GetString(2) };
-                        attributeList.Add(personAttribute);
-                    }
-                }
+                PersonAttribute personAttribute = new PersonAttribute { AttributeId = reader.GetGuid(0), AttributeName = reader.GetString(1), AttributeType = reader.GetString(2) };
+                attributeList.Add(personAttribute);
             }
             return attributeList;
         }

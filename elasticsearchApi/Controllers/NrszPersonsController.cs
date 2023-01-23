@@ -19,14 +19,14 @@ namespace elasticsearchApi.Controllers
     [ApiController]
     public class NrszPersonsController : ControllerBase
     {
-        private readonly NrszService svc;
+        private readonly ElasticService svc;
         private readonly IOptions<AppSettings> _appSettings;
         private readonly IMapper _mapper;
         public NrszPersonsController(IOptions<AppSettings> appSettings, IMapper mapper)
         {
             _appSettings = appSettings;
             _mapper = mapper;
-            svc = new (_appSettings.Value, mapper);
+            svc = new(_appSettings.Value.host, _appSettings.Value.asist_persons_index_name, _appSettings.Value.log_enabled, _appSettings.Value.logpath, _mapper, appSettings.Value);
         }
         [HttpGet]
         public IActionResult SomePerson()
@@ -95,37 +95,11 @@ namespace elasticsearchApi.Controllers
             }
         }
         [HttpPost]
-        public IActionResult FindSamePersonOld([FromBody] Person person)
-        {
-            try
-            {
-                var result = svc.FindSamePerson(person);
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.GetBaseException().Message);
-            }
-        }
-        [HttpPost]
         public IActionResult FindPersons([FromBody] SearchPersonModel person)
         {
             try
             {
                 var result = svc.FindPersonsES(person);
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.GetBaseException().Message);
-            }
-        }
-        [HttpPost]
-        public IActionResult FindPersonsOld([FromBody] Person person)
-        {
-            try
-            {
-                var result = svc.FindPersons(person);
                 return Ok(result);
             }
             catch (Exception e)
@@ -147,11 +121,11 @@ namespace elasticsearchApi.Controllers
             }
         }
         [HttpPost]
-        public IActionResult AddNewPerson(int regionNo, int districtNo, [FromBody] Person nrszPerson)
+        public IActionResult AddNewPerson(int regionNo, int districtNo, [FromBody] SearchPersonModel nrszPerson)
         {
             try
             {
-                var result = svc.AddNewPerson(nrszPerson, regionNo, districtNo);
+                var result = svc.AddNewPersonES(nrszPerson, regionNo, districtNo);
                 return Ok(result);
             }
             catch (Exception e)

@@ -649,7 +649,7 @@ FROM
             {
                 var nrsz_connection_string = _appSettings.cissa_data_connection;
                 var attributeStorage = new AttributeStorage(nrsz_connection_string);
-                attributeStorage.SavePerson(person);
+                attributeStorage.InsertPerson(person);
                 WriteLog($"[NRSZ-DATA] PIN-{person.IIN} saved at {DateTime.Now:HH:mm:ss.fff}", _appSettings.logpath);
                 return true;
             }
@@ -688,7 +688,7 @@ FROM
                     WriteLog($"[API] has sent to [NRSZ-DATA] at {DateTime.Now:HH:mm:ss.fff} pin: {person.IIN}", _appSettings.logpath);
                     var nrsz_connection_string = _appSettings.cissa_data_connection;
                     var attributeStorage = new AttributeStorage(nrsz_connection_string);
-                    attributeStorage.SavePerson(person);
+                    attributeStorage.InsertPerson(person);
                     WriteLog($"[NRSZ-DATA] PIN-{person.IIN} saved at {DateTime.Now:HH:mm:ss.fff}", _appSettings.logpath);
                     return 2;
                 }

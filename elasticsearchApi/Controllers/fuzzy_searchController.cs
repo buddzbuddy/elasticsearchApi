@@ -138,7 +138,7 @@ namespace elasticsearchApi.Controllers
         {
             var nrsz_connection_string = _appSettings.Value.cissa_data_connection;
             AttributeStorage attributeStorage = new AttributeStorage(nrsz_connection_string);
-            attributeStorage.SavePerson(obj);
+            attributeStorage.InsertPerson(obj);
             //try
             //{
 
