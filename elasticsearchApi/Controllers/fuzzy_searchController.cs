@@ -137,7 +137,7 @@ namespace elasticsearchApi.Controllers
         public ActionResult CreateAsistPerson([FromBody] Person obj)
         {
             var nrsz_connection_string = _appSettings.Value.cissa_data_connection;
-            AttributeStorage attributeStorage = new AttributeStorage(nrsz_connection_string);
+            DbStorage attributeStorage = new DbStorage(nrsz_connection_string);
             attributeStorage.InsertPerson(obj);
             //try
             //{
@@ -160,7 +160,7 @@ namespace elasticsearchApi.Controllers
         public ActionResult UpdateAsistPerson2([FromBody] Person obj)
         {
             var nrsz_connection_string = _appSettings.Value.cissa_data_connection;
-            AttributeStorage attributeStorage = new AttributeStorage(nrsz_connection_string);
+            DbStorage attributeStorage = new DbStorage(nrsz_connection_string);
             //attributeStorage.UpdatePerson(obj);
             //try
             //{

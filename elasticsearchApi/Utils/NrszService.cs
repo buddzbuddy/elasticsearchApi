@@ -648,7 +648,7 @@ FROM
             try
             {
                 var nrsz_connection_string = _appSettings.cissa_data_connection;
-                var attributeStorage = new AttributeStorage(nrsz_connection_string);
+                var attributeStorage = new DbStorage(nrsz_connection_string);
                 attributeStorage.InsertPerson(person);
                 WriteLog($"[NRSZ-DATA] PIN-{person.IIN} saved at {DateTime.Now:HH:mm:ss.fff}", _appSettings.logpath);
                 return true;
@@ -687,7 +687,7 @@ FROM
                     person.Id = tempId;
                     WriteLog($"[API] has sent to [NRSZ-DATA] at {DateTime.Now:HH:mm:ss.fff} pin: {person.IIN}", _appSettings.logpath);
                     var nrsz_connection_string = _appSettings.cissa_data_connection;
-                    var attributeStorage = new AttributeStorage(nrsz_connection_string);
+                    var attributeStorage = new DbStorage(nrsz_connection_string);
                     attributeStorage.InsertPerson(person);
                     WriteLog($"[NRSZ-DATA] PIN-{person.IIN} saved at {DateTime.Now:HH:mm:ss.fff}", _appSettings.logpath);
                     return 2;

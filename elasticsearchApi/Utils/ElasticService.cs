@@ -498,8 +498,7 @@ namespace elasticsearchApi.Utils
             errorMessage = "";
             try
             {
-                var nrsz_connection_string = _appSettings.cissa_data_connection;
-                var attributeStorage = new AttributeStorage(nrsz_connection_string);
+                var attributeStorage = new DbStorage(_appSettings.cissa_data_connection);
                 attributeStorage.InsertPerson(person);
                 if (logEnabled)
                     WriteLog($"[{index}][CreateInNrszData] PIN-{person.IIN} saved at {DateTime.Now:HH:mm:ss.fff}", logPath);

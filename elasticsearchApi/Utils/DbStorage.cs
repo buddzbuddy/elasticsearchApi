@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace elasticsearchApi.Utils
 {
-    public class AttributeStorage
+    public class DbStorage
     {
         private static readonly Guid UserId = new Guid("05EEF54F-5BFE-4E2B-82C7-6AB6CD59D488");
         private static readonly Guid OrgId = new Guid("B0E44CB2-0E06-4212-87CA-EC11F9D4E18E");
@@ -70,7 +70,7 @@ namespace elasticsearchApi.Utils
             "FROM Image_Attributes WITH(NOLOCK) WHERE Document_Id = @Id AND Expired = '99991231'\n";
 
         private string connectionString;
-        public AttributeStorage(string _connectionString)
+        public DbStorage(string _connectionString)
         {
             if (_connectionString == null)
                 throw new ArgumentNullException("dataContext");
