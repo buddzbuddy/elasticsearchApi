@@ -34,7 +34,7 @@ namespace elasticsearchApi
             services.Configure<Utils.AppSettings>(Configuration.GetSection("AppSettings"));
             services.AddSwaggerGen();
             services.AddAutoMapper(typeof(Startup));
-            services.AddHostedService<InitiatorHostedService>();
+            //services.AddHostedService<InitiatorHostedService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

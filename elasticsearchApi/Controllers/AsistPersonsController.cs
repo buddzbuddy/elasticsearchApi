@@ -28,7 +28,7 @@ namespace elasticsearchApi.Controllers
             _mapper = mapper;
             es = new (_appSettings.Value.host, _appSettings.Value.asist_persons_index_name, _appSettings.Value.log_enabled, _appSettings.Value.logpath, _mapper, appSettings.Value);
         }
-        [HttpPost]
+        /*[HttpPost]
         public IActionResult IndexDoc([FromBody] SearchPersonModel person)
         {
             try
@@ -42,7 +42,7 @@ namespace elasticsearchApi.Controllers
             {
                 return BadRequest(e.GetBaseException().Message);
             }
-        }
+        }*/
         [HttpPost]
         public IActionResult FindSamePerson([FromBody] SearchPersonModel person)
         {

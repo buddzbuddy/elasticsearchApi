@@ -19,16 +19,16 @@ namespace elasticsearchApi.Controllers
     [ApiController]
     public class NrszPersonsController : ControllerBase
     {
-        private readonly ElasticService svc;
+        private readonly ElasticService es;
         private readonly IOptions<AppSettings> _appSettings;
         private readonly IMapper _mapper;
         public NrszPersonsController(IOptions<AppSettings> appSettings, IMapper mapper)
         {
             _appSettings = appSettings;
             _mapper = mapper;
-            svc = new(_appSettings.Value.host, _appSettings.Value.asist_persons_index_name, _appSettings.Value.log_enabled, _appSettings.Value.logpath, _mapper, appSettings.Value);
+            es = new(_appSettings.Value.host, _appSettings.Value.asist_persons_index_name, _appSettings.Value.log_enabled, _appSettings.Value.logpath, _mapper, appSettings.Value);
         }
-        [HttpGet]
+        /*[HttpGet]
         public IActionResult SomePerson()
         {
             try
@@ -80,13 +80,13 @@ namespace elasticsearchApi.Controllers
             {
                 return BadRequest(e.GetBaseException().Message);
             }
-        }
+        }*/
         [HttpPost]
         public IActionResult FindSamePerson([FromBody] SearchPersonModel person)
         {
             try
             {
-                var result = svc.FindSamePersonES(person);
+                var result = es.FindSamePersonES(person);
                 return Ok(result);
             }
             catch (Exception e)
@@ -99,7 +99,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = svc.FindPersonsES(person);
+                var result = es.FindPersonsES(person);
                 return Ok(result);
             }
             catch (Exception e)
@@ -112,7 +112,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = svc.FindPersonByPINES(nrszPerson);
+                var result = es.FindPersonByPINES(nrszPerson);
                 return Ok(result);
             }
             catch (Exception e)
@@ -120,12 +120,12 @@ namespace elasticsearchApi.Controllers
                 return BadRequest(e.GetBaseException().Message);
             }
         }
-        [HttpPost]
+        /*[HttpPost]
         public IActionResult AddNewPerson(int regionNo, int districtNo, [FromBody] SearchPersonModel nrszPerson)
         {
             try
             {
-                var result = svc.AddNewPersonES(nrszPerson, regionNo, districtNo);
+                var result = es.AddNewPersonES(nrszPerson, regionNo, districtNo);
                 return Ok(result);
             }
             catch (Exception e)
@@ -161,7 +161,7 @@ namespace elasticsearchApi.Controllers
                 return BadRequest(e.GetBaseException().Message + ", trace: " + e.StackTrace);
             }
         }
-
+        */
         static void WriteLog(object text)
         {
             using (StreamWriter sw = new("c:\\distr\\cissa\\nrsz-rest-api.log", true))
