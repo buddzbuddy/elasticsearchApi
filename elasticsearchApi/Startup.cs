@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Nest;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -34,6 +35,15 @@ namespace elasticsearchApi
             services.Configure<Utils.AppSettings>(Configuration.GetSection("AppSettings"));
             services.AddSwaggerGen();
             services.AddAutoMapper(typeof(Startup));
+
+
+            var es_host = Configuration.GetSection("AppSettings").GetValue<string>("es_host");
+            var es_nrsz_index_name = Configuration.GetSection("AppSettings").GetValue<string>("nrsz_persons_index_name");
+            var es_user = Configuration.GetSection("AppSettings").GetValue<string>("elasticUser");
+            var es_pass = Configuration.GetSection("AppSettings").GetValue<string>("elasticPass");
+            var settings = new ConnectionSettings(new Uri(es_host)).DefaultIndex(es_nrsz_index_name).BasicAuthentication(es_user, es_pass);
+            var client = new ElasticClient(settings);
+            services.AddSingleton(client);
             //services.AddHostedService<InitiatorHostedService>();
         }
 
@@ -46,7 +56,7 @@ namespace elasticsearchApi
             }
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseSwagger();
             app.UseSwaggerUI(options =>
             {
@@ -65,7 +75,7 @@ namespace elasticsearchApi
         }
     }
 
-    public class InitiatorHostedService : IHostedService
+    /*public class InitiatorHostedService : IHostedService
     {
         // We need to inject the IServiceProvider so we can create 
         // the scoped service, MyDbContext
@@ -143,5 +153,5 @@ FROM
 	) as [Area1] on [Area1].Id = [District].[Area]
 ";
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-    }
+    }*/
 }

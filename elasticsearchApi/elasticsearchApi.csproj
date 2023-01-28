@@ -8,6 +8,7 @@
     <Compile Remove="Controllers\AsistPersonsController.cs" />
     <Compile Remove="Controllers\fuzzy_searchController.cs" />
     <Compile Remove="Controllers\LockController.cs" />
+    <Compile Remove="Utils\NrszService.cs" />
   </ItemGroup>
 
   <ItemGroup>

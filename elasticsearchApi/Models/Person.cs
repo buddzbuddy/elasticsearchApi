@@ -41,7 +41,7 @@ namespace elasticsearchApi.Models
 
     public class personDTO
     {
-        public Guid id { get; set; }
+        public int id { get; set; }
         [Description("IIN")]
         public string iin { get; set; }
         [Description("Last_Name")]

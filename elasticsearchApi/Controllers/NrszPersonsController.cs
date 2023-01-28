@@ -23,123 +23,79 @@ namespace elasticsearchApi.Controllers
         private readonly ElasticService es;
         private readonly IOptions<AppSettings> _appSettings;
         private readonly IMapper _mapper;
-        public NrszPersonsController(IOptions<AppSettings> appSettings, IMapper mapper)
+        public NrszPersonsController(IOptions<AppSettings> appSettings, IMapper mapper, ElasticClient client)
         {
             _appSettings = appSettings;
             _mapper = mapper;
-            es = new(_appSettings.Value.host, _appSettings.Value.nrsz_persons_index_name, _appSettings.Value.log_enabled, _appSettings.Value.logpath, _mapper, appSettings.Value);
+            es = new(_appSettings.Value.es_host, _appSettings.Value.nrsz_persons_index_name, _appSettings.Value.log_enabled, _appSettings.Value.logpath, _mapper, appSettings.Value, client);
         }
-        /*[HttpGet]
-        public IActionResult SomePerson()
-        {
-            try
-            {
-                var result = svc.SomePersons();
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.GetBaseException().Message);
-            }
-        }
-        [HttpGet]
-        public IActionResult RegCounters()
-        {
-            try
-            {
-                return Ok(FakeDb.RegCounters);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.GetBaseException().Message);
-            }
-        }
+        
         [HttpPost]
-        public IActionResult IndexDoc([FromBody] SearchPersonModel person)
-        {
-            try
-            {
-                var settings = new ConnectionSettings(new Uri(_appSettings.Value.host)).DefaultIndex("nrsz_persons2");
-                var client = new ElasticClient(settings);
-                client.Index(person, i => i.Refresh(Refresh.True));
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.GetBaseException().Message);
-            }
-        }
-        [HttpGet]
-        public IActionResult IncreaseTest(int regCode)
-        {
-            try
-            {
-                FakeDb.Increase(regCode);
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.GetBaseException().Message);
-            }
-        }*/
-        [HttpPost]
-        public IActionResult FindSamePerson([FromBody] SearchPersonModel person)
+        public IActionResult FindSamePerson([FromBody] SearchPersonModel person, int page = 1, int size = 10)
         {
             ServiceContext context = new();
             try
             {
-                es.FindSamePersonES(person, ref context);
+                es.FindSamePersonES(person, ref context, page, size);
                 return Ok(context);
             }
             catch (Exception e)
             {
-                context.AddErrorMessage("", e.GetBaseException().Message);
+                context.SuccessFlag = false;
+                context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
+                context.AddErrorMessage("errorTrace", e.StackTrace);
                 return Ok(context);
             }
         }
         [HttpPost]
-        public IActionResult FindPersons([FromBody] SearchPersonModel person)
+        public IActionResult FindPersons([FromBody] SearchPersonModel person, int page = 1, int size = 10, bool fuzzy = false)
         {
             ServiceContext context = new();
             try
             {
-                es.FindPersonsES(person, ref context);
+                es.FindPersonsES(person, ref context, fuzzy, page, size);
                 return Ok(context);
             }
             catch (Exception e)
             {
-                context.AddErrorMessage("", e.GetBaseException().Message);
+                context.SuccessFlag = false;
+                context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
+                context.AddErrorMessage("errorTrace", e.StackTrace);
+                return Ok(context);
+            }
+        }
+        [HttpGet("{iin}")]
+        public IActionResult FindPersonByPIN(string iin, int page = 1, int size = 10)
+        {
+            ServiceContext context = new();
+            try
+            {
+                es.FindPersonByPinES(iin, ref context, page, size);
+                return Ok(context);
+            }
+            catch (Exception e)
+            {
+                context.SuccessFlag = false;
+                context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
+                context.AddErrorMessage("errorTrace", e.StackTrace);
                 return Ok(context);
             }
         }
         [HttpPost]
-        public IActionResult FindPersonByPIN([FromBody] SearchPersonModel nrszPerson)
+        public IActionResult Filter([FromBody] IDictionary<string, object> filter, int page = 1, int size = 10, bool fuzzy = false)
         {
             try
             {
-                var result = es.FindPersonByPINES(nrszPerson);
-                return Ok(result);
+                var result = es.FilterES(filter, out personDTO[] data, out string[] errorMessages, fuzzy, page, size);
+                return Ok(new { successFlag = result, data, errorMessages });
             }
             catch (Exception e)
             {
-                return BadRequest(e.GetBaseException().Message);
+                return Ok(new { result = false, errorMessages = new[] { e.GetBaseException().Message }, trace = e.StackTrace });
             }
         }
         [HttpPost]
-        public IActionResult Filter([FromBody] IDictionary<string, string> filter)
-        {
-            try
-            {
-                var result = es.FilterES(filter, out personDTO[] data, out string[] errorMessages);
-                return Ok(new { result, data, errorMessages });
-            }
-            catch (Exception e)
-            {
-                return Ok(new { result = false, errorMessages = new[] { e.GetBaseException().Message } });
-            }
-        }
-        [HttpPost]
-        public IActionResult FilterDocumentES([FromBody] documentDTO filter)
+        public IActionResult FilterDocumentES([FromBody] documentDTO filter, int page = 1, int size = 10, bool fuzzy = false)
         {
             try
             {
@@ -148,56 +104,7 @@ namespace elasticsearchApi.Controllers
             }
             catch (Exception e)
             {
-                return Ok(new { result = false, errorMessages = new[] { e.GetBaseException().Message } });
-            }
-        }
-        /*[HttpPost]
-        public IActionResult AddNewPerson(int regionNo, int districtNo, [FromBody] SearchPersonModel nrszPerson)
-        {
-            try
-            {
-                var result = es.AddNewPersonES(nrszPerson, regionNo, districtNo);
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.GetBaseException().Message + ", trace: " + e.StackTrace);
-            }
-        }
-
-        [HttpGet]
-        public IActionResult InitRegionDistricts()
-        {
-            try
-            {
-                //svc.InitRegionDistricts();
-                return Ok(Refs.RegionDistricts);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.GetBaseException().Message + ", trace: " + e.StackTrace);
-            }
-        }
-
-        [HttpGet]
-        public IActionResult DeleteTestPerson(int tempId)
-        {
-            try
-            {
-                //executor.DeleteTestPerson(tempId);
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.GetBaseException().Message + ", trace: " + e.StackTrace);
-            }
-        }
-        */
-        static void WriteLog(object text)
-        {
-            using (StreamWriter sw = new("c:\\distr\\cissa\\nrsz-rest-api.log", true))
-            {
-                sw.WriteLine(text.ToString());
+                return Ok(new { result = false, errorMessages = new[] { e.GetBaseException().Message }, trace = e.StackTrace });
             }
         }
     }

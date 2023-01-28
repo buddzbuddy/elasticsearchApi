@@ -11,7 +11,7 @@ namespace elasticsearchApi.Utils
     {
         return string.IsNullOrEmpty(@this);
     }
-    public static bool IsEmpty(this object @this)
+    public static bool IsNullOrEmpty(this object @this)
     {
         return @this == null || string.IsNullOrEmpty(@this.ToString());
     }
