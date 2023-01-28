@@ -15,5 +15,7 @@ namespace elasticsearchApi.Utils
         public string cissa_data_connection { get; set; }
         public string cissa_meta_connection { get; set; }
         public string nrsz_temp_connection { get; set; }
+        public string elasticUser { get; set; }
+        public string elasticPass { get; set; }
     }
 }

@@ -12,6 +12,7 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using static elasticsearchApi.Utils.ElasticService;
 
 namespace elasticsearchApi.Controllers
 {
@@ -26,7 +27,7 @@ namespace elasticsearchApi.Controllers
         {
             _appSettings = appSettings;
             _mapper = mapper;
-            es = new(_appSettings.Value.host, _appSettings.Value.asist_persons_index_name, _appSettings.Value.log_enabled, _appSettings.Value.logpath, _mapper, appSettings.Value);
+            es = new(_appSettings.Value.host, _appSettings.Value.nrsz_persons_index_name, _appSettings.Value.log_enabled, _appSettings.Value.logpath, _mapper, appSettings.Value);
         }
         /*[HttpGet]
         public IActionResult SomePerson()
@@ -84,27 +85,31 @@ namespace elasticsearchApi.Controllers
         [HttpPost]
         public IActionResult FindSamePerson([FromBody] SearchPersonModel person)
         {
+            ServiceContext context = new();
             try
             {
-                var result = es.FindSamePersonES(person);
-                return Ok(result);
+                es.FindSamePersonES(person, ref context);
+                return Ok(context);
             }
             catch (Exception e)
             {
-                return BadRequest(e.GetBaseException().Message);
+                context.AddErrorMessage("", e.GetBaseException().Message);
+                return Ok(context);
             }
         }
         [HttpPost]
         public IActionResult FindPersons([FromBody] SearchPersonModel person)
         {
+            ServiceContext context = new();
             try
             {
-                var result = es.FindPersonsES(person);
-                return Ok(result);
+                es.FindPersonsES(person, ref context);
+                return Ok(context);
             }
             catch (Exception e)
             {
-                return BadRequest(e.GetBaseException().Message);
+                context.AddErrorMessage("", e.GetBaseException().Message);
+                return Ok(context);
             }
         }
         [HttpPost]
@@ -118,6 +123,32 @@ namespace elasticsearchApi.Controllers
             catch (Exception e)
             {
                 return BadRequest(e.GetBaseException().Message);
+            }
+        }
+        [HttpPost]
+        public IActionResult Filter([FromBody] IDictionary<string, string> filter)
+        {
+            try
+            {
+                var result = es.FilterES(filter, out personDTO[] data, out string[] errorMessages);
+                return Ok(new { result, data, errorMessages });
+            }
+            catch (Exception e)
+            {
+                return Ok(new { result = false, errorMessages = new[] { e.GetBaseException().Message } });
+            }
+        }
+        [HttpPost]
+        public IActionResult FilterDocumentES([FromBody] documentDTO filter)
+        {
+            try
+            {
+                var result = es.FilterDocumentES(filter, out IEnumerable<documentDTO> data, out string[] errorMessages);
+                return Ok(new { result, data, errorMessages });
+            }
+            catch (Exception e)
+            {
+                return Ok(new { result = false, errorMessages = new[] { e.GetBaseException().Message } });
             }
         }
         /*[HttpPost]

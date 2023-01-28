@@ -77,13 +77,9 @@ namespace elasticsearchApi.Utils
             var persons = searchResponse.Documents;
             return persons.ToArray();
         }
-        public ServiceContext FindSamePersonES(SearchPersonModel person)
+        public void FindSamePersonES(SearchPersonModel person, ref ServiceContext context)
         {
-            //WorkflowContext context = CreateContext("asist2nrsz", new Guid("{05EEF54F-5BFE-4E2B-82C7-6AB6CD59D488}"));
-            ServiceContext context = new();
-            
-            
-            verifyData(context, person);
+            verifyData(ref context, person);
             context.SuccessFlag = context.ErrorMessages == null || context.ErrorMessages.Count == 0;
             if (context.SuccessFlag)
             {
@@ -125,10 +121,9 @@ namespace elasticsearchApi.Utils
                     }
                 }
             }
-            return context;
         }
 
-        private static void verifyData(ServiceContext context, SearchPersonModel person)
+        private static void verifyData(ref ServiceContext context, SearchPersonModel person)
         {
             System.Text.RegularExpressions.Regex nameRegex =
                 new System.Text.RegularExpressions.Regex("[0-9]");
@@ -203,13 +198,11 @@ namespace elasticsearchApi.Utils
 
         }
 
-        public ServiceContext FindPersonsES(SearchPersonModel person)
+        public void FindPersonsES(SearchPersonModel person, ref ServiceContext context)
         {
-            ServiceContext context = new();
-            context.SuccessFlag = false;
-            //context.SuccessFlag = context.ErrorMessages == null || context.ErrorMessages.Count == 0;
-            //verifyData(context, person);
-            //if (context.SuccessFlag)
+            verifyData(ref context, person);
+            context.SuccessFlag = context.ErrorMessages == null || context.ErrorMessages.Count == 0;
+            if (context.SuccessFlag)
             {
                 var settings = new ConnectionSettings(new Uri(host)).DefaultIndex(index);
                 var client = new ElasticClient(settings);
@@ -226,7 +219,7 @@ namespace elasticsearchApi.Utils
                     context.AddErrorMessage("", "Данные для поиска не переданы!");
                     context.SuccessFlag = false;
                     context["Persons"] = new List<object>();
-                    return context;
+                    return;
                 }
                 var searchDescriptor = new SearchDescriptor<personDTO>()
                 .From(0)
@@ -249,7 +242,6 @@ namespace elasticsearchApi.Utils
                     context.AddErrorMessage("", searchResponse.OriginalException.Message);
                 }
             }
-            return context;
         }
 
         public bool FilterES(IDictionary<string, string> filter, out personDTO[] data, out string[] errorMessages)
@@ -257,6 +249,7 @@ namespace elasticsearchApi.Utils
             errorMessages = Array.Empty<string>();
             data = null;//Array.Empty<_nrsz_person>();
             var settings = new ConnectionSettings(new Uri(host)).DefaultIndex(index);
+            settings = settings.BasicAuthentication(_appSettings.elasticUser, _appSettings.elasticPass);
             var client = new ElasticClient(settings);
             var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
             foreach (var f in filter)
@@ -438,82 +431,7 @@ namespace elasticsearchApi.Utils
         }
 
 
-        private static SemaphoreSlim semaphore = new(1, 1);
-
-        internal ServiceContext AddNewPersonES(SearchPersonModel p, int regionNo, int districtNo)
-        {
-            ServiceContext context = new();
-            try
-            {
-                verifyData(context, p);
-                if (context.ErrorMessages != null && context.ErrorMessages.Count > 0) return context;
-
-                if (!Refs.RegionDistricts.Any(x => x.RegionNo == regionNo && x.DistrictNo == districtNo))
-                    throw new ApplicationException(string.Format("Номера области и района отсутствуют в справочнике: regionNo - {0}, districtNo - {1}", regionNo, districtNo));
-
-                /*var districtCode = districtNo.ToString();
-                while (districtCode.Length < 3) districtCode = '0' + districtCode;*/
-                var regCode = regionNo * 1000 + districtNo;//regionNo.ToString() + districtCode;
-                semaphore.Wait();
-                //lock (PinLock)
-                {
-                    var maxPin = FakeDb.RegCounters[regCode];
-                    var newPin = (maxPin + 1).ToString();
-                    //while (newPinCounter.Length < 10) newPinCounter = '0' + newPinCounter;
-                    context["NewPIN"] = newPin;//startPin + newPinCounter;//14-ти значное число
-                    context.SuccessFlag = true;
-                    //CalcControlSum(context);
-                    context["ResultPIN"] = newPin;//startPin + newPinCounter;
-                                                  //var newPin = startPin + newPinCounter;//context["ResultPIN"].ToString();
-
-                    var person = _mapper.Map<Person>(p);
-                    person.IIN = newPin;
-                    context["Result"] = person;
-
-                    var res = CreateInNrszData(person, out string errorMessage);
-                    if (res)
-                    {
-                        var settings = new ConnectionSettings(new Uri(host)).DefaultIndex(index);
-                        var client = new ElasticClient(settings);
-                        var resp = client.Index(person, i => i.Refresh(Refresh.True));
-                        if (resp.IsValid)
-                            FakeDb.RegCounters[regCode]++;
-                        else
-                            throw new("Ошибка при сохранении данных в ElasticSearch (see inner)", resp.OriginalException);
-                    }
-                    else
-                        throw new(string.Format("Ошибка при сохранении данных в основную БД NRSZ-DATA: {0}", errorMessage));
-                }
-                semaphore.Release();
-            }
-            catch (Exception e)
-            {
-                context.SuccessFlag = false;
-                context.AddErrorMessage("System", $"{e.Message}; trace: {e.StackTrace}");
-            }
-            return context;
-        }
-        private bool CreateInNrszData(Person person, out string errorMessage)
-        {
-            errorMessage = "";
-            try
-            {
-                var attributeStorage = new DbStorage(_appSettings.cissa_data_connection);
-                attributeStorage.InsertPerson(person);
-                if (logEnabled)
-                    WriteLog($"[{index}][CreateInNrszData] PIN-{person.IIN} saved at {DateTime.Now:HH:mm:ss.fff}", logPath);
-                return true;
-            }
-            catch (Exception e)
-            {
-                WriteLog($"[{index}] [CreateInNrszData] {DateTime.Now:HH:mm:ss.fff} - Error: {e.Message}; trace: {e.StackTrace}", _appSettings.logpath);
-                errorMessage = e.GetBaseException().Message;
-                return false;
-            }
-        }
-
         private static SemaphoreSlim semaphoreLog = new(1, 1);
-        static object lockObj = new object();
         public static void WriteLog(string text, string pathToFile)
         {
             semaphoreLog.Wait();
