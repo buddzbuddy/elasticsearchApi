@@ -353,7 +353,7 @@ namespace elasticsearchApi.Utils
 
                 if (personDb.PassportSeries != null || personDb.PassportNo != null)
                 {
-                    var tran = _db.Connection.BeginTransaction();
+                    //_db.Statement("BEGIN TRANSACTION;");
                     var affectedRows = _db.Query("Passports").Insert(new
                     {
                         PersonId = personDb.Id,
@@ -363,15 +363,15 @@ namespace elasticsearchApi.Utils
                         personDb.Date_Of_Issue,
                         personDb.Issuing_Authority,
                         personDb.Marital_Status
-                    }, tran);
+                    });
                     if (affectedRows == 0)
                     {
                         context.AddErrorMessage("", "Паспортные данные не обновлены 1");
-                        tran.Rollback();
+                        //_db.Statement("ROLLBACK TRANSACTION;");
                     }
                     else
                     {
-                        affectedRows = _db.Query("Persons").Where("Id", personDb.Id).Update(new
+                        affectedRows = _db.Query("Persons").Where("Id", (int)personDb.Id).Update(new
                         {
                             PassportType = passportType,
                             PassportSeries = series,
@@ -379,14 +379,14 @@ namespace elasticsearchApi.Utils
                             Date_of_Issue = issueDate,
                             Issuing_Authority = authority,
                             FamilyState = familyState
-                        }, tran);
+                        });
                         if (affectedRows == 0)
                         {
                             context.AddErrorMessage("", "Паспортные данные не обновлены 1");
-                            tran.Rollback();
+                            //_db.Statement("ROLLBACK TRANSACTION;");
                         }
-                        else
-                            tran.Commit();
+                        /*else
+                            _db.Statement("COMMIT TRANSACTION;");*/
                     }
                 }
                 else
