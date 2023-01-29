@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace elasticsearchApi.Models
 {
-    public static class FakeDb
+    public static class MemoryDb
     {
         public static IDictionary<int, int> RegCounters { get; set; }
         public static void Increase(int regCode)

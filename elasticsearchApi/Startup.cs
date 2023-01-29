@@ -2,18 +2,12 @@ using elasticsearchApi.Models;
 using elasticsearchApi.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Nest;
 using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,19 +26,21 @@ namespace elasticsearchApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.Configure<Utils.AppSettings>(Configuration.GetSection("AppSettings"));
+            AppSettings appSettings = Configuration.GetSection("AppSettings").Get<AppSettings>();
+            services.AddSingleton(appSettings);
             services.AddSwaggerGen();
             services.AddAutoMapper(typeof(Startup));
 
+            services.AddElasticsearch(Configuration);
 
-            var es_host = Configuration.GetSection("AppSettings").GetValue<string>("es_host");
-            var es_nrsz_index_name = Configuration.GetSection("AppSettings").GetValue<string>("nrsz_persons_index_name");
-            var es_user = Configuration.GetSection("AppSettings").GetValue<string>("elasticUser");
-            var es_pass = Configuration.GetSection("AppSettings").GetValue<string>("elasticPass");
-            var settings = new ConnectionSettings(new Uri(es_host)).DefaultIndex(es_nrsz_index_name).BasicAuthentication(es_user, es_pass);
-            var client = new ElasticClient(settings);
-            services.AddSingleton(client);
-            //services.AddHostedService<InitiatorHostedService>();
+
+            services.AddSqlKataQueryFactory(Configuration);
+
+            services.AddScoped<IElasticService, ElasticService>();
+            services.AddScoped<IDataService, DataService>();
+            services.AddTransient<IServiceContext, ServiceContext>();
+
+            services.AddHostedService<InitiatorHostedService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -75,7 +71,7 @@ namespace elasticsearchApi
         }
     }
 
-    /*public class InitiatorHostedService : IHostedService
+    public class InitiatorHostedService : IHostedService
     {
         // We need to inject the IServiceProvider so we can create 
         // the scoped service, MyDbContext
@@ -87,28 +83,22 @@ namespace elasticsearchApi
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            FakeDb.RegCounters = new Dictionary<int, int>();
+            Console.WriteLine("STARTUP SQL LOADING STARTED...");
             // Create a new scope to retrieve scoped services
             using var scope = _serviceProvider.CreateScope();
             //3. Get the instance of BoardGamesDBContext in our services layer
             var services = scope.ServiceProvider;
-            var _appSettings = services.GetRequiredService<IOptions<AppSettings>>();
+            var _appSettings = services.GetRequiredService<AppSettings>();
             //Initialize PIN counters from DB
-            using var connection = new SqlConnection(_appSettings.Value.cissa_data_connection);
+            using var connection = new SqlConnection(_appSettings.asist_data_connection);
             connection.Open();
-            var command = new SqlCommand(getRegCounterSql, connection);
-            using (var reader = await command.ExecuteReaderAsync(cancellationToken))
-            {
-                while (reader.Read()) FakeDb.RegCounters.Add(reader.GetInt32(0), reader.GetInt32(1));
-            }
-            command = new(getDistrictsSql, connection);
+            var command = new SqlCommand(getDistrictsSql, connection);
             using (var reader = await command.ExecuteReaderAsync(cancellationToken))
             {
                 while (reader.Read()) Refs.RegionDistricts.Add(new Refs.RegionDistrictItem { RegionNo = reader.GetInt32(0), DistrictNo = reader.GetInt32(1) });
             }
             connection.Close();
-
-            Console.WriteLine("STARTUP CODE EXECUTED SUCCESSFUL");
+            Console.WriteLine($"IN-MEMORY DATA({Refs.RegionDistricts.Count} rows) LOADED SUCCESSFUL!");
         }
         const string getRegCounterSql = @"
 SELECT CAST(SUBSTRING([iin], 0, 5) as int) as regCode, CAST(MAX(SUBSTRING([iin], 5, 10)) as int) as maxPin
@@ -118,7 +108,7 @@ group by SUBSTRING([iin], 0, 5)
 ";
         const string getDistrictsSql = @"
 SELECT
-	[Area1].[Number] as regionNo,
+	[Area].[Number] as regionNo,
 	[District].[Number] as [districtNo]
 FROM
 	(SELECT
@@ -127,10 +117,10 @@ FROM
 		[a2].[Value] as [Area]
 	FROM
 		Documents d WITH(NOLOCK)
-		INNER JOIN Int_Attributes a1 WITH(NOLOCK) on (a1.Document_Id = d.Id and a1.Def_Id = '8f74f065-4632-4ef4-87e3-ae0df1d3cfca' and a1.Expired = '99991231' and [a1].[Value] > 0)
-		LEFT OUTER JOIN Document_Attributes a2 WITH(NOLOCK) on (a2.Document_Id = d.Id and a2.Def_Id = 'e6600d4b-f03c-4cb9-a67a-8b400cdf6f69' and a2.Expired = '99991231')
+		INNER JOIN Int_Attributes a1 WITH(NOLOCK) on (a1.Document_Id = d.Id and a1.Def_Id = '{B31C64A2-0606-471D-BED2-CBBBD5E9CE79}' and a1.Expired = '99991231' and [a1].[Value] > 0)
+		INNER JOIN Document_Attributes a2 WITH(NOLOCK) on (a2.Document_Id = d.Id and a2.Def_Id = '{485F6AEF-4ACC-4240-BD79-93C940E6F6C4}' and a2.Expired = '99991231')
 	WHERE
-		d.Def_Id = 'ba5d4276-6bfb-4180-9d4f-828e38e95601' AND
+		d.Def_Id = '{4D029337-C025-442E-8E93-AFD1852073AC}' AND
 		([d].[Deleted] is null OR [d].[Deleted] = 0)
 	) as [District]
 	INNER JOIN (SELECT
@@ -138,20 +128,11 @@ FROM
 		[a1].[Value] as [Number]
 	FROM
 		Documents d WITH(NOLOCK)
-		INNER JOIN Int_Attributes a1 WITH(NOLOCK) on (a1.Document_Id = d.Id and a1.Def_Id = '9f8a9e68-676f-4c1d-9359-0784df076491' and a1.Expired = '99991231' and [a1].[Value] > 0)
+		INNER JOIN Int_Attributes a1 WITH(NOLOCK) on (a1.Document_Id = d.Id and a1.Def_Id = '{F63E743F-557C-4DB3-A599-69A06C134C6C}' and a1.Expired = '99991231' and [a1].[Value] > 0)
 	WHERE
-		d.Def_Id = '67a81660-8a8b-4d80-9199-734a618edd32'
+		d.Def_Id = '{8C5E9217-59AC-4B4E-A41A-643FC34444E4}'
 	) as [Area] on [Area].Id = [District].[Area]
-	INNER JOIN (SELECT
-		d.Id,
-		[a1].[Value] as [Number]
-	FROM
-		Documents d WITH(NOLOCK)
-		LEFT OUTER JOIN Int_Attributes a1 WITH(NOLOCK) on (a1.Document_Id = d.Id and a1.Def_Id = '9f8a9e68-676f-4c1d-9359-0784df076491' and a1.Expired = '99991231')
-	WHERE
-		d.Def_Id = '67a81660-8a8b-4d80-9199-734a618edd32'
-	) as [Area1] on [Area1].Id = [District].[Area]
 ";
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-    }*/
+    }
 }

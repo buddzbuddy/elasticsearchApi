@@ -1,15 +1,25 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace elasticsearchApi.Models
 {
-    public class ServiceContext
+    public interface IServiceContext
     {
-        public bool SuccessFlag { get; set; }
+        bool SuccessFlag { get; set; }
+        IDictionary<string, object> Data { get; set; }
+        object this[string attributeName] { get; set; }
+        IDictionary<string, string> ErrorMessages { get; set; }
+        void AddErrorMessage(string key, string errorMessage);
+    }
+    public class ServiceContext: IServiceContext
+    {
+        public bool SuccessFlag { get; set; } = false;
 
         public IDictionary<string, string> ErrorMessages { get; set; } = new Dictionary<string, string>();
 
-        internal void AddErrorMessage(string key, string errorMessage)
+        public void AddErrorMessage(string key, string errorMessage)
         {
+            Console.Write($"{key}-{errorMessage}");
             if (!ErrorMessages.ContainsKey(key))
                 ErrorMessages.Add(key, errorMessage);
             else
@@ -18,7 +28,7 @@ namespace elasticsearchApi.Models
 
         public IDictionary<string, object> Data { get; set; } = new Dictionary<string, object>();
 
-        internal object this[string attributeName]
+        public object this[string attributeName]
         {
             get
             {

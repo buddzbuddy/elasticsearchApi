@@ -20,65 +20,68 @@ namespace elasticsearchApi.Controllers
     [ApiController]
     public class NrszPersonsController : ControllerBase
     {
-        private readonly ElasticService es;
+        private readonly IElasticService _es;
+        private readonly IDataService _dataSvc;
+        private IServiceContext _context;
         private readonly IOptions<AppSettings> _appSettings;
         private readonly IMapper _mapper;
-        public NrszPersonsController(IOptions<AppSettings> appSettings, IMapper mapper, ElasticClient client)
+        public NrszPersonsController(IOptions<AppSettings> appSettings, IMapper mapper, IElasticService es,
+            IDataService dataSvc, IServiceContext context
+            )
         {
             _appSettings = appSettings;
             _mapper = mapper;
-            es = new(_appSettings.Value.es_host, _appSettings.Value.nrsz_persons_index_name, _appSettings.Value.log_enabled, _appSettings.Value.logpath, _mapper, appSettings.Value, client);
+            _es = es;
+            _dataSvc = dataSvc;
+            _context = context;
         }
         
         [HttpPost]
-        public IActionResult FindSamePerson([FromBody] SearchPersonModel person, int page = 1, int size = 10)
+        public IActionResult FindSamePerson([FromBody] inputPersonDTO person, int page = 1, int size = 10)
         {
-            ServiceContext context = new();
             try
             {
-                es.FindSamePersonES(person, ref context, page, size);
-                return Ok(context);
+                _es.FindSamePersonES(person, ref _context, page, size);
+                return Ok(_context);
             }
             catch (Exception e)
             {
-                context.SuccessFlag = false;
-                context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
-                context.AddErrorMessage("errorTrace", e.StackTrace);
-                return Ok(context);
+                _context.SuccessFlag = false;
+                _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
+                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                return Ok(_context);
             }
         }
         [HttpPost]
-        public IActionResult FindPersons([FromBody] SearchPersonModel person, int page = 1, int size = 10, bool fuzzy = false)
+        public IActionResult FindPersons([FromBody] inputPersonDTO person, int page = 1, int size = 10, bool fuzzy = false)
         {
-            ServiceContext context = new();
             try
             {
-                es.FindPersonsES(person, ref context, fuzzy, page, size);
-                return Ok(context);
+                _es.FindPersonsES(person, ref _context, fuzzy, page, size);
+                return Ok(_context);
             }
             catch (Exception e)
             {
-                context.SuccessFlag = false;
-                context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
-                context.AddErrorMessage("errorTrace", e.StackTrace);
-                return Ok(context);
+                _context.SuccessFlag = false;
+                _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
+                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                return Ok(_context);
             }
         }
         [HttpGet("{iin}")]
         public IActionResult FindPersonByPIN(string iin, int page = 1, int size = 10)
         {
-            ServiceContext context = new();
             try
             {
-                es.FindPersonByPinES(iin, ref context, page, size);
-                return Ok(context);
+                _es.FindPersonByPinES(iin, ref _context, page, size);
+                return Ok(_context);
             }
             catch (Exception e)
             {
-                context.SuccessFlag = false;
-                context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
-                context.AddErrorMessage("errorTrace", e.StackTrace);
-                return Ok(context);
+                _context.SuccessFlag = false;
+                _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
+                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                return Ok(_context);
             }
         }
         [HttpPost]
@@ -86,7 +89,7 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = es.FilterES(filter, out personDTO[] data, out string[] errorMessages, fuzzy, page, size);
+                var result = _es.FilterES(filter, out outPersonDTO[] data, out string[] errorMessages, fuzzy, page, size);
                 return Ok(new { successFlag = result, data, errorMessages });
             }
             catch (Exception e)
@@ -99,12 +102,60 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = es.FilterDocumentES(filter, out IEnumerable<documentDTO> data, out string[] errorMessages);
+                var result = _es.FilterDocumentES(filter, out IEnumerable<documentDTO> data, out string[] errorMessages);
                 return Ok(new { result, data, errorMessages });
             }
             catch (Exception e)
             {
                 return Ok(new { result = false, errorMessages = new[] { e.GetBaseException().Message }, trace = e.StackTrace });
+            }
+        }
+        [HttpPost]
+        public IActionResult AddNewPerson([FromBody] addNewPersonDTO person, int regionNo, int districtNo)
+        {
+            try
+            {
+                _dataSvc.AddNewPerson(person, regionNo, districtNo, ref _context);
+                return Ok(_context);
+            }
+            catch (Exception e)
+            {
+                _context.SuccessFlag = false;
+                _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
+                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                return Ok(_context);
+            }
+        }
+        [HttpPost]
+        public IActionResult ModifyPersonData(string iin, [FromBody] modifyPersonDataDTO person)
+        {
+            try
+            {
+                _dataSvc.ModifyPersonData(iin, person, ref _context);
+                return Ok(_context);
+            }
+            catch (Exception e)
+            {
+                _context.SuccessFlag = false;
+                _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
+                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                return Ok(_context);
+            }
+        }
+        [HttpPost]
+        public IActionResult ModifyPersonPassport(string iin, [FromBody] modifyPersonPassportDTO person)
+        {
+            try
+            {
+                _dataSvc.ModifyPersonPassport(iin, person, ref _context);
+                return Ok(_context);
+            }
+            catch (Exception e)
+            {
+                _context.SuccessFlag = false;
+                _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
+                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                return Ok(_context);
             }
         }
     }

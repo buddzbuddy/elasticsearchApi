@@ -22,92 +22,35 @@ using static System.Net.WebRequestMethods;
 
 namespace elasticsearchApi.Utils
 {
-    public class ElasticService
+    public interface IElasticService
     {
-        private readonly string host;
-        private readonly string index;
-        private readonly bool logEnabled;
-        private readonly string logPath;
-        private readonly IMapper _mapper;
+        void FindSamePersonES(inputPersonDTO inputData, ref IServiceContext context, int page = 1, int size = 10);
+        void FindPersonsES(inputPersonDTO inputData, ref IServiceContext context, bool fuzzy = false, int page = 1, int size = 10);
+        bool FilterES(IDictionary<string, object> filter, out outPersonDTO[] data, out string[] errorMessages, bool fuzzy = false, int page = 1, int size = 10);
+        bool FilterDocumentES(documentDTO filter, out IEnumerable<documentDTO> data, out string[] errorMessages, bool fuzzy = false, int page = 1, int size = 10);
+        void FindPersonByPinES(string iin, ref IServiceContext context, int page = 1, int size = 10);
+    }
+    public class ElasticService : BaseService, IElasticService
+    {
         private readonly AppSettings _appSettings;
-        private readonly ElasticClient _client;
-        public ElasticService(string _host, string _index, bool _logEnabled, string _logPath, IMapper mapper, AppSettings appSettings, ElasticClient client)
+        private readonly IElasticClient _client;
+        public ElasticService(AppSettings appSettings, IElasticClient client)
         {
-            host = _host;
-            index = _index;
-            logEnabled = _logEnabled;
-            logPath = _logPath;
-            _mapper = mapper;
             _appSettings = appSettings;
             _client = client;
         }
 
         
 
-        static IDictionary<string, object> ModelToDict<T>(T obj)
-        {
-            Dictionary<string, object> dict = new();
-            foreach (var propInfo in typeof(T).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase))
-            {
-                var field_name = propInfo.Name.ToLower();
-                if (/*field_name != "id" && */propInfo.GetValue(obj) != null && !string.IsNullOrEmpty(propInfo.GetValue(obj).ToString()))
-                    dict.Add(field_name, propInfo.GetValue(obj));
-            }
-            return dict;
-        }
-        static documentDTO ModelToDocumentWithAttributes<T>(T obj)
-        {
-            var res = new documentDTO
-            {
-                attributes = Array.Empty<attributeDTO>()
-            };
-            foreach (var propInfo in typeof(T).GetProperties(System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public))
-            {
-                var v = propInfo.GetValue(obj);
-                if (propInfo.Name == "id" || v.IsNullOrEmpty()) continue;
-                if (propInfo.Name == "id" && v != null && v is int id && id > 0)
-                {
-                    res.id = id;
-                }
-                else
-                {
-                    var attr = new attributeDTO { name = (propInfo.GetCustomAttributes(true)[0] as DescriptionAttribute).Description, value = v };
-                    res.attributes = res.attributes.Append(attr);
-                }
-            }
-            return res;
-        }
-        static bool DocumentToDict(documentDTO obj, out IDictionary<string, object> dict, out string[] errorMessages)
-        {
-            errorMessages = Array.Empty<string>();
-            dict = new Dictionary<string, object>();
-            if (obj != null)
-            {
-                if (obj.id != null) dict["id"] = obj.id;
-                foreach (var attr in obj.attributes)
-                {
-                    if (attr.value.IsNullOrEmpty()) continue;
-                    var attrname = attr.name.ToLower();
-                    if (!dict.ContainsKey(attrname))
-                    {
-                        dict[attrname] = attr.value.ToString();
-                    }
-                    else
-                    {
-                        errorMessages = errorMessages.Append($"Поле {attr.name} дублируется в теле запроса! Дубликаты полей недопустимы!").ToArray();
-                    }
-                }
-            }
-            return errorMessages.Length == 0;
-        }
-        public void FindSamePersonES(SearchPersonModel inputData, ref ServiceContext context, int page = 1, int size = 10)
+        
+        public void FindSamePersonES(inputPersonDTO inputData, ref IServiceContext context, int page = 1, int size = 10)
         {
             verifyData(ref context, inputData);
             context.SuccessFlag = context.ErrorMessages == null || context.ErrorMessages.Count == 0;
             if (context.SuccessFlag)
             {
                 
-                if (FilterES(ModelToDict(inputData), out personDTO[] data, out string[] errorMessages, false, page, size))
+                if (FilterES(ModelToDict(inputData), out outPersonDTO[] data, out string[] errorMessages, false, page, size))
                 {
                     var dupPersonList = data;
                     if (dupPersonList.Count() == 1)
@@ -124,19 +67,20 @@ namespace elasticsearchApi.Utils
                 }
                 else
                 {
-                    throw new ApplicationException(string.Join(", ", errorMessages));
+                    context.AddErrorMessage("ElasticError", string.Join(", ", errorMessages));
+                    context.SuccessFlag = false;
                 }
             }
         }
 
-        public void FindPersonsES(SearchPersonModel inputData, ref ServiceContext context, bool fuzzy = false, int page = 1, int size = 10)
+        public void FindPersonsES(inputPersonDTO inputData, ref IServiceContext context, bool fuzzy = false, int page = 1, int size = 10)
         {
             verifyData(ref context, inputData);
             context.SuccessFlag = context.ErrorMessages == null || context.ErrorMessages.Count == 0;
             if (context.SuccessFlag)
             {
 
-                if (FilterES(ModelToDict(inputData), out personDTO[] data, out string[] errorMessages, fuzzy, page, size))
+                if (FilterES(ModelToDict(inputData), out outPersonDTO[] data, out string[] errorMessages, fuzzy, page, size))
                 {
                     context["Persons"] = data;
                     context.SuccessFlag = true;
@@ -148,7 +92,7 @@ namespace elasticsearchApi.Utils
             }
         }
 
-        private static void verifyData(ref ServiceContext context, SearchPersonModel person)
+        static void verifyData(ref IServiceContext context, inputPersonDTO person)
         {
             System.Text.RegularExpressions.Regex nameRegex =
                 new System.Text.RegularExpressions.Regex("[0-9]");
@@ -224,11 +168,11 @@ namespace elasticsearchApi.Utils
         }
 
 
-        public bool FilterES(IDictionary<string, object> filter, out personDTO[] data, out string[] errorMessages, bool fuzzy = false, int page = 1, int size = 10)
+        public bool FilterES(IDictionary<string, object> filter, out outPersonDTO[] data, out string[] errorMessages, bool fuzzy = false, int page = 1, int size = 10)
         {
             errorMessages = Array.Empty<string>();
-            data = Array.Empty<personDTO>();
-            var filters = new List<Func<QueryContainerDescriptor<personDTO>, QueryContainer>>();
+            data = Array.Empty<outPersonDTO>();
+            var filters = new List<Func<QueryContainerDescriptor<outPersonDTO>, QueryContainer>>();
             foreach (var f in filter)
             {
                 var val = f.Value;
@@ -274,18 +218,18 @@ namespace elasticsearchApi.Utils
                 errorMessages = errorMessages.Append("Пустой поиск запрещен!").ToArray();
                 return false;
             }
-            var searchDescriptor = new SearchDescriptor<personDTO>()
+            var searchDescriptor = new SearchDescriptor<outPersonDTO>()
             .From(page - 1)
             .Size(size)
             .Query(q => q.Bool(b => b.Must(filters)));
             
-            if (logEnabled)
+            if (_appSettings.log_enabled)
             {
                 var json = _client.RequestResponseSerializer.SerializeToString(searchDescriptor);
-                WriteLog($"[{index}]-[FilterES] at [{DateTime.Now}]:\n{json}", logPath);
+                WriteLog($"[{nameof(ElasticService)}]-[{nameof(FilterES)}] at [{DateTime.Now}]:\n{json}", _appSettings.logpath);
             }
 
-            var searchResponse = _client.Search<personDTO>(searchDescriptor);
+            var searchResponse = _client.Search<outPersonDTO>(searchDescriptor);
 
             var persons = searchResponse.Documents;
             if (searchResponse.IsValid)
@@ -305,7 +249,7 @@ namespace elasticsearchApi.Utils
             data = Array.Empty<documentDTO>();
             if(DocumentToDict(filter, out IDictionary<string, object> dict, out errorMessages))
             {
-                if (FilterES(dict, out personDTO[] personDatas, out errorMessages, fuzzy, page, size))
+                if (FilterES(dict, out outPersonDTO[] personDatas, out errorMessages, fuzzy, page, size))
                 {
                     //Console.Write(JsonSerializer.Serialize(personDatas));
                     foreach (var p in personDatas)
@@ -318,9 +262,9 @@ namespace elasticsearchApi.Utils
             }
             return false;
         }
-        public void FindPersonByPinES(string iin, ref ServiceContext context, int page = 1, int size = 10)
+        public void FindPersonByPinES(string iin, ref IServiceContext context, int page = 1, int size = 10)
         {
-            if (FilterES(new Dictionary<string, object> { { "iin", iin } }, out personDTO[] data, out string[] errorMessages, false, page, size))
+            if (FilterES(new Dictionary<string, object> { { "iin", iin } }, out outPersonDTO[] data, out string[] errorMessages, false, page, size))
             {
                 var res = data.FirstOrDefault();
                 context["Result"] = res;
@@ -332,19 +276,6 @@ namespace elasticsearchApi.Utils
             }
         }
         
-        private static SemaphoreSlim semaphoreLog = new(1, 1);
-        public static void WriteLog(string text, string pathToFile)
-        {
-            semaphoreLog.Wait();
-            //lock (lockObj)
-            {
-                using (StreamWriter sw = new StreamWriter(pathToFile, true))
-                {
-                    sw.WriteLine(text);
-                }
-            }
-            semaphoreLog.Release();
-        }
     }
 
 }
