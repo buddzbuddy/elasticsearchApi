@@ -182,10 +182,12 @@ namespace elasticsearchApi.Utils
                 //DateTime Cases
                 if (f.Key.ToLower().Contains("date") || f.Key.EndsWith("At") || f.Key.ToLower().Contains("time"))
                 {
-                    val = val.ToString().Split('T')[0];
+                    val = val.ToString().Split('T')[0].Split(' ')[0];
                 }
                 //Convert input date to UTC date like in ES
-                if (DateTime.TryParseExact(val.ToString(), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime d))
+                if (DateTime.TryParseExact(val.ToString(), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime d) 
+                    ||
+                    DateTime.TryParseExact(val.ToString(), "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out d))
                 {
                     //Console.WriteLine(d.ToString());
                     //var utcDate = d.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ");

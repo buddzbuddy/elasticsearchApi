@@ -36,6 +36,9 @@ namespace elasticsearchApi.Utils
         {
             var settings = new ConnectionSettings(new Uri(configuration["ElasticsearchSettings:uri"]));
             var defaultIndex = configuration["ElasticsearchSettings:defaultIndex"];
+            var elasticUser = configuration["ElasticsearchSettings:elasticUser"];
+            var elasticPass = configuration["ElasticsearchSettings:elasticPass"];
+            settings = settings.BasicAuthentication(elasticUser, elasticPass);
             if (!string.IsNullOrEmpty(defaultIndex))
                 settings = settings.DefaultIndex(defaultIndex);
             var client = new ElasticClient(settings);
