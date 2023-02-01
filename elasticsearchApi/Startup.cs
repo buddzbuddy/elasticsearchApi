@@ -90,7 +90,7 @@ namespace elasticsearchApi
             var services = scope.ServiceProvider;
             var _appSettings = services.GetRequiredService<AppSettings>();
             //Initialize PIN counters from DB
-            using var connection = new SqlConnection(_appSettings.asist_data_connection);
+            using var connection = new SqlConnection(Environment.GetEnvironmentVariable("ASIST_DATA_CONNECTION_STRING"));
             connection.Open();
             var command = new SqlCommand(getDistrictsSql, connection);
             using (var reader = await command.ExecuteReaderAsync(cancellationToken))
