@@ -1,16 +1,10 @@
 version: '3.8'
 
-networks:
-  my-contacts:
-    driver: bridge
-
 services:
   api:
     image: buddzbuddy/api-elastic:latest
     ports:
       - 5000:5000
-    networks:
-      - my-contacts
     environment:
       - ES_HOST=http://localhost:9200
       - NRSZ_CONNECTION_STRING=Data Source=localhost;Initial Catalog=nrsz;Password=WestWood-911;Persist Security Info=True;User ID=sa;MultipleActiveResultSets=True;Max Pool Size=3500;Connect Timeout=300;
