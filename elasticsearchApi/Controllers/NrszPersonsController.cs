@@ -89,8 +89,8 @@ namespace elasticsearchApi.Controllers
         {
             try
             {
-                var result = _es.FilterES(filter, out outPersonDTO[] data, out string[] errorMessages, fuzzy, page, size);
-                return Ok(new { successFlag = result, data, errorMessages });
+                var result = _es.FilterES(filter, out outPersonDTO[] data, out string[] errorMessages, out long totalCount, fuzzy, page, size);
+                return Ok(new { successFlag = result, data, totalCount, errorMessages });
             }
             catch (Exception e)
             {

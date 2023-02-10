@@ -26,7 +26,7 @@ namespace elasticsearchApi.Utils
     {
         void FindSamePersonES(inputPersonDTO inputData, ref IServiceContext context, int page = 1, int size = 10);
         void FindPersonsES(inputPersonDTO inputData, ref IServiceContext context, bool fuzzy = false, int page = 1, int size = 10);
-        bool FilterES(IDictionary<string, object> filter, out outPersonDTO[] data, out string[] errorMessages, bool fuzzy = false, int page = 1, int size = 10);
+        bool FilterES(IDictionary<string, object> filter, out outPersonDTO[] data, out string[] errorMessages, out long totalCount, bool fuzzy = false, int page = 1, int size = 10);
         bool FilterDocumentES(documentDTO filter, out IEnumerable<documentDTO> data, out string[] errorMessages, bool fuzzy = false, int page = 1, int size = 10);
         void FindPersonByPinES(string iin, ref IServiceContext context, int page = 1, int size = 10);
     }
@@ -50,7 +50,7 @@ namespace elasticsearchApi.Utils
             if (context.SuccessFlag)
             {
                 
-                if (FilterES(ModelToDict(inputData), out outPersonDTO[] data, out string[] errorMessages, false, page, size))
+                if (FilterES(ModelToDict(inputData), out outPersonDTO[] data, out string[] errorMessages, out long totalCount, false, page, size))
                 {
                     var dupPersonList = data;
                     if (dupPersonList.Count() == 1)
@@ -80,7 +80,7 @@ namespace elasticsearchApi.Utils
             if (context.SuccessFlag)
             {
 
-                if (FilterES(ModelToDict(inputData), out outPersonDTO[] data, out string[] errorMessages, fuzzy, page, size))
+                if (FilterES(ModelToDict(inputData), out outPersonDTO[] data, out string[] errorMessages, out long totalCount, fuzzy, page, size))
                 {
                     context["Persons"] = data;
                     context.SuccessFlag = true;
@@ -168,10 +168,11 @@ namespace elasticsearchApi.Utils
         }
 
 
-        public bool FilterES(IDictionary<string, object> filter, out outPersonDTO[] data, out string[] errorMessages, bool fuzzy = false, int page = 1, int size = 10)
+        public bool FilterES(IDictionary<string, object> filter, out outPersonDTO[] data, out string[] errorMessages, out long totalCount, bool fuzzy = false, int page = 1, int size = 10)
         {
             errorMessages = Array.Empty<string>();
             data = Array.Empty<outPersonDTO>();
+            totalCount = 0;
             var filters = new List<Func<QueryContainerDescriptor<outPersonDTO>, QueryContainer>>();
             foreach (var f in filter)
             {
@@ -237,6 +238,7 @@ namespace elasticsearchApi.Utils
             if (searchResponse.IsValid)
             {
                 data = persons.ToArray();
+                totalCount = searchResponse.HitsMetadata.Total.Value;
                 return true;
             }
             else
@@ -251,7 +253,7 @@ namespace elasticsearchApi.Utils
             data = Array.Empty<documentDTO>();
             if(DocumentToDict(filter, out IDictionary<string, object> dict, out errorMessages))
             {
-                if (FilterES(dict, out outPersonDTO[] personDatas, out errorMessages, fuzzy, page, size))
+                if (FilterES(dict, out outPersonDTO[] personDatas, out errorMessages, out long totalCount, fuzzy, page, size))
                 {
                     //Console.Write(JsonSerializer.Serialize(personDatas));
                     foreach (var p in personDatas)
@@ -266,7 +268,7 @@ namespace elasticsearchApi.Utils
         }
         public void FindPersonByPinES(string iin, ref IServiceContext context, int page = 1, int size = 10)
         {
-            if (FilterES(new Dictionary<string, object> { { "iin", iin } }, out outPersonDTO[] data, out string[] errorMessages, false, page, size))
+            if (FilterES(new Dictionary<string, object> { { "iin", iin } }, out outPersonDTO[] data, out string[] errorMessages, out long totalCount, false, page, size))
             {
                 var res = data.FirstOrDefault();
                 context["Result"] = res;

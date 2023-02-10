@@ -206,7 +206,7 @@ namespace elasticsearchApi.Utils
             verifyFull(ref context, person);
             if (!context.SuccessFlag) return;
 
-            if(_es.FilterES(ModelToDict(person), out outPersonDTO[] es_data, out string[] errorMessages))
+            if(_es.FilterES(ModelToDict(person), out outPersonDTO[] es_data, out string[] errorMessages, out long totalCount))
             {
                 if (es_data != null && es_data.Length > 0)
                 {
