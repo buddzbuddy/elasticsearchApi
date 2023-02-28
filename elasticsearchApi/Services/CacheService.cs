@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using elasticsearchApi.Utils;
 
-namespace elasticsearchApi.Utils
+namespace elasticsearchApi.Services
 {
     public interface ICacheService
     {

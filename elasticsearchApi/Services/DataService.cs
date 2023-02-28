@@ -1,19 +1,13 @@
 ﻿using AutoMapper;
 using elasticsearchApi.Models;
-using Humanizer;
-using Microsoft.AspNetCore.Http.Extensions;
-using Nest;
-using SqlKata;
-using SqlKata.Compilers;
+using elasticsearchApi.Utils;
 using SqlKata.Execution;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.PortableExecutable;
 using System.Threading;
 
-namespace elasticsearchApi.Utils
+namespace elasticsearchApi.Services
 {
     public interface IDataService
     {
@@ -32,7 +26,7 @@ namespace elasticsearchApi.Utils
         {
             _db = db;
             _mapper = mapper;
-            _appSettings= appSettings;
+            _appSettings = appSettings;
             _es = es;
         }
 
@@ -44,9 +38,9 @@ namespace elasticsearchApi.Utils
             System.Text.RegularExpressions.Regex nameRegex =
                 new System.Text.RegularExpressions.Regex("[0-9]");
             object s = person.last_name;
-            string lastName = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
+            string lastName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
 
-            if (String.IsNullOrEmpty(lastName)) //message = "Заполните фамилию!\n";
+            if (string.IsNullOrEmpty(lastName)) //message = "Заполните фамилию!\n";
                 context.AddErrorMessage("Last_Name", "Заполните фамилию");
             else
             {
@@ -57,9 +51,9 @@ namespace elasticsearchApi.Utils
             }
 
             s = person.first_name;
-            var firstName = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
+            var firstName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
 
-            if (String.IsNullOrEmpty(firstName))
+            if (string.IsNullOrEmpty(firstName))
                 context.AddErrorMessage("First_Name", "Заполните имя");
             else
             {
@@ -70,9 +64,9 @@ namespace elasticsearchApi.Utils
             }
 
             s = person.middle_name;
-            var middleName = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
+            var middleName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
 
-            if (!String.IsNullOrEmpty(middleName))
+            if (!string.IsNullOrEmpty(middleName))
             {
                 middleName = char.ToUpper(middleName[0]) + middleName.Substring(1);
                 person.middle_name = middleName;
@@ -83,9 +77,9 @@ namespace elasticsearchApi.Utils
             System.Text.RegularExpressions.Regex regex =
                 new System.Text.RegularExpressions.Regex("[^0-9]");
             s = person.iin;
-            var pin = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
+            var pin = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
 
-            if (!String.IsNullOrEmpty(pin))
+            if (!string.IsNullOrEmpty(pin))
             {
                 if (pin.Length > 14)
                     context.AddErrorMessage("IIN", "Ошибка в длине ПИН");
@@ -114,20 +108,20 @@ namespace elasticsearchApi.Utils
             var isPassport = passportType != null && (Guid)passportType == passportTypeId;
             //{
             var v = person.passportseries;
-            var series = v != null ? v.ToString().Trim() : String.Empty;
-            if (isPassport && String.IsNullOrWhiteSpace(series))
+            var series = v != null ? v.ToString().Trim() : string.Empty;
+            if (isPassport && string.IsNullOrWhiteSpace(series))
                 context.AddErrorMessage("passportseries", "Серия удостоверяющего документа не указана!");
             v = person.passportno;
-            var no = v != null ? v.ToString().Trim() : String.Empty;
-            if (isPassport && String.IsNullOrWhiteSpace(no))
+            var no = v != null ? v.ToString().Trim() : string.Empty;
+            if (isPassport && string.IsNullOrWhiteSpace(no))
                 context.AddErrorMessage("passportno", "Номер удостоверяющего документа не указан!");
             var pDate = person.date_of_issue;
             if (isPassport && pDate == null)
                 context.AddErrorMessage("date_of_issue", "Дата выдачи удостоверяющего документа не указана!");
             var issueDate = pDate;//!string.IsNullOrEmpty(v) ? Convert.ToDateTime(v) : (DateTime?)null;
             v = person.issuing_authority;
-            var authority = v != null ? v.ToString().Trim() : String.Empty;
-            if (isPassport && String.IsNullOrWhiteSpace(authority))
+            var authority = v != null ? v.ToString().Trim() : string.Empty;
+            if (isPassport && string.IsNullOrWhiteSpace(authority))
                 context.AddErrorMessage("issuing_authority", "Орган выдавший удостоверяющий документ не указан!");
             var familyState = person.familystate;
             if (isPassport && familyState == null)
@@ -140,9 +134,9 @@ namespace elasticsearchApi.Utils
             System.Text.RegularExpressions.Regex nameRegex =
                 new System.Text.RegularExpressions.Regex("[0-9]");
             object s = person.last_name;
-            string lastName = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
+            string lastName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
 
-            if (String.IsNullOrEmpty(lastName)) //message = "Заполните фамилию!\n";
+            if (string.IsNullOrEmpty(lastName)) //message = "Заполните фамилию!\n";
                 context.AddErrorMessage("Last_Name", "Заполните фамилию");
             else
             {
@@ -153,9 +147,9 @@ namespace elasticsearchApi.Utils
             }
 
             s = person.first_name;
-            var firstName = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
+            var firstName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
 
-            if (String.IsNullOrEmpty(firstName))
+            if (string.IsNullOrEmpty(firstName))
                 context.AddErrorMessage("First_Name", "Заполните имя");
             else
             {
@@ -166,9 +160,9 @@ namespace elasticsearchApi.Utils
             }
 
             s = person.middle_name;
-            var middleName = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
+            var middleName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
 
-            if (!String.IsNullOrEmpty(middleName))
+            if (!string.IsNullOrEmpty(middleName))
             {
                 middleName = char.ToUpper(middleName[0]) + middleName.Substring(1);
                 person.middle_name = middleName;
@@ -179,9 +173,9 @@ namespace elasticsearchApi.Utils
             System.Text.RegularExpressions.Regex regex =
                 new System.Text.RegularExpressions.Regex("[^0-9]");
             s = iin;
-            var pin = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
+            var pin = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
 
-            if (!String.IsNullOrEmpty(pin))
+            if (!string.IsNullOrEmpty(pin))
             {
                 if (pin.Length > 14)
                     context.AddErrorMessage("IIN", "Ошибка в длине ПИН");
@@ -206,7 +200,7 @@ namespace elasticsearchApi.Utils
             verifyFull(ref context, person);
             if (!context.SuccessFlag) return;
 
-            if(_es.FilterES(ModelToDict(person), out outPersonDTO[] es_data, out string[] errorMessages, out long totalCount))
+            if (_es.FilterES(ModelToDict(person), out outPersonDTO[] es_data, out string[] errorMessages, out long totalCount))
             {
                 if (es_data != null && es_data.Length > 0)
                 {
@@ -312,20 +306,20 @@ namespace elasticsearchApi.Utils
             var isPassport = passportType != null && (Guid)passportType == passportTypeId;
             //{
             var v = person.passportseries;
-            var series = v != null ? v.ToString().Trim() : String.Empty;
-            if (isPassport && String.IsNullOrWhiteSpace(series))
+            var series = v != null ? v.ToString().Trim() : string.Empty;
+            if (isPassport && string.IsNullOrWhiteSpace(series))
                 context.AddErrorMessage("passportseries", "Серия удостоверяющего документа не указана!");
             v = person.passportno;
-            var no = v != null ? v.ToString().Trim() : String.Empty;
-            if (isPassport && String.IsNullOrWhiteSpace(no))
+            var no = v != null ? v.ToString().Trim() : string.Empty;
+            if (isPassport && string.IsNullOrWhiteSpace(no))
                 context.AddErrorMessage("passportno", "Номер удостоверяющего документа не указан!");
             var pDate = person.date_of_issue;
             if (isPassport && pDate == null)
                 context.AddErrorMessage("date_of_issue", "Дата выдачи удостоверяющего документа не указана!");
             var issueDate = pDate;//!string.IsNullOrEmpty(v) ? Convert.ToDateTime(v) : (DateTime?)null;
             v = person.issuing_authority;
-            var authority = v != null ? v.ToString().Trim() : String.Empty;
-            if (isPassport && String.IsNullOrWhiteSpace(authority))
+            var authority = v != null ? v.ToString().Trim() : string.Empty;
+            if (isPassport && string.IsNullOrWhiteSpace(authority))
                 context.AddErrorMessage("issuing_authority", "Орган выдавший удостоверяющий документ не указан!");
             var familyState = person.familystate;
             if (isPassport && familyState == null)
@@ -338,7 +332,7 @@ namespace elasticsearchApi.Utils
                 context.AddErrorMessage("", "Гражданин с указанным ПИН не найден!");
             else
             {
-                if (!String.IsNullOrEmpty(no) && !String.IsNullOrEmpty(series))
+                if (!string.IsNullOrEmpty(no) && !string.IsNullOrEmpty(series))
                 {
                     query = _db.Query("Persons").Where("PassportType", passportType)
                         .Where("PassportSeries", series).Where("PassportNo", no)

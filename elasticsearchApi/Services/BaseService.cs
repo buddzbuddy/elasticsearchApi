@@ -5,8 +5,9 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using elasticsearchApi.Utils;
 
-namespace elasticsearchApi.Utils
+namespace elasticsearchApi.Services
 {
     public abstract class BaseService
     {

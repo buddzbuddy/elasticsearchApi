@@ -1,18 +1,11 @@
 ﻿using AutoMapper;
-using Elasticsearch.Net;
 using elasticsearchApi.Models;
+using elasticsearchApi.Services;
 using elasticsearchApi.Utils;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Nest;
 using System;
 using System.Collections.Generic;
-using System.Dynamic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using static elasticsearchApi.Utils.ElasticService;
 
 namespace elasticsearchApi.Controllers
 {

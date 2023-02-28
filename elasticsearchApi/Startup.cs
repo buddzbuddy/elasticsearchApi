@@ -1,4 +1,5 @@
 using elasticsearchApi.Models;
+using elasticsearchApi.Services;
 using elasticsearchApi.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

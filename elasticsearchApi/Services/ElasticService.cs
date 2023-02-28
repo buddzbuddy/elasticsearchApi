@@ -1,26 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using System.Data.SqlClient;
 using elasticsearchApi.Models;
-using SqlKata.Compilers;
 using SqlKata.Execution;
-using System.Data;
 using Nest;
-using elasticsearchApi.Controllers;
 using Elasticsearch.Net;
-using SqlKata;
-using AutoMapper;
-using System.ComponentModel;
-using System.Text.Json;
-using System.Threading;
-using Microsoft.AspNetCore.Components.Forms;
-using static System.Net.WebRequestMethods;
+using elasticsearchApi.Utils;
 
-namespace elasticsearchApi.Utils
+namespace elasticsearchApi.Services
 {
     public interface IElasticService
     {
@@ -40,16 +27,16 @@ namespace elasticsearchApi.Utils
             _client = client;
         }
 
-        
 
-        
+
+
         public void FindSamePersonES(inputPersonDTO inputData, ref IServiceContext context, int page = 1, int size = 10)
         {
             verifyData(ref context, inputData);
             context.SuccessFlag = context.ErrorMessages == null || context.ErrorMessages.Count == 0;
             if (context.SuccessFlag)
             {
-                
+
                 if (FilterES(ModelToDict(inputData), out outPersonDTO[] data, out string[] errorMessages, out long totalCount, false, page, size))
                 {
                     var dupPersonList = data;
@@ -97,9 +84,9 @@ namespace elasticsearchApi.Utils
             System.Text.RegularExpressions.Regex nameRegex =
                 new System.Text.RegularExpressions.Regex("[0-9]");
             object s = person.last_name;
-            string lastName = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
+            string lastName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
 
-            if (String.IsNullOrEmpty(lastName)) //message = "Заполните фамилию!\n";
+            if (string.IsNullOrEmpty(lastName)) //message = "Заполните фамилию!\n";
                 context.AddErrorMessage("Last_Name", "Заполните фамилию");
             else
             {
@@ -110,9 +97,9 @@ namespace elasticsearchApi.Utils
             }
 
             s = person.first_name;
-            var firstName = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
+            var firstName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
 
-            if (String.IsNullOrEmpty(firstName))
+            if (string.IsNullOrEmpty(firstName))
                 context.AddErrorMessage("First_Name", "Заполните имя");
             else
             {
@@ -123,9 +110,9 @@ namespace elasticsearchApi.Utils
             }
 
             s = person.middle_name;
-            var middleName = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
+            var middleName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
 
-            if (!String.IsNullOrEmpty(middleName))
+            if (!string.IsNullOrEmpty(middleName))
             {
                 middleName = char.ToUpper(middleName[0]) + middleName.Substring(1);
                 person.middle_name = middleName;
@@ -136,9 +123,9 @@ namespace elasticsearchApi.Utils
             System.Text.RegularExpressions.Regex regex =
                 new System.Text.RegularExpressions.Regex("[^0-9]");
             s = person.iin;
-            var pin = (s != null ? s.ToString() : String.Empty).Trim().ToLower();
+            var pin = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
 
-            if (!String.IsNullOrEmpty(pin))
+            if (!string.IsNullOrEmpty(pin))
             {
                 if (pin.Length > 14)
                     context.AddErrorMessage("IIN", "Ошибка в длине ПИН");
@@ -186,7 +173,7 @@ namespace elasticsearchApi.Utils
                     val = val.ToString().Split('T')[0].Split(' ')[0];
                 }
                 //Convert input date to UTC date like in ES
-                if (DateTime.TryParseExact(val.ToString(), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime d) 
+                if (DateTime.TryParseExact(val.ToString(), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime d)
                     ||
                     DateTime.TryParseExact(val.ToString(), "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out d))
                 {
@@ -225,7 +212,7 @@ namespace elasticsearchApi.Utils
             .From(page - 1)
             .Size(size)
             .Query(q => q.Bool(b => b.Must(filters)));
-            
+
             if (_appSettings.log_enabled)
             {
                 var json = _client.RequestResponseSerializer.SerializeToString(searchDescriptor);
@@ -251,7 +238,7 @@ namespace elasticsearchApi.Utils
         {
             _ = Array.Empty<string>();
             data = Array.Empty<documentDTO>();
-            if(DocumentToDict(filter, out IDictionary<string, object> dict, out errorMessages))
+            if (DocumentToDict(filter, out IDictionary<string, object> dict, out errorMessages))
             {
                 if (FilterES(dict, out outPersonDTO[] personDatas, out errorMessages, out long totalCount, fuzzy, page, size))
                 {
@@ -279,7 +266,7 @@ namespace elasticsearchApi.Utils
                 throw new ApplicationException(string.Join(", ", errorMessages));
             }
         }
-        
+
     }
 
 }
