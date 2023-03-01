@@ -1,3 +1,4 @@
+using elasticsearchApi.Config;
 using elasticsearchApi.Models;
 using elasticsearchApi.Services;
 using elasticsearchApi.Utils;
@@ -40,6 +41,10 @@ namespace elasticsearchApi
             services.AddScoped<IElasticService, ElasticService>();
             services.AddScoped<IDataService, DataService>();
             services.AddTransient<IServiceContext, ServiceContext>();
+            services.AddTransient<IUserService, UserService>();
+            services.AddHttpClient<IUserService, UserService>();
+
+            services.Configure<UsersApiOptions>(Configuration.GetSection("UsersApiOptions"));
 
             services.AddHostedService<InitiatorHostedService>();
         }
