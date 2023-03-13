@@ -30,7 +30,7 @@ namespace API.Test.Helpers
             return handlerMock;
         }
 
-        internal static Mock<HttpMessageHandler> SetupBasicGetResourceList(List<MyUserDTO> expectedResponse, string endpoint)
+        /*internal static Mock<HttpMessageHandler> SetupBasicGetResourceList(List<MyUserDTO> expectedResponse, string endpoint)
         {
             var mockResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK)
             {
@@ -46,7 +46,7 @@ namespace API.Test.Helpers
                 ItExpr.IsAny<CancellationToken>())
                 .ReturnsAsync(mockResponse);
             return handlerMock;
-        }
+        }*/
 
         internal static Mock<HttpMessageHandler> SetupReturn404(List<T> expectedResponse)
         {

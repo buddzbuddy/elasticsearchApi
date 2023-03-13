@@ -4,6 +4,7 @@ using elasticsearchApi.Services;
 using elasticsearchApi.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Nest;
 using System;
 using System.Collections.Generic;
 
@@ -109,6 +110,34 @@ namespace elasticsearchApi.Controllers
             try
             {
                 _dataSvc.AddNewPerson(person, regionNo, districtNo, ref _context);
+                return Ok(_context);
+            }
+            catch (Exception e)
+            {
+                _context.SuccessFlag = false;
+                _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
+                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                return Ok(_context);
+            }
+        }
+        [HttpPost]
+        public IActionResult AddNewPersonFake([FromBody] addNewPersonDTO person, int regionNo, int districtNo)
+        {
+            try
+            {
+                //_dataSvc.AddNewPerson(person, regionNo, districtNo, ref _context);
+                var regCode = regionNo * 1000 + districtNo;
+                var pin = regCode * 10000000000;
+                DateTimeOffset now = DateTimeOffset.UtcNow;
+                long unixTimeMilliseconds = now.ToUnixTimeMilliseconds();
+                pin += unixTimeMilliseconds;
+                person.iin = pin.ToString();
+
+                _context["NewPIN"] = pin;
+                _context.SuccessFlag = true;
+                _context["Result"] = person;
+                _context["ResultPIN"] = pin;
+
                 return Ok(_context);
             }
             catch (Exception e)
