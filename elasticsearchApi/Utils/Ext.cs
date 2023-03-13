@@ -35,7 +35,11 @@ namespace elasticsearchApi.Utils
         public static void AddElasticsearch(this IServiceCollection services, IConfiguration configuration)
         {
             //var settings = new ConnectionSettings(new Uri(configuration["ElasticsearchSettings:uri"]));
-            var settings = new ConnectionSettings(new Uri(Environment.GetEnvironmentVariable("ES_HOST")));
+            var es_host = Environment.GetEnvironmentVariable("ES_HOST");
+            if(es_host.IsNullOrEmpty()) es_host = configuration["ElasticsearchSettings:uri"];
+
+            var settings = new ConnectionSettings(new Uri(es_host));
+            
             var defaultIndex = configuration["ElasticsearchSettings:defaultIndex"];
             var elasticUser = configuration["ElasticsearchSettings:elasticUser"];
             var elasticPass = configuration["ElasticsearchSettings:elasticPass"];
@@ -50,7 +54,11 @@ namespace elasticsearchApi.Utils
     {
         public static void AddSqlKataQueryFactory(this IServiceCollection services, IConfiguration configuration)
         {
-            var nrsz_connection = Environment.GetEnvironmentVariable("NRSZ_CONNECTION_STRING");//configuration["SqlKataSettings:connectionString"];
+            var nrsz_connection = Environment.GetEnvironmentVariable("NRSZ_CONNECTION_STRING");
+            if (nrsz_connection.IsNullOrEmpty())
+            {
+                nrsz_connection = configuration["SqlKataSettings:connectionString"];
+            }
             services.AddTransient((e) =>
             {
                 SqlConnection connection = new(nrsz_connection);

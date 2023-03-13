@@ -118,7 +118,7 @@ namespace API.Test.Systems.Services
             //Assert
             handlerMock.Protected().Verify(
                 "SendAsync", Times.Exactly(1),
-                httpRequestMessage,
+                ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Get && req.RequestUri == new Uri(endpoint)),
                 ItExpr.IsAny<CancellationToken>()
                 );
         }

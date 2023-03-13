@@ -95,8 +95,14 @@ namespace elasticsearchApi
             //3. Get the instance of BoardGamesDBContext in our services layer
             var services = scope.ServiceProvider;
             var _appSettings = services.GetRequiredService<AppSettings>();
+            var _config = services.GetRequiredService<IConfiguration>();
             //Initialize PIN counters from DB
-            using var connection = new SqlConnection(Environment.GetEnvironmentVariable("NRSZ_CONNECTION_STRING"));
+            var nrsz_connection = Environment.GetEnvironmentVariable("NRSZ_CONNECTION_STRING");
+            if (nrsz_connection.IsNullOrEmpty())
+            {
+                nrsz_connection = _config["SqlKataSettings:connectionString"];
+            }
+            using var connection = new SqlConnection(nrsz_connection);
             connection.Open();
             var command = new SqlCommand(getDistrictsSql, connection);
             using (var reader = await command.ExecuteReaderAsync(cancellationToken))
