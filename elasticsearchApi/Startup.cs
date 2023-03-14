@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using SqlKata.Execution;
 using System;
 using System.Data.SqlClient;
 using System.Threading;
@@ -96,20 +97,11 @@ namespace elasticsearchApi
             var services = scope.ServiceProvider;
             var _appSettings = services.GetRequiredService<AppSettings>();
             var _config = services.GetRequiredService<IConfiguration>();
-            //Initialize PIN counters from DB
-            var nrsz_connection = Environment.GetEnvironmentVariable("NRSZ_CONNECTION_STRING");
-            if (nrsz_connection.IsNullOrEmpty())
-            {
-                nrsz_connection = _config["SqlKataSettings:connectionString"];
-            }
-            using var connection = new SqlConnection(nrsz_connection);
-            connection.Open();
-            var command = new SqlCommand(getDistrictsSql, connection);
-            using (var reader = await command.ExecuteReaderAsync(cancellationToken))
-            {
-                while (reader.Read()) Refs.RegionDistricts.Add(new Refs.RegionDistrictItem { RegionNo = reader.GetInt32(0), DistrictNo = reader.GetInt32(1) });
-            }
-            connection.Close();
+            var _db = services.GetRequiredService<QueryFactory>();
+            //Initialize Region and District Codes from DB to InMemory
+            var list = await _db.Query("address").Select("regionNo", "districtNo").GetAsync<Refs.RegionDistrictItem>();
+            Refs.RegionDistricts.AddRange(list);
+
             Console.WriteLine($"IN-MEMORY DATA({Refs.RegionDistricts.Count} rows) LOADED SUCCESSFUL!");
         }
         const string getRegCounterSql = @"

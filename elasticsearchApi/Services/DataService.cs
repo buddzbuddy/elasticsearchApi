@@ -13,19 +13,17 @@ namespace elasticsearchApi.Services
     {
         void AddNewPerson(addNewPersonDTO person, int regionNo, int districtNo, ref IServiceContext context);
         void ModifyPersonData(string iin, modifyPersonDataDTO person, ref IServiceContext context);
-        void ModifyPersonPassport(string iin, modifyPersonPassportDTO person, ref IServiceContext context);
+        ModifyPersonPassportResult ModifyPersonPassport(string iin, modifyPersonPassportDTO person, ref IServiceContext context);
     }
     public class DataService : BaseService, IDataService
     {
         private readonly QueryFactory _db;
-        private readonly IMapper _mapper;
         private readonly AppSettings _appSettings;
         private readonly IElasticService _es;
 
-        public DataService(QueryFactory db, IMapper mapper, AppSettings appSettings, IElasticService es)
+        public DataService(QueryFactory db, AppSettings appSettings, IElasticService es)
         {
             _db = db;
-            _mapper = mapper;
             _appSettings = appSettings;
             _es = es;
         }
@@ -243,7 +241,7 @@ namespace elasticsearchApi.Services
                 {
                     context["NewPIN"] = newPin;
                     context.SuccessFlag = true;
-                    var result = _mapper.Map<outPersonDTO>(person);
+                    var result = StaticReferences.InitInhertedProperties<addNewPersonDTO, outPersonDTO>(person);
                     result.id = id;
                     context["Result"] = result;
                     context["ResultPIN"] = newPin;
@@ -287,49 +285,34 @@ namespace elasticsearchApi.Services
                 context.AddErrorMessage("", "NRSZ-TEMP is not updated");
             }
         }
-        public void ModifyPersonPassport(string iin, modifyPersonPassportDTO person, ref IServiceContext context)
-
+        public ModifyPersonPassportResult ModifyPersonPassport(string iin, modifyPersonPassportDTO person, ref IServiceContext context)
         {
-            var passportTypeId = new Guid("{A77C7DB9-C27F-4FFC-BFC0-0C6959731B98}");
-            var birthCertificateId = new Guid("{A52BE3AF-5DFA-405B-A4E6-18A64C24F9A5}");
-            //HERE IS MORE COMPLEX
-            System.Text.RegularExpressions.Regex nameRegex =
-                    new System.Text.RegularExpressions.Regex("[0-9]");
             var passportType = person.passporttype;
             var docTypeName = "";
             if ((passportType ?? Guid.Empty) != Guid.Empty)
             {
-                docTypeName = passportType.ToString();//context.Enums.GetValue((Guid)passportType).Value;
+                docTypeName = passportType.ToString();
             }
-            if (passportType == null)
-                context.AddErrorMessage("PassportType", "Тип удостоверяющего документа не указан!");
-            var isPassport = passportType != null && (Guid)passportType == passportTypeId;
-            //{
+            
             var v = person.passportseries;
             var series = v != null ? v.ToString().Trim() : string.Empty;
-            if (isPassport && string.IsNullOrWhiteSpace(series))
-                context.AddErrorMessage("passportseries", "Серия удостоверяющего документа не указана!");
             v = person.passportno;
             var no = v != null ? v.ToString().Trim() : string.Empty;
-            if (isPassport && string.IsNullOrWhiteSpace(no))
-                context.AddErrorMessage("passportno", "Номер удостоверяющего документа не указан!");
             var pDate = person.date_of_issue;
-            if (isPassport && pDate == null)
-                context.AddErrorMessage("date_of_issue", "Дата выдачи удостоверяющего документа не указана!");
-            var issueDate = pDate;//!string.IsNullOrEmpty(v) ? Convert.ToDateTime(v) : (DateTime?)null;
+            var issueDate = pDate;
             v = person.issuing_authority;
             var authority = v != null ? v.ToString().Trim() : string.Empty;
-            if (isPassport && string.IsNullOrWhiteSpace(authority))
-                context.AddErrorMessage("issuing_authority", "Орган выдавший удостоверяющий документ не указан!");
             var familyState = person.familystate;
-            if (isPassport && familyState == null)
-                context.AddErrorMessage("familystate", "Семейное положение не указано!");
-            //}
+
+            if (!verifyInputData(person, ref context)) return ModifyPersonPassportResult.INPUT_DATA_ERROR;
 
             var query = _db.Query("Persons").Where("IIN", iin);
             var personDb = query.FirstOrDefault();
             if (personDb == null)
-                context.AddErrorMessage("", "Гражданин с указанным ПИН не найден!");
+            {
+                context.AddErrorMessage("", ModifyPersonPassportResult.NRSZ_NOT_FOUND_BY_PIN.GetDescription());
+                return ModifyPersonPassportResult.NRSZ_NOT_FOUND_BY_PIN;
+            }
             else
             {
                 if (!string.IsNullOrEmpty(no) && !string.IsNullOrEmpty(series))
@@ -342,51 +325,83 @@ namespace elasticsearchApi.Services
                     {
                         var msg = $"Ошибка дублирования данных в документе \"{docTypeName}\"! ПИН: {personDb2.IIN}, ФИО: {personDb2.Last_Name} {personDb2.First_Name} {personDb2.Middle_Name}, \"{docTypeName}\" Номер: {personDb2.PassportNo}, Дата рождения {personDb2.Date_of_Birth}, found personIdByPIN: {personDb.Id}, found personIdByPassport: " + personDb2.Id;
                         context.AddErrorMessage("", msg);
+                        return ModifyPersonPassportResult.PASSPORT_DUPLICATE;
                     }
                 }
 
-                if (personDb.PassportSeries != null || personDb.PassportNo != null)
+                var affectedRows = _db.Query("Passports").Insert(new
                 {
-                    //_db.Statement("BEGIN TRANSACTION;");
-                    var affectedRows = _db.Query("Passports").Insert(new
+                    PersonId = personDb.Id,
+                    personDb.PassportType,
+                    personDb.PassportSeries,
+                    personDb.PassportNo,
+                    personDb.Date_Of_Issue,
+                    personDb.Issuing_Authority,
+                    personDb.Marital_Status
+                });
+                if (affectedRows == 0)
+                {
+                    var response = ModifyPersonPassportResult.PASSPORT_NOT_INSERTED_TO_ARCHIVE;
+                    context.AddErrorMessage("", response.GetDescription());
+                    return response;
+                }
+                else
+                {
+                    affectedRows = _db.Query("Persons").Where("Id", (int)personDb.Id).Update(new
                     {
-                        PersonId = personDb.Id,
-                        personDb.PassportType,
-                        personDb.PassportSeries,
-                        personDb.PassportNo,
-                        personDb.Date_Of_Issue,
-                        personDb.Issuing_Authority,
-                        personDb.Marital_Status
+                        PassportType = passportType,
+                        PassportSeries = series,
+                        PassportNo = no,
+                        Date_of_Issue = issueDate,
+                        Issuing_Authority = authority,
+                        FamilyState = familyState
                     });
                     if (affectedRows == 0)
                     {
-                        context.AddErrorMessage("", "Паспортные данные не обновлены 1");
-                        //_db.Statement("ROLLBACK TRANSACTION;");
-                    }
-                    else
-                    {
-                        affectedRows = _db.Query("Persons").Where("Id", (int)personDb.Id).Update(new
-                        {
-                            PassportType = passportType,
-                            PassportSeries = series,
-                            PassportNo = no,
-                            Date_of_Issue = issueDate,
-                            Issuing_Authority = authority,
-                            FamilyState = familyState
-                        });
-                        if (affectedRows == 0)
-                        {
-                            context.AddErrorMessage("", "Паспортные данные не обновлены 1");
-                            //_db.Statement("ROLLBACK TRANSACTION;");
-                        }
-                        /*else
-                            _db.Statement("COMMIT TRANSACTION;");*/
+                        context.AddErrorMessage("", ModifyPersonPassportResult.PASSPORT_NOT_UPDATED.GetDescription());
+                        return ModifyPersonPassportResult.PASSPORT_NOT_UPDATED;
                     }
                 }
-                else
-                    context.AddErrorMessage("", "Паспортные данные не переданы");
             }
             context.SuccessFlag = context.ErrorMessages.Count == 0;
+            return ModifyPersonPassportResult.OK;
+        }
+
+        private bool verifyInputData(modifyPersonPassportDTO person, ref IServiceContext context)
+        {
+            var passportTypeId = new Guid("{A77C7DB9-C27F-4FFC-BFC0-0C6959731B98}");
+            var birthCertificateId = new Guid("{A52BE3AF-5DFA-405B-A4E6-18A64C24F9A5}");
+            //HERE IS MORE COMPLEX
+            var passportType = person.passporttype;
+            var docTypeName = "";
+            if ((passportType ?? Guid.Empty) != Guid.Empty)
+            {
+                docTypeName = passportType.ToString();
+            }
+            if (passportType == null)
+                context.AddErrorMessage("PassportType", "Тип удостоверяющего документа не указан!");
+            var isPassport = passportType != null && (Guid)passportType == passportTypeId;
+
+            var v = person.passportseries;
+            var series = v != null ? v.ToString().Trim() : string.Empty;
+            if (isPassport && string.IsNullOrWhiteSpace(series))
+                context.AddErrorMessage("passportseries", "Серия удостоверяющего документа не указана!");
+            v = person.passportno;
+            var no = v != null ? v.ToString().Trim() : string.Empty;
+            if (isPassport && string.IsNullOrWhiteSpace(no))
+                context.AddErrorMessage("passportno", "Номер удостоверяющего документа не указан!");
+            var pDate = person.date_of_issue;
+            if (isPassport && pDate == null)
+                context.AddErrorMessage("date_of_issue", "Дата выдачи удостоверяющего документа не указана!");
+            var issueDate = pDate;
+            v = person.issuing_authority;
+            var authority = v != null ? v.ToString().Trim() : string.Empty;
+            if (isPassport && string.IsNullOrWhiteSpace(authority))
+                context.AddErrorMessage("issuing_authority", "Орган выдавший удостоверяющий документ не указан!");
+            var familyState = person.familystate;
+            if (isPassport && familyState == null)
+                context.AddErrorMessage("familystate", "Семейное положение не указано!");
+            return context.ErrorMessages.Count == 0;
         }
     }
 }

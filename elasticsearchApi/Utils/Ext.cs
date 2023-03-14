@@ -5,7 +5,9 @@ using Nest;
 using SqlKata.Compilers;
 using SqlKata.Execution;
 using System;
+using System.ComponentModel;
 using System.Data.SqlClient;
+using System.Reflection;
 
 namespace elasticsearchApi.Utils
 {
@@ -28,6 +30,24 @@ namespace elasticsearchApi.Utils
         public static string ToStringJoin(this string[] @this, string separator = ",")
         {
             return @this == null ? "" : string.Join(separator, @this);
+        }
+        public static string GetDescription(this Enum value)
+        {
+            Type type = value.GetType();
+            string name = Enum.GetName(type, value);
+            if (name != null)
+            {
+                FieldInfo field = type.GetField(name);
+                if (field != null)
+                {
+                    if (Attribute.GetCustomAttribute(field,
+                             typeof(DescriptionAttribute)) is DescriptionAttribute attr)
+                    {
+                        return attr.Description;
+                    }
+                }
+            }
+            return value?.ToString();
         }
     }
     public static class ElasticsearchExtensions
