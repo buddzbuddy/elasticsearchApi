@@ -14,13 +14,16 @@ namespace elasticsearchApi.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Person>(x => {
+            modelBuilder.Entity<PersonEntity>(x => {
+                x.ToTable("Persons");
+            });
+            modelBuilder.Entity<User>(x => {
                 x.ToTable("Users");
             });
         }
-
-#nullable disable
-        public DbSet<Person> Persons { get; set; }
-#nullable enable
+        #nullable disable
+        public DbSet<PersonEntity> Persons { get; set; }
+        public DbSet<User> Users { get; set; }
+        #nullable enable
     }
 }

@@ -1,4 +1,4 @@
-﻿using API.Test.Fixtures;
+﻿using elasticsearchApi.Tests.Fixtures;
 using elasticsearchApi.Controllers;
 using elasticsearchApi.Models;
 using elasticsearchApi.Services;
@@ -11,7 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace API.Test.Systems.Controllers
+namespace elasticsearchApi.Tests.Systems.Controllers
 {
     public class TestUsersController
     {

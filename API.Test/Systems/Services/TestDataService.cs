@@ -2,18 +2,10 @@
 using elasticsearchApi.Services;
 using elasticsearchApi.Utils;
 using FluentAssertions;
-using Humanizer;
 using Moq;
-using SqlKata.Compilers;
 using SqlKata.Execution;
-using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace API.Test.Systems.Services
+namespace elasticsearchApi.Tests.Systems.Services
 {
     public class TestDataService
     {

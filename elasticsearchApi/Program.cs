@@ -47,8 +47,8 @@ services.Configure<UsersApiOptions>(Configuration.GetSection("UsersApiOptions"))
 
 services.AddHostedService<InitiatorHostedService>();
 
-/*builder.Services.AddScoped<IUsers, Users>();
-builder.Services.AddSingleton<INotificationService, DummyNotificationService>();*/
+services.AddScoped<IUsers, Users>();
+services.AddSingleton<INotificationService, DummyNotificationService>();
 
 services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer();
