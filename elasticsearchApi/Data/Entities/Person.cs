@@ -1,6 +1,8 @@
-﻿namespace elasticsearchApi.Data.Entities
+﻿using elasticsearchApi.Models;
+
+namespace elasticsearchApi.Data.Entities
 {
-    public class Person
+    public class Person : inputPersonDTO
     {
 
     }
