@@ -22,7 +22,7 @@ namespace elasticsearchApi.Utils
         {
             return string.IsNullOrEmpty(@this);
         }
-        public static bool IsNullOrEmpty(this object @this)
+        public static bool IsNullOrEmpty(this object? @this)
         {
             return @this == null || string.IsNullOrEmpty(@this.ToString());
         }
@@ -31,13 +31,13 @@ namespace elasticsearchApi.Utils
         {
             return @this == null ? "" : string.Join(separator, @this);
         }
-        public static string GetDescription(this Enum value)
+        public static string? GetDescription(this Enum value)
         {
             Type type = value.GetType();
-            string name = Enum.GetName(type, value);
+            var name = Enum.GetName(type, value);
             if (name != null)
             {
-                FieldInfo field = type.GetField(name);
+                var field = type.GetField(name);
                 if (field != null)
                 {
                     if (Attribute.GetCustomAttribute(field,
@@ -58,7 +58,7 @@ namespace elasticsearchApi.Utils
             var es_host = Environment.GetEnvironmentVariable("ES_HOST");
             if(es_host.IsNullOrEmpty()) es_host = configuration["ElasticsearchSettings:uri"];
 
-            var settings = new ConnectionSettings(new Uri(es_host));
+            var settings = new ConnectionSettings(new Uri(es_host ?? String.Empty));
             
             var defaultIndex = configuration["ElasticsearchSettings:defaultIndex"];
             var elasticUser = configuration["ElasticsearchSettings:elasticUser"];
@@ -79,7 +79,7 @@ namespace elasticsearchApi.Utils
             {
                 nrsz_connection = configuration["SqlKataSettings:connectionString"];
             }
-            services.AddTransient((e) =>
+            services.AddScoped((e) =>
             {
                 SqlConnection connection = new(nrsz_connection);
                 SqlServerCompiler compiler = new();
