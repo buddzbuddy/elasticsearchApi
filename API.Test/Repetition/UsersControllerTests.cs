@@ -25,7 +25,7 @@ namespace elasticsearchApi.Tests.Repetition
         private const string Username = "Test";
         private const string Password = "test";
         private readonly string base64EncodedAuthenticationString = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{Username}:{Password}"));
-        private const string SqlConnectionString = "Server=localhost,14331;Database=AspNetCoreTesting;User Id=sa;Password=P@ssword123";
+        private const string SqlConnectionString = "Server=localhost,14331;Database=elasticsearchApi;User Id=sa;Password=P@ssword123;Encrypt=False";
         private INotificationService NotificationServiceFake = A.Fake<INotificationService>();
 
         [Fact]
@@ -35,7 +35,7 @@ namespace elasticsearchApi.Tests.Repetition
 
             var client = application.CreateClient();
 
-            var response = await client.GetAsync("/users");
+            var response = await client.GetAsync("api/users");
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
@@ -68,9 +68,9 @@ namespace elasticsearchApi.Tests.Repetition
                     var client = application.CreateClient();
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
 
-                    var response = await client.GetAsync("/users");
-
-                    dynamic users = JArray.Parse(await response.Content.ReadAsStringAsync());
+                    var response = await client.GetAsync("api/users");
+                    var json = await response.Content.ReadAsStringAsync();
+                    dynamic users = JArray.Parse(json);
 
                     Assert.Equal(2, users.Count);
                     Assert.Equal("John", (string)users[0].firstName);
@@ -98,7 +98,7 @@ namespace elasticsearchApi.Tests.Repetition
                 var client = application.CreateClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
 
-                var response = await client.PutAsJsonAsync("/users/", new { firstName = "John", lastName = "Doe" });
+                var response = await client.PutAsJsonAsync("api/users/", new { firstName = "John", lastName = "Doe" });
 
                 dynamic user = JObject.Parse(await response.Content.ReadAsStringAsync());
 
@@ -139,7 +139,7 @@ namespace elasticsearchApi.Tests.Repetition
                 var client = application.CreateClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
 
-                var response = await client.PutAsJsonAsync("/users/", new { firstName = "John", lastName = "Doe" });
+                var response = await client.PutAsJsonAsync("api/users/", new { firstName = "John", lastName = "Doe" });
 
                 A.CallTo(() =>
                     NotificationServiceFake.SendUserCreatedNotification(A<User>.That.Matches(x => x.FirstName == "John" && x.LastName == "Doe"))

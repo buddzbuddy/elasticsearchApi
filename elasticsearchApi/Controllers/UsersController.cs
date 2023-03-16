@@ -1,4 +1,5 @@
-﻿using elasticsearchApi.Services;
+﻿using elasticsearchApi.Data.Entities;
+using elasticsearchApi.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
@@ -11,8 +12,17 @@ namespace elasticsearchApi.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
-        public UsersController(IUserService userService) {
+        private readonly IUsers _users;
+        public UsersController(IUserService userService, IUsers users)
+        {
             _userService = userService;
+            _users = users;
+        }
+
+        [HttpGet()]
+        public async Task<ActionResult<User>> GetUsers()
+        {
+            return Ok(await _users.All());
         }
 
         [HttpGet("GetUsers")]

@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using elasticsearchApi.Data.Entities;
 
 namespace elasticsearchApi.Tests.Systems.Controllers
 {
@@ -21,7 +22,8 @@ namespace elasticsearchApi.Tests.Systems.Controllers
             //Arrange
             var mockUserService = new Mock<IUserService>();
             mockUserService.Setup(svc => svc.GetAllMyUsers()).ReturnsAsync(MyUserFixtures.GetTestUsers);
-            var sut = new UsersController(mockUserService.Object);
+            var mockUsers = new Mock<IUsers>();
+            var sut = new UsersController(mockUserService.Object, mockUsers.Object);
 
 
             //Act
@@ -40,7 +42,8 @@ namespace elasticsearchApi.Tests.Systems.Controllers
 
             mockUserService.Setup(svc => svc.GetAllMyUsers()).ReturnsAsync(MyUserFixtures.GetTestUsers);
 
-            var sut = new UsersController(mockUserService.Object);
+            var mockUsers = new Mock<IUsers>();
+            var sut = new UsersController(mockUserService.Object, mockUsers.Object);
 
 
 
@@ -60,7 +63,8 @@ namespace elasticsearchApi.Tests.Systems.Controllers
 
             mockUserService.Setup(svc => svc.GetAllMyUsers()).ReturnsAsync(MyUserFixtures.GetTestUsers);
 
-            var sut = new UsersController(mockUserService.Object);
+            var mockUsers = new Mock<IUsers>();
+            var sut = new UsersController(mockUserService.Object, mockUsers.Object);
 
 
 
@@ -83,7 +87,8 @@ namespace elasticsearchApi.Tests.Systems.Controllers
 
             mockUserService.Setup(svc => svc.GetAllMyUsers()).ReturnsAsync(new List<elasticsearchApi.Models.MyUserDTO>());
 
-            var sut = new UsersController(mockUserService.Object);
+            var mockUsers = new Mock<IUsers>();
+            var sut = new UsersController(mockUserService.Object, mockUsers.Object);
 
 
 

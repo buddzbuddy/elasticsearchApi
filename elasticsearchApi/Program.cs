@@ -45,7 +45,7 @@ services.AddHttpClient<IUserService, UserService>();
 
 services.Configure<UsersApiOptions>(Configuration.GetSection("UsersApiOptions"));
 
-services.AddHostedService<InitiatorHostedService>();
+//services.AddHostedService<InitiatorHostedService>();
 
 services.AddScoped<IUsers, Users>();
 services.AddSingleton<INotificationService, DummyNotificationService>();
@@ -71,7 +71,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run("http://0.0.0.0:5000");
+app.Run();
 
 public partial class Program
 {
