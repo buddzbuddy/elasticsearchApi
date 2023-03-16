@@ -1,7 +1,7 @@
 ﻿using elasticsearchApi.Models;
 using SqlKata.Execution;
 
-namespace elasticsearchApi.Utils
+namespace elasticsearchApi.Utils.InitiatorProcesses
 {
     public class InitiatorHostedService : IHostedService
     {
@@ -17,7 +17,10 @@ namespace elasticsearchApi.Utils
         {
             Console.WriteLine("STARTUP SQL LOADING STARTED...");
             // Create a new scope to retrieve scoped services
+
+
             using var scope = _serviceProvider.CreateScope();
+
             var services = scope.ServiceProvider;
             var _db = services.GetRequiredService<QueryFactory>();
             //Initialize Region and District Codes from DB to InMemory

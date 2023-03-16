@@ -1,4 +1,5 @@
 ﻿using elasticsearchApi.Data.Entities;
+using elasticsearchApi.Data.Seed;
 using Microsoft.EntityFrameworkCore;
 using Nest;
 using System.Collections.Generic;
@@ -51,19 +52,21 @@ namespace elasticsearchApi.Data
                 // DB Computed Fields
                 x.Property<DateTime>("CreatedAt").IsRequired(true).HasColumnType("datetime").HasDefaultValueSql("getdate()");
             });
-            modelBuilder.Entity<AddressEntity>(x => {
+            modelBuilder.Entity<AddressEntity>(x =>
+            {
                 x.ToTable("address");
                 x.HasNoKey();
                 x.Property<int>("regionNo").IsRequired();
                 x.Property<string?>("regionName").IsRequired().HasColumnType("nvarchar(50)");
                 x.Property<int>("districtNo").IsRequired();
                 x.Property<string?>("districtName").IsRequired().HasColumnType("nvarchar(50)");
+
+                //x.HasData(DataSeeder.addressEntities); //Moved to HostedServices and will be achieved through SqlKata
             });
+            
             modelBuilder.Entity<User>(x => {
                 x.ToTable("Users");
             });
-
-            
         }
         #nullable disable
         public DbSet<PersonEntity> Persons { get; set; }

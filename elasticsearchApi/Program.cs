@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
+using elasticsearchApi.Utils.InitiatorProcesses;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
@@ -18,7 +19,7 @@ services.AddControllers(options => {
     options.Filters.Add(new AuthorizeFilter());
 });
 var nrsz_connection = Environment.GetEnvironmentVariable("NRSZ_CONNECTION_STRING");
-if (nrsz_connection?.IsNullOrEmpty() ?? false)
+if (nrsz_connection.IsNullOrEmpty())
 {
     nrsz_connection = Configuration["SqlKataSettings:connectionString"];
 }
@@ -44,8 +45,12 @@ services.AddTransient<IUserService, UserService>();
 services.AddHttpClient<IUserService, UserService>();
 
 services.Configure<UsersApiOptions>(Configuration.GetSection("UsersApiOptions"));
-
-//services.AddHostedService<InitiatorHostedService>();
+var envName = builder.Environment.EnvironmentName;
+if (builder.Environment.IsEnvironment("Test"))
+{
+    services.AddHostedService<SeedAddressData>();
+}
+services.AddHostedService<InitiatorHostedService>();
 
 services.AddScoped<IUsers, Users>();
 services.AddSingleton<INotificationService, DummyNotificationService>();

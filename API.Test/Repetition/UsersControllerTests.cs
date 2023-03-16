@@ -2,8 +2,10 @@ using Bazinga.AspNetCore.Authentication.Basic;
 using elasticsearchApi.Data;
 using elasticsearchApi.Data.Entities;
 using elasticsearchApi.Services;
+using elasticsearchApi.Utils.InitiatorProcesses;
 using FakeItEasy;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -154,6 +156,7 @@ namespace elasticsearchApi.Tests.Repetition
         private WebApplicationFactory<Program> GetWebApplication()
             => new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
             {
+                builder.UseEnvironment("Test");
                 builder.ConfigureTestServices(services =>
                 {
                     var options = new DbContextOptionsBuilder<ApiContext>()
@@ -172,6 +175,8 @@ namespace elasticsearchApi.Tests.Repetition
                                                     .AddAuthenticationSchemes(BasicAuthenticationDefaults.AuthenticationScheme)
                                                     .Build();
                     });
+
+                    //services.AddHostedService<SeedAddressData>(); //Moved to Program.cs with ENV.TEST condition
                 });
             });
     }
