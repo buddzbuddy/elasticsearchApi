@@ -36,13 +36,14 @@ namespace elasticsearchApi.Data
                 x.Property<DateTime>("ModifiedAt").IsRequired(true).HasColumnType("datetime").HasDefaultValueSql("getdate()");
                 x.Property<bool>("deleted").IsRequired(true).HasColumnType("bit").HasDefaultValue(0);
             });
-            modelBuilder.Entity<PassportEntity>(x => {
+            modelBuilder.Entity<PassportEntity>(x =>
+            {
                 x.ToTable("Passports");
                 x.HasNoKey();
                 x.Property<int>("PersonId").IsRequired();
                 x.Property<Guid?>("PassportType").IsRequired(false).HasColumnType("uniqueidentifier");
                 x.Property<string?>("PassportSeries").IsRequired(false).HasColumnType("nvarchar(50)");
-                x.Property<string?>("PassportNo").IsRequired(false).HasColumnType("nvarchar(max)");
+                x.Property<string?>("PassportNo").IsRequired(false).HasColumnType("nvarchar(50)");
                 x.Property<DateTime?>("Date_of_Issue").IsRequired(false).HasColumnType("date");
                 x.Property<string?>("Issuing_Authority").IsRequired(false).HasColumnType("nvarchar(50)");
                 x.Property<Guid?>("Marital_Status").IsRequired(false).HasColumnType("uniqueidentifier");
@@ -50,9 +51,19 @@ namespace elasticsearchApi.Data
                 // DB Computed Fields
                 x.Property<DateTime>("CreatedAt").IsRequired(true).HasColumnType("datetime").HasDefaultValueSql("getdate()");
             });
+            modelBuilder.Entity<AddressEntity>(x => {
+                x.ToTable("address");
+                x.HasNoKey();
+                x.Property<int>("regionNo").IsRequired();
+                x.Property<string?>("regionName").IsRequired().HasColumnType("nvarchar(50)");
+                x.Property<int>("districtNo").IsRequired();
+                x.Property<string?>("districtName").IsRequired().HasColumnType("nvarchar(50)");
+            });
             modelBuilder.Entity<User>(x => {
                 x.ToTable("Users");
             });
+
+            
         }
         #nullable disable
         public DbSet<PersonEntity> Persons { get; set; }
