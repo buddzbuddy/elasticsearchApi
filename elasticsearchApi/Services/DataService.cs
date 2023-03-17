@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using elasticsearchApi.Data.Entities;
 using elasticsearchApi.Models;
 using elasticsearchApi.Utils;
 using SqlKata.Execution;
@@ -20,12 +21,14 @@ namespace elasticsearchApi.Services
         private readonly QueryFactory _db;
         private readonly AppSettings _appSettings;
         private readonly IElasticService _es;
+        private readonly ICacheService _cache;
 
-        public DataService(QueryFactory db, AppSettings appSettings, IElasticService es)
+        public DataService(QueryFactory db, AppSettings appSettings, IElasticService es, ICacheService cache)
         {
             _db = db;
             _appSettings = appSettings;
             _es = es;
+            _cache = cache;
         }
 
         private static readonly ConcurrentDictionary<int, Lazy<SemaphoreSlim>> _semaphore = new();
@@ -217,7 +220,14 @@ namespace elasticsearchApi.Services
                 context.SuccessFlag = false;
                 return;
             }
-            if (!Refs.RegionDistricts.Any(x => x.RegionNo == regionNo && x.DistrictNo == districtNo))
+            var addressRefs = _cache.GetObject(CacheKeys.ADDRESS_REFS_KEY);
+            if (addressRefs == null)
+            {
+                context.AddErrorMessage("AddressRefs", $"Адресный справочник не загружен в память! Перезапустите и проверьте!");
+                context.SuccessFlag = false;
+                return;
+            }
+            if (!((AddressEntity[])addressRefs).Any(x => x.regionNo == regionNo && x.districtNo == districtNo))
             {
                 context.AddErrorMessage("", string.Format("Номера области и района отсутствуют в справочнике: regionNo - {0}, districtNo - {1}", regionNo, districtNo));
                 context.SuccessFlag = false;

@@ -15,7 +15,7 @@ namespace elasticsearchApi.Tests.Repetition
 {
     public class UsersControllerTestsWithTestHelper
     {
-        private const string SqlConnectionString = "Server=localhost,14331;Database=AspNetCoreTesting;User Id=sa;Password=P@ssword123";
+        private const string SqlConnectionString = "Server=localhost,14331;Database=nrsz-test;User Id=sa;Password=P@ssword123;Encrypt=False";
         private INotificationService NotificationServiceFake = A.Fake<INotificationService>();
 
         [Fact]

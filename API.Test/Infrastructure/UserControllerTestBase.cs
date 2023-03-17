@@ -21,7 +21,7 @@ namespace elasticsearchApi.Tests.Infrastructure
         private const string Username = "Test";
         private const string Password = "test";
         private readonly string base64EncodedAuthenticationString = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{Username}:{Password}"));
-        private const string SqlConnectionString = "Server=localhost,14331;Database=AspNetCoreTesting;User Id=sa;Password=P@ssword123";
+        private const string SqlConnectionString = "Server=localhost,14331;Database=nrsz-test;User Id=sa;Password=P@ssword123;Encrypt=False";
         protected INotificationService NotificationServiceFake = A.Fake<INotificationService>();
 
         protected Task RunTest(Func<HttpClient, Task> test, Func<DbCommand, Task>? populateDatabase = null, Func<DbCommand, Task>? validateDatabase = null, bool addAuth = true)

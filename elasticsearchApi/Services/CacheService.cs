@@ -49,8 +49,9 @@ namespace elasticsearchApi.Services
             _cacheProvider.SetCache(key, obj, DateTimeOffset.UtcNow.AddDays(100));
         }
     }
-    public static class CacheKeys
+    public class CacheKeys
     {
-        public static string RegCounters => "_RegCounters";
+        public const string RegCounters = "_RegCounters";
+        public const string ADDRESS_REFS_KEY = "_ADDRESS_REFS_KEY";
     }
 }

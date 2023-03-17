@@ -43,13 +43,9 @@ services.AddScoped<IDataService, DataService>();
 services.AddTransient<IServiceContext, ServiceContext>();
 services.AddTransient<IUserService, UserService>();
 services.AddHttpClient<IUserService, UserService>();
+services.AddCacheServices();
 
 services.Configure<UsersApiOptions>(Configuration.GetSection("UsersApiOptions"));
-var envName = builder.Environment.EnvironmentName;
-if (builder.Environment.IsEnvironment("Test"))
-{
-    services.AddHostedService<SeedAddressData>();
-}
 services.AddHostedService<InitiatorHostedService>();
 
 services.AddScoped<IUsers, Users>();

@@ -37,7 +37,7 @@ namespace elasticsearchApi.Tests.Repetition
 
             var client = application.CreateClient();
 
-            var response = await client.GetAsync("api/users");
+            var response = await client.GetAsync("/users");
 
             Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
@@ -70,7 +70,7 @@ namespace elasticsearchApi.Tests.Repetition
                     var client = application.CreateClient();
                     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
 
-                    var response = await client.GetAsync("api/users");
+                    var response = await client.GetAsync("/users");
                     var json = await response.Content.ReadAsStringAsync();
                     dynamic users = JArray.Parse(json);
 
@@ -100,7 +100,7 @@ namespace elasticsearchApi.Tests.Repetition
                 var client = application.CreateClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
 
-                var response = await client.PutAsJsonAsync("api/users/", new { firstName = "John", lastName = "Doe" });
+                var response = await client.PutAsJsonAsync("/users/", new { firstName = "John", lastName = "Doe" });
 
                 dynamic user = JObject.Parse(await response.Content.ReadAsStringAsync());
 
@@ -141,7 +141,7 @@ namespace elasticsearchApi.Tests.Repetition
                 var client = application.CreateClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
 
-                var response = await client.PutAsJsonAsync("api/users/", new { firstName = "John", lastName = "Doe" });
+                var response = await client.PutAsJsonAsync("/users/", new { firstName = "John", lastName = "Doe" });
 
                 A.CallTo(() =>
                     NotificationServiceFake.SendUserCreatedNotification(A<User>.That.Matches(x => x.FirstName == "John" && x.LastName == "Doe"))

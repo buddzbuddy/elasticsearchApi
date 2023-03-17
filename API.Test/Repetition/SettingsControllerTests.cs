@@ -11,7 +11,21 @@ namespace elasticsearchApi.Tests.Repetition
     public class SettingsControllerTests
     {
         [Fact]
-        public async Task Gets_production_setting_if_no_other_configuration_is_set_up()
+        public async Task Gets_prod_setting_if_environment_name_is_set_to_Prod()
+        {
+            var application = new WebApplicationFactory<Program>().WithWebHostBuilder(builder => {
+                builder.UseEnvironment("Production");
+            });
+
+            var client = application.CreateClient();
+
+            var response = await client.GetAsync("/settings/mysetting");
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("Production setting", await response.Content.ReadAsStringAsync());
+        }
+        [Fact]
+        public async Task Gets_development_setting_if_no_other_configuration_is_set_up()
         {
             var application = new WebApplicationFactory<Program>();
 
@@ -20,7 +34,7 @@ namespace elasticsearchApi.Tests.Repetition
             var response = await client.GetAsync("/settings/mysetting");
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            Assert.Equal("Production setting", await response.Content.ReadAsStringAsync());
+            Assert.Equal("Development setting", await response.Content.ReadAsStringAsync());
         }
         
         [Fact]

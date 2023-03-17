@@ -18,6 +18,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             SqlServerCompiler compiler = new();*/
             var mockServiceContext = new Mock<IServiceContext>();
             var mockEsService = new Mock<IElasticService>();
+            var mockCacheService = new Mock<ICacheService>();
             var appSettings = new AppSettings();
             var mockQF = new Mock<QueryFactory>();
             string iin = "";
@@ -25,7 +26,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             //mockServiceContext.Setup(svc => svc.AddErrorMessage(It.IsAny<string>(), It.IsAny<string>()));
             mockServiceContext.Setup(svc => svc.ErrorMessages.Count).Returns(1);
 
-            var sut = new DataService(mockQF.Object, appSettings, mockEsService.Object);
+            var sut = new DataService(mockQF.Object, appSettings, mockEsService.Object, mockCacheService.Object);
 
             //Act
             var sc = mockServiceContext.Object;
@@ -44,6 +45,8 @@ namespace elasticsearchApi.Tests.Systems.Services
             SqlServerCompiler compiler = new();*/
             var mockServiceContext = new Mock<IServiceContext>();
             var mockEsService = new Mock<IElasticService>();
+
+            var mockCacheService = new Mock<ICacheService>();
             var appSettings = new AppSettings();
             var mockQF = new Mock<QueryFactory>();
             string iin = "";
@@ -51,7 +54,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             //mockServiceContext.Setup(svc => svc.AddErrorMessage(It.IsAny<string>(), It.IsAny<string>()));
             mockServiceContext.Setup(svc => svc.ErrorMessages.Count).Returns(0);
 
-            var sut = new DataService(mockQF.Object, appSettings, mockEsService.Object);
+            var sut = new DataService(mockQF.Object, appSettings, mockEsService.Object, mockCacheService.Object);
 
             //Act
             var sc = mockServiceContext.Object;

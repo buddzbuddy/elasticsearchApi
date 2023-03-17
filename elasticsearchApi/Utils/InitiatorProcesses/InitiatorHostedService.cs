@@ -1,4 +1,6 @@
-﻿using elasticsearchApi.Models;
+﻿using elasticsearchApi.Data.Entities;
+using elasticsearchApi.Models;
+using elasticsearchApi.Services;
 using SqlKata.Execution;
 
 namespace elasticsearchApi.Utils.InitiatorProcesses
@@ -23,11 +25,13 @@ namespace elasticsearchApi.Utils.InitiatorProcesses
 
             var services = scope.ServiceProvider;
             var _db = services.GetRequiredService<QueryFactory>();
+            var _cache = services.GetRequiredService<ICacheService>();
             //Initialize Region and District Codes from DB to InMemory
-            var list = await _db.Query("address").Select("regionNo", "districtNo").GetAsync<Refs.RegionDistrictItem>(cancellationToken: cancellationToken);
-            Refs.RegionDistricts.AddRange(list);
+            var list = await _db.Query("address").Select("regionNo", "districtNo").GetAsync<AddressEntity>(cancellationToken: cancellationToken);
 
-            Console.WriteLine($"IN-MEMORY DATA({Refs.RegionDistricts.Count} rows) LOADED SUCCESSFUL!");
+            _cache.UpdateObject(CacheKeys.ADDRESS_REFS_KEY, list.ToArray());
+
+            Console.WriteLine($"IN-MEMORY DATA({list.Count()} rows) LOADED SUCCESSFUL!");
         }
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }

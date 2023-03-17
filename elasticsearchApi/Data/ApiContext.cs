@@ -55,13 +55,13 @@ namespace elasticsearchApi.Data
             modelBuilder.Entity<AddressEntity>(x =>
             {
                 x.ToTable("address");
-                x.HasNoKey();
                 x.Property<int>("regionNo").IsRequired();
                 x.Property<string?>("regionName").IsRequired().HasColumnType("nvarchar(50)");
                 x.Property<int>("districtNo").IsRequired();
                 x.Property<string?>("districtName").IsRequired().HasColumnType("nvarchar(50)");
 
-                //x.HasData(DataSeeder.addressEntities); //Moved to HostedServices and will be achieved through SqlKata
+                DataSeeder.addressEntities.ForEach(x => x.Id = DataSeeder.addressEntities.IndexOf(x) + 1);
+                x.HasData(DataSeeder.addressEntities);
             });
             
             modelBuilder.Entity<User>(x => {

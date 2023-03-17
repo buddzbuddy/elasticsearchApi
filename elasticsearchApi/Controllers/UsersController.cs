@@ -1,4 +1,5 @@
 ﻿using elasticsearchApi.Data.Entities;
+using elasticsearchApi.Models;
 using elasticsearchApi.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace elasticsearchApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
     {
@@ -32,6 +33,24 @@ namespace elasticsearchApi.Controllers
             if (users.Any())
                 return Ok(users);
             return NotFound();
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<User>> GetUserById(int id)
+        {
+            var user = await _users.WithId(id);
+            return user != null ? Ok(user) : NotFound();
+        }
+
+        [HttpPut("")]
+        public async Task<ActionResult<User>> AddUser(AddUserModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var user = await _users.Add(model.FirstName!, model.LastName!);
+            return CreatedAtAction("GetUserById", new { id = user.Id }, user);
         }
     }
 }

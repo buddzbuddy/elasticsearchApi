@@ -6,7 +6,7 @@ namespace elasticsearchApi.Data.Seed
 {
     public static class DataSeeder
     {
-        public static IList<AddressEntity> addressEntities = new List<AddressEntity>(JsonConvert.DeserializeObject<AddressEntity[]>(address_json) ?? Array.Empty<AddressEntity>());
+        public static List<AddressEntity> addressEntities = new List<AddressEntity>(JsonConvert.DeserializeObject<AddressEntity[]>(address_json) ?? Array.Empty<AddressEntity>());
 
         const string address_json = @"
 [

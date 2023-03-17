@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Repetition\SettingsControllerTests.cs" />
+    <Compile Remove="Repetition\SettingsControllerTestsWithTestBase.cs" />
+    <Compile Remove="Repetition\SettingsControllerTestsWithTestHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Bazinga.AspNetCore.Authentication.Basic" Version="2.0.1" />
     <PackageReference Include="FakeItEasy" Version="7.3.1" />
     <PackageReference Include="FluentAssertions" Version="6.10.0" />

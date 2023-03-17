@@ -1,3 +1,4 @@
+using elasticsearchApi.Services;
 using Humanizer.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -85,6 +86,15 @@ namespace elasticsearchApi.Utils
                 SqlServerCompiler compiler = new();
                 return new QueryFactory(connection, compiler);
             });
+        }
+    }
+    public static class CacheServiceExtensions
+    {
+        public static void AddCacheServices(this IServiceCollection services)
+        {
+            services.AddMemoryCache();
+            services.AddScoped<ICacheService, CacheService>();
+            services.AddScoped<ICacheProvider, CacheProvider>();
         }
     }
 
