@@ -38,7 +38,7 @@ namespace elasticsearchApi.Services
             var familyState = person.familystate;
             if (isPassport && familyState == null)
                 errors.Add("familystate", "Семейное положение не указано!");
-            return errors.Any();
+            return !errors.Any();
         }
     }
 }
