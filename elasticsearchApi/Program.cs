@@ -45,6 +45,8 @@ services.AddTransient<IUserService, UserService>();
 services.AddHttpClient<IUserService, UserService>();
 services.AddCacheServices();
 
+services.AddScoped<IDataVerifier, DataVerifier>();
+
 services.Configure<UsersApiOptions>(Configuration.GetSection("UsersApiOptions"));
 services.AddHostedService<InitiatorHostedService>();
 

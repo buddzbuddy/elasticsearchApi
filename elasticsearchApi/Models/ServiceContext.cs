@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Nest;
+using System;
 using System.Collections.Generic;
 
 namespace elasticsearchApi.Models
@@ -10,6 +12,7 @@ namespace elasticsearchApi.Models
         object this[string attributeName] { get; set; }
         IDictionary<string, string> ErrorMessages { get; set; }
         void AddErrorMessage(string key, string errorMessage);
+        void PatchFromDictionary(IDictionary<string, string> erros);
     }
     public class ServiceContext: IServiceContext
     {
@@ -24,6 +27,17 @@ namespace elasticsearchApi.Models
                 ErrorMessages.Add(key, errorMessage);
             else
                 ErrorMessages[key] += "; " + errorMessage;
+        }
+
+        public void PatchFromDictionary(IDictionary<string, string> erros)
+        {
+            foreach (var item in erros)
+            {
+                if (!ErrorMessages.ContainsKey(item.Key))
+                    ErrorMessages.Add(item.Key, item.Value);
+                else
+                    ErrorMessages[item.Key] += "; " + item.Value;
+            }
         }
 
         public IDictionary<string, object> Data { get; set; } = new Dictionary<string, object>();

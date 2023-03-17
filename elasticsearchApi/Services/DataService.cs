@@ -22,13 +22,15 @@ namespace elasticsearchApi.Services
         private readonly AppSettings _appSettings;
         private readonly IElasticService _es;
         private readonly ICacheService _cache;
+        private readonly IDataVerifier _dataVerifier;
 
-        public DataService(QueryFactory db, AppSettings appSettings, IElasticService es, ICacheService cache)
+        public DataService(QueryFactory db, AppSettings appSettings, IElasticService es, ICacheService cache, IDataVerifier dataVerifier)
         {
             _db = db;
             _appSettings = appSettings;
             _es = es;
             _cache = cache;
+            _dataVerifier = dataVerifier;
         }
 
         private static readonly ConcurrentDictionary<int, Lazy<SemaphoreSlim>> _semaphore = new();
@@ -314,7 +316,11 @@ namespace elasticsearchApi.Services
             var authority = v != null ? v.ToString().Trim() : string.Empty;
             var familyState = person.familystate;
 
-            if (!verifyInputData(person, ref context)) return ModifyPersonPassportResult.INPUT_DATA_ERROR;
+            if (!_dataVerifier.Verify(person, out Dictionary<string, string> errors))
+            {
+                context.PatchFromDictionary(errors);
+                return ModifyPersonPassportResult.INPUT_DATA_ERROR;
+            }
 
             var query = _db.Query("Persons").Where("IIN", iin);
             var personDb = query.FirstOrDefault();
