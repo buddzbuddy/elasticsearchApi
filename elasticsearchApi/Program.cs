@@ -13,14 +13,18 @@ using Microsoft.EntityFrameworkCore;
 using elasticsearchApi.Utils.InitiatorProcesses;
 
 var builder = WebApplication.CreateBuilder(args);
+
 var services = builder.Services;
 var Configuration = builder.Configuration;
+
+var env = builder.Environment;
 services.AddControllers(options => {
     options.Filters.Add(new AuthorizeFilter());
 });
 var nrsz_connection = Environment.GetEnvironmentVariable("NRSZ_CONNECTION_STRING");
 if (nrsz_connection.IsNullOrEmpty())
 {
+    var s = Configuration.GetSection("SqlKataSettings").GetValue<string>("connectionString");
     nrsz_connection = Configuration["SqlKataSettings:connectionString"];
 }
 services.AddDbContext<ApiContext>(x => {

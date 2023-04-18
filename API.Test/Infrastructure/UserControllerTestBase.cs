@@ -21,7 +21,7 @@ namespace elasticsearchApi.Tests.Infrastructure
         private const string Username = "Test";
         private const string Password = "test";
         private readonly string base64EncodedAuthenticationString = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{Username}:{Password}"));
-        private const string SqlConnectionString = "Server=localhost,14331;Database=nrsz-test;User Id=sa;Password=P@ssword123;Encrypt=False";
+        //private const string SqlConnectionString = "Server=localhost,14331;Database=nrsz-test;User Id=sa;Password=P@ssword123;Encrypt=False";
         protected INotificationService NotificationServiceFake = A.Fake<INotificationService>();
 
         protected Task RunTest(Func<HttpClient, Task> test, Func<DbCommand, Task>? populateDatabase = null, Func<DbCommand, Task>? validateDatabase = null, bool addAuth = true)
@@ -61,10 +61,10 @@ namespace elasticsearchApi.Tests.Infrastructure
 
         protected override void ConfigureTestServices(IServiceCollection services)
         {
-            var options = new DbContextOptionsBuilder<ApiContext>()
+            /*var options = new DbContextOptionsBuilder<ApiContext>()
                                             .UseSqlServer(SqlConnectionString)
                                             .Options;
-            services.AddSingleton(options);
+            services.AddSingleton(options);*/
             services.AddSingleton<ApiContext>();
             services.AddSingleton(NotificationServiceFake);
 

@@ -15,7 +15,7 @@ namespace elasticsearchApi.Tests.Repetition
 {
     public class UsersControllerTestsWithTestHelper
     {
-        private const string SqlConnectionString = "Server=localhost,14331;Database=nrsz-test;User Id=sa;Password=P@ssword123;Encrypt=False";
+        //private const string SqlConnectionString = "Server=localhost,14331;Database=nrsz-test;User Id=sa;Password=P@ssword123;Encrypt=False";
         private INotificationService NotificationServiceFake = A.Fake<INotificationService>();
 
         [Fact]
@@ -130,7 +130,7 @@ namespace elasticsearchApi.Tests.Repetition
         private TestHelper<Program> GetTestRunner(bool addClientAuth = true)
         {
             var helper = new TestHelper<Program>()
-                        .AddDbContext<ApiContext>(SqlConnectionString)
+                        //.AddDbContext<ApiContext>(SqlConnectionString)
                         .AddFakeAuth("Test", "test")
                         .OverrideServices(services => {
                             services.AddSingleton(NotificationServiceFake);
