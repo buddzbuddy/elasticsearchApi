@@ -1,6 +1,6 @@
 ﻿using elasticsearchApi.Models;
 
-namespace elasticsearchApi.Contracts
+namespace elasticsearchApi.Contracts.Passport
 {
     public interface IPassportVerifierBasic
     {

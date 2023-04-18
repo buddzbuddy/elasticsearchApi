@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using elasticsearchApi.Contracts;
 using elasticsearchApi.Models;
 using elasticsearchApi.Services;
 using elasticsearchApi.Utils;

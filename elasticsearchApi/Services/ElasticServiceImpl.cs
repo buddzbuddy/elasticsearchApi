@@ -6,22 +6,15 @@ using SqlKata.Execution;
 using Nest;
 using Elasticsearch.Net;
 using elasticsearchApi.Utils;
+using elasticsearchApi.Contracts;
 
 namespace elasticsearchApi.Services
 {
-    public interface IElasticService
-    {
-        void FindSamePersonES(inputPersonDTO inputData, ref IServiceContext context, int page = 1, int size = 10);
-        void FindPersonsES(inputPersonDTO inputData, ref IServiceContext context, bool fuzzy = false, int page = 1, int size = 10);
-        bool FilterES(IDictionary<string, object> filter, out outPersonDTO[] data, out string[] errorMessages, out long totalCount, bool fuzzy = false, int page = 1, int size = 10);
-        bool FilterDocumentES(documentDTO filter, out IEnumerable<documentDTO> data, out string[] errorMessages, bool fuzzy = false, int page = 1, int size = 10);
-        void FindPersonByPinES(string iin, ref IServiceContext context, int page = 1, int size = 10);
-    }
-    public class ElasticService : BaseService, IElasticService
+    public class ElasticServiceImpl : BaseService, IElasticService
     {
         private readonly AppSettings _appSettings;
         private readonly IElasticClient _client;
-        public ElasticService(AppSettings appSettings, IElasticClient client)
+        public ElasticServiceImpl(AppSettings appSettings, IElasticClient client)
         {
             _appSettings = appSettings;
             _client = client;
@@ -213,10 +206,10 @@ namespace elasticsearchApi.Services
             .Size(size)
             .Query(q => q.Bool(b => b.Must(filters)));
 
-            if (_appSettings.log_enabled)
+            if (_appSettings.log_enabled ?? false)
             {
                 var json = _client.RequestResponseSerializer.SerializeToString(searchDescriptor);
-                WriteLog($"[{nameof(ElasticService)}]-[{nameof(FilterES)}] at [{DateTime.Now}]:\n{json}", _appSettings.logpath);
+                WriteLog($"[{nameof(ElasticServiceImpl)}]-[{nameof(FilterES)}] at [{DateTime.Now}]:\n{json}", _appSettings.logpath);
             }
 
             var searchResponse = _client.Search<outPersonDTO>(searchDescriptor);

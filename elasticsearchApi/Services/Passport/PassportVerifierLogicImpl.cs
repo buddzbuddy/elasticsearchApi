@@ -1,9 +1,9 @@
 ﻿using Elasticsearch.Net;
-using elasticsearchApi.Contracts;
+using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
 using System;
 
-namespace elasticsearchApi.Services
+namespace elasticsearchApi.Services.Passport
 {
     public class PassportVerifierLogicImpl : IPassportVerifierLogic
     {

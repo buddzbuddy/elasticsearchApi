@@ -1,4 +1,5 @@
 ﻿using elasticsearchApi.Config;
+using elasticsearchApi.Contracts;
 using elasticsearchApi.Models;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
@@ -8,17 +9,12 @@ using System.Threading.Tasks;
 
 namespace elasticsearchApi.Services
 {
-    public interface IUserService
-    {
-        Task<List<MyUserDTO>> GetAllMyUsers();
-    }
-
-    public class UserService : IUserService
+    public class UserServiceImpl : IUserService
     {
         private readonly HttpClient _httpClient;
         private readonly UsersApiOptions _apiOptions;
 
-        public UserService(
+        public UserServiceImpl(
             HttpClient httpClient,
             IOptions<UsersApiOptions> options
             ) {

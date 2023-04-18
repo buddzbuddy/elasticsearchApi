@@ -1,6 +1,7 @@
-﻿using elasticsearchApi.Contracts;
+﻿using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
 using elasticsearchApi.Services;
+using elasticsearchApi.Services.Passport;
 using FluentAssertions;
 using Moq;
 using System;

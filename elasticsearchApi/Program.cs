@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using elasticsearchApi.Utils.InitiatorProcesses;
+using elasticsearchApi.Contracts;
+using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Services.Passport;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,14 +45,14 @@ services.AddElasticsearch(Configuration);
 
 services.AddSqlKataQueryFactory(Configuration);
 
-services.AddScoped<IElasticService, ElasticService>();
-services.AddScoped<IDataService, DataService>();
+services.AddScoped<IElasticService, ElasticServiceImpl>();
+services.AddScoped<IDataService, DataServiceImpl>();
 services.AddTransient<IServiceContext, ServiceContext>();
-services.AddTransient<IUserService, UserService>();
-services.AddHttpClient<IUserService, UserService>();
+services.AddTransient<IUserService, UserServiceImpl>();
+services.AddHttpClient<IUserService, UserServiceImpl>();
 services.AddCacheServices();
 
-services.AddScoped<IDataVerifier, DataVerifier>();
+services.AddPassportVerifierServices();
 
 services.Configure<UsersApiOptions>(Configuration.GetSection("UsersApiOptions"));
 services.AddHostedService<InitiatorHostedService>();

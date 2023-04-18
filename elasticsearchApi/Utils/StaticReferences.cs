@@ -22,7 +22,7 @@ namespace elasticsearchApi.Utils
             {
                 if (pi.PropertyType == typeof(string))
                 {
-                    if (string.IsNullOrEmpty((string)pi.GetValue(myObject)))
+                    if (string.IsNullOrEmpty(pi.GetValue(myObject) as string))
                     {
                         list.Add(pi.Name);
                     }
@@ -33,12 +33,12 @@ namespace elasticsearchApi.Utils
             return nullFields.Length > 0;
         }
         
-        public static TOutput InitInhertedProperties<TInput, TOutput>(TInput baseClassInstance)
+        public static TOutput? InitInhertedProperties<TInput, TOutput>(TInput baseClassInstance)
         {
-            TOutput output = (TOutput)Activator.CreateInstance(typeof(TOutput));
-            foreach (PropertyInfo propertyInfo in baseClassInstance.GetType().GetProperties(BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public))
+            TOutput? output = (TOutput?)Activator.CreateInstance(typeof(TOutput));
+            foreach (PropertyInfo propertyInfo in typeof(TInput).GetType().GetProperties(BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public))
             {
-                object value = propertyInfo.GetValue(baseClassInstance);
+                object? value = propertyInfo.GetValue(baseClassInstance);
                 if (value != null) propertyInfo.SetValue(output, value);
             }
             return output;

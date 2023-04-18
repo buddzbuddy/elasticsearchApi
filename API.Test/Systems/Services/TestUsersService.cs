@@ -32,7 +32,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             {
                 Endpoint = endpoint
             });
-            var sut = new UserService(httpClient, config);
+            var sut = new UserServiceImpl(httpClient, config);
 
             //Act
             await sut.GetAllMyUsers();
@@ -57,7 +57,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             {
                 Endpoint = endpoint
             });
-            var sut = new UserService(httpClient, config);
+            var sut = new UserServiceImpl(httpClient, config);
 
             //Act
             var result = await sut.GetAllMyUsers();
@@ -80,7 +80,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             {
                 Endpoint = endpoint
             });
-            var sut = new UserService(httpClient, config);
+            var sut = new UserServiceImpl(httpClient, config);
 
             //Act
             var result = await sut.GetAllMyUsers();
@@ -105,7 +105,7 @@ namespace elasticsearchApi.Tests.Systems.Services
                 Endpoint = endpoint
             });
 
-            var sut = new UserService(httpClient, config);
+            var sut = new UserServiceImpl(httpClient, config);
 
             //Act
             var result = await sut.GetAllMyUsers();

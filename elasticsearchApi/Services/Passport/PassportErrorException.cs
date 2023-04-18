@@ -1,7 +1,7 @@
 ﻿using elasticsearchApi.Utils;
 using System.Runtime.Serialization;
 
-namespace elasticsearchApi.Services
+namespace elasticsearchApi.Services.Passport
 {
     [Serializable]
     public class PassportErrorException : Exception
@@ -19,7 +19,7 @@ namespace elasticsearchApi.Services
         }
 
         public PassportErrorException(string key, string message)
-            :base(message)
+            : base(message)
         {
             _key = key;
             _message = message;

@@ -1,4 +1,7 @@
+using elasticsearchApi.Contracts;
+using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Services;
+using elasticsearchApi.Services.Passport;
 using Humanizer.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -93,8 +96,17 @@ namespace elasticsearchApi.Utils
         public static void AddCacheServices(this IServiceCollection services)
         {
             services.AddMemoryCache();
-            services.AddScoped<ICacheService, CacheService>();
-            services.AddScoped<ICacheProvider, CacheProvider>();
+            services.AddScoped<ICacheService, CacheServiceImpl>();
+            services.AddScoped<ICacheProvider, CacheProviderImpl>();
+        }
+    }
+    public static class DataVerifierExtensions
+    {
+        public static void AddPassportVerifierServices(this IServiceCollection services)
+        {
+            services.AddScoped<IPassportVerifier, PassportVerifierImpl>();
+            services.AddScoped<IPassportVerifierBasic, PassportVerifierBasicImpl>();
+            services.AddScoped<IPassportVerifierLogic, PassportVerifierLogicImpl>();
         }
     }
 

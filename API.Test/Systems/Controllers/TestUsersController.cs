@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using elasticsearchApi.Data.Entities;
+using elasticsearchApi.Contracts;
 
 namespace elasticsearchApi.Tests.Systems.Controllers
 {

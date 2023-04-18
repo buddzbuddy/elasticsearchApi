@@ -1,6 +1,6 @@
 ﻿using elasticsearchApi.Data.Entities;
 
-namespace elasticsearchApi.Services
+namespace elasticsearchApi.Contracts
 {
     public interface INotificationService
     {

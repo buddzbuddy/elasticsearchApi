@@ -10,9 +10,9 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using elasticsearchApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Bazinga.AspNetCore.Authentication.Basic;
+using elasticsearchApi.Contracts;
 
 namespace elasticsearchApi.Tests.Infrastructure
 {

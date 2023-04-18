@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using elasticsearchApi.Contracts;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,20 +7,13 @@ using System.Threading.Tasks;
 
 namespace elasticsearchApi.Utils
 {
-    public interface ICacheProvider
-    {
-        T GetFromCache<T>(string key) where T : class;
-        void SetCache<T>(string key, T value) where T : class;
-        void SetCache<T>(string key, T value, DateTimeOffset duration) where T : class;
-        void ClearCache(string key);
-    }
-    public class CacheProvider : ICacheProvider
+    public class CacheProviderImpl : ICacheProvider
     {
         private const int CacheSeconds = 10000; // 10 Seconds
 
         private readonly IMemoryCache _cache;
 
-        public CacheProvider(IMemoryCache cache)
+        public CacheProviderImpl(IMemoryCache cache)
         {
             _cache = cache;
         }

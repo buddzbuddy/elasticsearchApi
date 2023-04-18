@@ -1,4 +1,5 @@
-﻿using elasticsearchApi.Data.Entities;
+﻿using elasticsearchApi.Contracts;
+using elasticsearchApi.Data.Entities;
 using elasticsearchApi.Models;
 using elasticsearchApi.Services;
 using SqlKata.Execution;

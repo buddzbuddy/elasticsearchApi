@@ -2,7 +2,7 @@
 using elasticsearchApi.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace elasticsearchApi.Services
+namespace elasticsearchApi.Contracts
 {
     public interface IUsers
     {

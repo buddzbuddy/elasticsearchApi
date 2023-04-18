@@ -1,7 +1,7 @@
-﻿using elasticsearchApi.Contracts;
+﻿using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
 
-namespace elasticsearchApi.Services
+namespace elasticsearchApi.Services.Passport
 {
     public class PassportVerifierImpl : IPassportVerifier
     {

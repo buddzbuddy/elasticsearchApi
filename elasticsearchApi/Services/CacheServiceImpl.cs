@@ -2,24 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using elasticsearchApi.Contracts;
 using elasticsearchApi.Utils;
 
 namespace elasticsearchApi.Services
 {
-    public interface ICacheService
-    {
-        IDictionary<int, int> GetRegCounters();
-        void UpdateRegCounters(IDictionary<int, int> regCounters);
-        void ClearCache();
-
-        object GetObject(string key);
-        void UpdateObject(string key, object obj);
-    }
-    public class CacheService : ICacheService
+    public class CacheServiceImpl : ICacheService
     {
         private readonly ICacheProvider _cacheProvider;
 
-        public CacheService(ICacheProvider cacheProvider)
+        public CacheServiceImpl(ICacheProvider cacheProvider)
         {
             _cacheProvider = cacheProvider;
         }

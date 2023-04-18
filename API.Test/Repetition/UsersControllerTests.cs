@@ -1,7 +1,7 @@
 using Bazinga.AspNetCore.Authentication.Basic;
+using elasticsearchApi.Contracts;
 using elasticsearchApi.Data;
 using elasticsearchApi.Data.Entities;
-using elasticsearchApi.Services;
 using elasticsearchApi.Utils.InitiatorProcesses;
 using FakeItEasy;
 using Microsoft.AspNetCore.Authorization;

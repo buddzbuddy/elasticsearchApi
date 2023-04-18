@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using elasticsearchApi.Contracts;
+using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Data.Entities;
 using elasticsearchApi.Models;
 using elasticsearchApi.Utils;
@@ -11,13 +12,7 @@ using System.Threading;
 
 namespace elasticsearchApi.Services
 {
-    public interface IDataService
-    {
-        void AddNewPerson(addNewPersonDTO person, int regionNo, int districtNo, ref IServiceContext context);
-        void ModifyPersonData(string iin, modifyPersonDataDTO person, ref IServiceContext context);
-        ModifyPersonPassportResult ModifyPersonPassport(string iin, modifyPersonPassportDTO person, ref IServiceContext context);
-    }
-    public class DataService : BaseService, IDataService
+    public class DataServiceImpl : BaseService, IDataService
     {
         private readonly QueryFactory _db;
         private readonly AppSettings _appSettings;
@@ -25,7 +20,7 @@ namespace elasticsearchApi.Services
         private readonly ICacheService _cache;
         private readonly IPassportVerifier _passportVerifier;
 
-        public DataService(QueryFactory db, AppSettings appSettings, IElasticService es, ICacheService cache, IPassportVerifier passportVerifier)
+        public DataServiceImpl(QueryFactory db, AppSettings appSettings, IElasticService es, ICacheService cache, IPassportVerifier passportVerifier)
         {
             _db = db;
             _appSettings = appSettings;
@@ -263,7 +258,7 @@ namespace elasticsearchApi.Services
                 {
                     var query = _db.Query("Persons").AsInsert(person);
                     var result = _db.Compiler.Compile(query);
-                    WriteLog($"[{nameof(DataService)}]-[{nameof(AddNewPerson)}] at [{DateTime.Now}]:\n{result.Sql}\n{string.Join(",", result.Bindings)}", _appSettings.error_logpath);
+                    WriteLog($"[{nameof(DataServiceImpl)}]-[{nameof(AddNewPerson)}] at [{DateTime.Now}]:\n{result.Sql}\n{string.Join(",", result.Bindings)}", _appSettings.error_logpath);
                     context.SuccessFlag = false;
                     context.AddErrorMessage("", "NRSZ-TEMP is not created");
                 }
@@ -272,7 +267,7 @@ namespace elasticsearchApi.Services
             {
                 context.SuccessFlag = false;
                 context.AddErrorMessage("", e.GetBaseException().Message);
-                WriteLog($"[{nameof(DataService)}]-[{nameof(AddNewPerson)}] at [{DateTime.Now}]:\n{e.GetBaseException().Message}\n{e.StackTrace}", _appSettings.error_logpath);
+                WriteLog($"[{nameof(DataServiceImpl)}]-[{nameof(AddNewPerson)}] at [{DateTime.Now}]:\n{e.GetBaseException().Message}\n{e.StackTrace}", _appSettings.error_logpath);
             }
             finally
             {
@@ -293,7 +288,7 @@ namespace elasticsearchApi.Services
             else
             {
                 var result = _db.Compiler.Compile(query);
-                WriteLog($"[{nameof(DataService)}]-[{nameof(ModifyPersonData)}] at [{DateTime.Now}]:\n{result.Sql}\n{string.Join(",", result.Bindings)}", _appSettings.error_logpath);
+                WriteLog($"[{nameof(DataServiceImpl)}]-[{nameof(ModifyPersonData)}] at [{DateTime.Now}]:\n{result.Sql}\n{string.Join(",", result.Bindings)}", _appSettings.error_logpath);
                 context.SuccessFlag = false;
                 context.AddErrorMessage("", "NRSZ-TEMP is not updated");
             }
