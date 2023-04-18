@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using elasticsearchApi.Contracts;
 using elasticsearchApi.Data.Entities;
 using elasticsearchApi.Models;
 using elasticsearchApi.Utils;
@@ -22,15 +23,15 @@ namespace elasticsearchApi.Services
         private readonly AppSettings _appSettings;
         private readonly IElasticService _es;
         private readonly ICacheService _cache;
-        private readonly IDataVerifier _dataVerifier;
+        private readonly IPassportVerifier _passportVerifier;
 
-        public DataService(QueryFactory db, AppSettings appSettings, IElasticService es, ICacheService cache, IDataVerifier dataVerifier)
+        public DataService(QueryFactory db, AppSettings appSettings, IElasticService es, ICacheService cache, IPassportVerifier passportVerifier)
         {
             _db = db;
             _appSettings = appSettings;
             _es = es;
             _cache = cache;
-            _dataVerifier = dataVerifier;
+            _passportVerifier = passportVerifier;
         }
 
         private static readonly ConcurrentDictionary<int, Lazy<SemaphoreSlim>> _semaphore = new();
@@ -315,12 +316,8 @@ namespace elasticsearchApi.Services
             v = person.issuing_authority;
             var authority = v != null ? v.ToString().Trim() : string.Empty;
             var familyState = person.familystate;
-
-            if (!_dataVerifier.Verify(person, out Dictionary<string, string> errors))
-            {
-                context.PatchFromDictionary(errors);
-                return ModifyPersonPassportResult.INPUT_DATA_ERROR;
-            }
+            
+            _passportVerifier.VerifyPassport(person);
 
             var query = _db.Query("Persons").Where("IIN", iin);
             var personDb = query.FirstOrDefault();

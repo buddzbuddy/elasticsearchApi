@@ -42,7 +42,7 @@ namespace elasticsearchApi.Controllers
             {
                 _context.SuccessFlag = false;
                 _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
-                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                _context.AddErrorMessage("errorTrace", e.StackTrace ?? "");
                 return Ok(_context);
             }
         }
@@ -58,7 +58,7 @@ namespace elasticsearchApi.Controllers
             {
                 _context.SuccessFlag = false;
                 _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
-                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                _context.AddErrorMessage("errorTrace", e.StackTrace ?? "");
                 return Ok(_context);
             }
         }
@@ -74,7 +74,7 @@ namespace elasticsearchApi.Controllers
             {
                 _context.SuccessFlag = false;
                 _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
-                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                _context.AddErrorMessage("errorTrace", e.StackTrace ?? "");
                 return Ok(_context);
             }
         }
@@ -116,7 +116,7 @@ namespace elasticsearchApi.Controllers
             {
                 _context.SuccessFlag = false;
                 _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
-                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                _context.AddErrorMessage("errorTrace", e.StackTrace ?? "");
                 return Ok(_context);
             }
         }
@@ -144,7 +144,7 @@ namespace elasticsearchApi.Controllers
             {
                 _context.SuccessFlag = false;
                 _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
-                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                _context.AddErrorMessage("errorTrace", e.StackTrace ?? "");
                 return Ok(_context);
             }
         }
@@ -160,7 +160,7 @@ namespace elasticsearchApi.Controllers
             {
                 _context.SuccessFlag = false;
                 _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
-                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                _context.AddErrorMessage("errorTrace", e.StackTrace ?? "");
                 return Ok(_context);
             }
         }
@@ -176,7 +176,7 @@ namespace elasticsearchApi.Controllers
             {
                 _context.SuccessFlag = false;
                 _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
-                _context.AddErrorMessage("errorTrace", e.StackTrace);
+                _context.AddErrorMessage("errorTrace", e.StackTrace ?? "");
                 return Ok(_context);
             }
         }

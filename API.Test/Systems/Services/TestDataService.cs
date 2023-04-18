@@ -1,4 +1,5 @@
-﻿using elasticsearchApi.Models;
+﻿using elasticsearchApi.Contracts;
+using elasticsearchApi.Models;
 using elasticsearchApi.Services;
 using elasticsearchApi.Utils;
 using FluentAssertions;
@@ -19,7 +20,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var mockServiceContext = new Mock<IServiceContext>();
             var mockEsService = new Mock<IElasticService>();
             var mockCacheService = new Mock<ICacheService>();
-            var mockDataVerifier = new Mock<IDataVerifier>();
+            var mockDataPassportVerifier = new Mock<IPassportVerifier>();
             var appSettings = new AppSettings();
             var mockQF = new Mock<QueryFactory>();
             string iin = "";
@@ -27,7 +28,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             //mockServiceContext.Setup(svc => svc.AddErrorMessage(It.IsAny<string>(), It.IsAny<string>()));
             mockServiceContext.Setup(svc => svc.ErrorMessages.Count).Returns(1);
 
-            var sut = new DataService(mockQF.Object, appSettings, mockEsService.Object, mockCacheService.Object, mockDataVerifier.Object);
+            var sut = new DataService(mockQF.Object, appSettings, mockEsService.Object, mockCacheService.Object, mockDataPassportVerifier.Object);
 
             //Act
             var sc = mockServiceContext.Object;
@@ -49,7 +50,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var mockEsService = new Mock<IElasticService>();
 
             var mockCacheService = new Mock<ICacheService>();
-            var mockDataVerifier = new Mock<IDataVerifier>();
+            var mockPassportVerifier = new Mock<IPassportVerifier>();
             var appSettings = new AppSettings();
             var mockQF = new Mock<QueryFactory>();
             string iin = "";
@@ -57,7 +58,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             //mockServiceContext.Setup(svc => svc.AddErrorMessage(It.IsAny<string>(), It.IsAny<string>()));
             mockServiceContext.Setup(svc => svc.ErrorMessages.Count).Returns(0);
 
-            var sut = new DataService(mockQF.Object, appSettings, mockEsService.Object, mockCacheService.Object, mockDataVerifier.Object);
+            var sut = new DataService(mockQF.Object, appSettings, mockEsService.Object, mockCacheService.Object, mockPassportVerifier.Object);
 
             //Act
             var sc = mockServiceContext.Object;
