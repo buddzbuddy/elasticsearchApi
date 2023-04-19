@@ -36,8 +36,8 @@ namespace elasticsearchApi.Services
             var birthCertificateId = new Guid("{A52BE3AF-5DFA-405B-A4E6-18A64C24F9A5}");
             System.Text.RegularExpressions.Regex nameRegex =
                 new System.Text.RegularExpressions.Regex("[0-9]");
-            object s = person.last_name;
-            string lastName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
+            object s = person.last_name ?? "";
+            string lastName = (s != null ? (s as string) ?? "" : string.Empty).Trim().ToLower();
 
             if (string.IsNullOrEmpty(lastName)) //message = "Заполните фамилию!\n";
                 context.AddErrorMessage("Last_Name", "Заполните фамилию");
@@ -49,8 +49,8 @@ namespace elasticsearchApi.Services
                     context.AddErrorMessage("Last_Name", "Ошибка в формате фамилии! Должны быть только буквы.");
             }
 
-            s = person.first_name;
-            var firstName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
+            s = person.first_name ?? "";
+            var firstName = (s != null ? (s as string) ?? "" : string.Empty).Trim().ToLower();
 
             if (string.IsNullOrEmpty(firstName))
                 context.AddErrorMessage("First_Name", "Заполните имя");
@@ -62,8 +62,8 @@ namespace elasticsearchApi.Services
                     context.AddErrorMessage("First_Name", "Ошибка в формате имени! Должны быть только буквы.");
             }
 
-            s = person.middle_name;
-            var middleName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
+            s = person.middle_name ?? "";
+            var middleName = (s != null ? (s as string) ?? "" : string.Empty).Trim().ToLower();
 
             if (!string.IsNullOrEmpty(middleName))
             {
@@ -75,8 +75,8 @@ namespace elasticsearchApi.Services
 
             System.Text.RegularExpressions.Regex regex =
                 new System.Text.RegularExpressions.Regex("[^0-9]");
-            s = person.iin;
-            var pin = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
+            s = person.iin ?? "";
+            var pin = (s != null ? (s as string) ?? "" : string.Empty).Trim().ToLower();
 
             if (!string.IsNullOrEmpty(pin))
             {
@@ -132,8 +132,8 @@ namespace elasticsearchApi.Services
         {
             System.Text.RegularExpressions.Regex nameRegex =
                 new System.Text.RegularExpressions.Regex("[0-9]");
-            object s = person.last_name;
-            string lastName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
+            object s = person.last_name ?? "";
+            string lastName = (s != null ? (s as string) ?? "" : string.Empty).Trim().ToLower();
 
             if (string.IsNullOrEmpty(lastName)) //message = "Заполните фамилию!\n";
                 context.AddErrorMessage("Last_Name", "Заполните фамилию");
@@ -145,8 +145,8 @@ namespace elasticsearchApi.Services
                     context.AddErrorMessage("Last_Name", "Ошибка в формате фамилии! Должны быть только буквы.");
             }
 
-            s = person.first_name;
-            var firstName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
+            s = person.first_name ?? "";
+            var firstName = (s != null ? (s as string) ?? "" : string.Empty).Trim().ToLower();
 
             if (string.IsNullOrEmpty(firstName))
                 context.AddErrorMessage("First_Name", "Заполните имя");
@@ -158,8 +158,8 @@ namespace elasticsearchApi.Services
                     context.AddErrorMessage("First_Name", "Ошибка в формате имени! Должны быть только буквы.");
             }
 
-            s = person.middle_name;
-            var middleName = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
+            s = person.middle_name ?? "";
+            var middleName = (s != null ? (s as string) ?? "" : string.Empty).Trim().ToLower();
 
             if (!string.IsNullOrEmpty(middleName))
             {
@@ -172,7 +172,7 @@ namespace elasticsearchApi.Services
             System.Text.RegularExpressions.Regex regex =
                 new System.Text.RegularExpressions.Regex("[^0-9]");
             s = iin;
-            var pin = (s != null ? s.ToString() : string.Empty).Trim().ToLower();
+            var pin = (s != null ? (s as string) ?? "" : string.Empty).Trim().ToLower();
 
             if (!string.IsNullOrEmpty(pin))
             {
@@ -205,9 +205,9 @@ namespace elasticsearchApi.Services
                 {
                     //RETURN EXISTING PERSON
                     var result = es_data[0];
-                    context["NewPIN"] = result.iin;
+                    context["NewPIN"] = result.iin ?? "";
                     context["Result"] = result;
-                    context["ResultPIN"] = result.iin;
+                    context["ResultPIN"] = result.iin ?? "";
                     context.SuccessFlag = true;
                     return;
                 }
@@ -258,7 +258,7 @@ namespace elasticsearchApi.Services
                 {
                     var query = _db.Query("Persons").AsInsert(person);
                     var result = _db.Compiler.Compile(query);
-                    WriteLog($"[{nameof(DataServiceImpl)}]-[{nameof(AddNewPerson)}] at [{DateTime.Now}]:\n{result.Sql}\n{string.Join(",", result.Bindings)}", _appSettings.error_logpath);
+                    WriteLog($"[{nameof(DataServiceImpl)}]-[{nameof(AddNewPerson)}] at [{DateTime.Now}]:\n{result.Sql}\n{string.Join(",", result.Bindings)}", _appSettings.error_logpath ?? "");
                     context.SuccessFlag = false;
                     context.AddErrorMessage("", "NRSZ-TEMP is not created");
                 }
@@ -267,7 +267,7 @@ namespace elasticsearchApi.Services
             {
                 context.SuccessFlag = false;
                 context.AddErrorMessage("", e.GetBaseException().Message);
-                WriteLog($"[{nameof(DataServiceImpl)}]-[{nameof(AddNewPerson)}] at [{DateTime.Now}]:\n{e.GetBaseException().Message}\n{e.StackTrace}", _appSettings.error_logpath);
+                WriteLog($"[{nameof(DataServiceImpl)}]-[{nameof(AddNewPerson)}] at [{DateTime.Now}]:\n{e.GetBaseException().Message}\n{e.StackTrace}", _appSettings.error_logpath ?? "");
             }
             finally
             {
@@ -288,7 +288,7 @@ namespace elasticsearchApi.Services
             else
             {
                 var result = _db.Compiler.Compile(query);
-                WriteLog($"[{nameof(DataServiceImpl)}]-[{nameof(ModifyPersonData)}] at [{DateTime.Now}]:\n{result.Sql}\n{string.Join(",", result.Bindings)}", _appSettings.error_logpath);
+                WriteLog($"[{nameof(DataServiceImpl)}]-[{nameof(ModifyPersonData)}] at [{DateTime.Now}]:\n{result.Sql}\n{string.Join(",", result.Bindings)}", _appSettings.error_logpath ?? "");
                 context.SuccessFlag = false;
                 context.AddErrorMessage("", "NRSZ-TEMP is not updated");
             }
@@ -318,7 +318,7 @@ namespace elasticsearchApi.Services
             var personDb = query.FirstOrDefault();
             if (personDb == null)
             {
-                context.AddErrorMessage("", ModifyPersonPassportResult.NRSZ_NOT_FOUND_BY_PIN.GetDescription());
+                context.AddErrorMessage("", ModifyPersonPassportResult.NRSZ_NOT_FOUND_BY_PIN.GetDescription() ?? "");
                 return ModifyPersonPassportResult.NRSZ_NOT_FOUND_BY_PIN;
             }
             else
@@ -350,7 +350,7 @@ namespace elasticsearchApi.Services
                 if (affectedRows == 0)
                 {
                     var response = ModifyPersonPassportResult.PASSPORT_NOT_INSERTED_TO_ARCHIVE;
-                    context.AddErrorMessage("", response.GetDescription());
+                    context.AddErrorMessage("", response.GetDescription() ?? "");
                     return response;
                 }
                 else
@@ -366,7 +366,7 @@ namespace elasticsearchApi.Services
                     });
                     if (affectedRows == 0)
                     {
-                        context.AddErrorMessage("", ModifyPersonPassportResult.PASSPORT_NOT_UPDATED.GetDescription());
+                        context.AddErrorMessage("", ModifyPersonPassportResult.PASSPORT_NOT_UPDATED.GetDescription() ?? "");
                         return ModifyPersonPassportResult.PASSPORT_NOT_UPDATED;
                     }
                 }

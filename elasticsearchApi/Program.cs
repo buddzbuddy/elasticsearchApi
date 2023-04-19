@@ -55,7 +55,7 @@ services.AddCacheServices();
 services.AddPassportVerifierServices();
 
 services.Configure<UsersApiOptions>(Configuration.GetSection("UsersApiOptions"));
-services.AddHostedService<InitiatorHostedService>();
+//services.AddHostedService<InitiatorHostedService>();
 
 services.AddScoped<IUsers, Users>();
 services.AddSingleton<INotificationService, DummyNotificationService>();

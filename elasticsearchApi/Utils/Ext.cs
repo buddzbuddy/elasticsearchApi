@@ -3,6 +3,8 @@ using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Services;
 using elasticsearchApi.Services.Passport;
 using Humanizer.Configuration;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nest;
@@ -10,6 +12,7 @@ using SqlKata.Compilers;
 using SqlKata.Execution;
 using System;
 using System.ComponentModel;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Reflection;
 
@@ -107,7 +110,17 @@ namespace elasticsearchApi.Utils
             services.AddScoped<IPassportVerifier, PassportVerifierImpl>();
             services.AddScoped<IPassportVerifierBasic, PassportVerifierBasicImpl>();
             services.AddScoped<IPassportVerifierLogic, PassportVerifierLogicImpl>();
+            services.AddScoped<IPassportDbVerifier, PassportDbVerifierImpl>();
         }
     }
+
+    /*public static class EFExtensions
+    {
+        public static DbTransaction GetDbTransaction(this IDbContextTransaction source)
+        {
+            return (source as IInfrastructure<DbTransaction>).Instance;
+        }
+    }*/
+
 
 }
