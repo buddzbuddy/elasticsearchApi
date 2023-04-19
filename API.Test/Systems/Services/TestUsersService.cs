@@ -1,5 +1,5 @@
-﻿using API.Test.Fixtures;
-using API.Test.Helpers;
+﻿using elasticsearchApi.Tests.Fixtures;
+using elasticsearchApi.Tests.Helpers;
 using elasticsearchApi.Config;
 using elasticsearchApi.Models;
 using elasticsearchApi.Services;
@@ -16,7 +16,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static System.Net.WebRequestMethods;
 
-namespace API.Test.Systems.Services
+namespace elasticsearchApi.Tests.Systems.Services
 {
     public class TestUsersService
     {
@@ -32,7 +32,7 @@ namespace API.Test.Systems.Services
             {
                 Endpoint = endpoint
             });
-            var sut = new UserService(httpClient, config);
+            var sut = new UserServiceImpl(httpClient, config);
 
             //Act
             await sut.GetAllMyUsers();
@@ -57,7 +57,7 @@ namespace API.Test.Systems.Services
             {
                 Endpoint = endpoint
             });
-            var sut = new UserService(httpClient, config);
+            var sut = new UserServiceImpl(httpClient, config);
 
             //Act
             var result = await sut.GetAllMyUsers();
@@ -80,7 +80,7 @@ namespace API.Test.Systems.Services
             {
                 Endpoint = endpoint
             });
-            var sut = new UserService(httpClient, config);
+            var sut = new UserServiceImpl(httpClient, config);
 
             //Act
             var result = await sut.GetAllMyUsers();
@@ -105,7 +105,7 @@ namespace API.Test.Systems.Services
                 Endpoint = endpoint
             });
 
-            var sut = new UserService(httpClient, config);
+            var sut = new UserServiceImpl(httpClient, config);
 
             //Act
             var result = await sut.GetAllMyUsers();
@@ -118,7 +118,7 @@ namespace API.Test.Systems.Services
             //Assert
             handlerMock.Protected().Verify(
                 "SendAsync", Times.Exactly(1),
-                httpRequestMessage,
+                ItExpr.Is<HttpRequestMessage>(req => req.Method == HttpMethod.Get && req.RequestUri == new Uri(endpoint)),
                 ItExpr.IsAny<CancellationToken>()
                 );
         }

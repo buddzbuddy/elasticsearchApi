@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace API.Test.Helpers
+namespace elasticsearchApi.Tests.Helpers
 {
     internal static class MockHttpMessageHandler<T>
     {

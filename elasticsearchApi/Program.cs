@@ -1,27 +1,89 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿
+using elasticsearchApi.Config;
+using elasticsearchApi;
+using elasticsearchApi.Data;
+using elasticsearchApi.Models;
+using elasticsearchApi.Services;
+using elasticsearchApi.Utils;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.EntityFrameworkCore;
+using elasticsearchApi.Utils.InitiatorProcesses;
+using elasticsearchApi.Contracts;
+using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Services.Passport;
 
-namespace elasticsearchApi
+var builder = WebApplication.CreateBuilder(args);
+
+var services = builder.Services;
+var Configuration = builder.Configuration;
+
+var env = builder.Environment;
+services.AddControllers(options => {
+    options.Filters.Add(new AuthorizeFilter());
+});
+var nrsz_connection = Environment.GetEnvironmentVariable("NRSZ_CONNECTION_STRING");
+if (nrsz_connection.IsNullOrEmpty())
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+    var s = Configuration.GetSection("SqlKataSettings").GetValue<string>("connectionString");
+    nrsz_connection = Configuration["SqlKataSettings:connectionString"];
+}
+services.AddDbContext<ApiContext>(x => {
+    
+    x.UseSqlServer(nrsz_connection);
+});
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                    webBuilder.UseUrls("http://0.0.0.0:5000");
-                });
-    }
+AppSettings appSettings = Configuration.GetSection("AppSettings").Get<AppSettings>();
+services.AddSingleton(appSettings);
+services.AddSwaggerGen();
+services.AddAutoMapper(typeof(Program));
+
+services.AddElasticsearch(Configuration);
+
+
+services.AddSqlKataQueryFactory(Configuration);
+
+services.AddScoped<IElasticService, ElasticServiceImpl>();
+services.AddScoped<IDataService, DataServiceImpl>();
+services.AddTransient<IServiceContext, ServiceContext>();
+services.AddTransient<IUserService, UserServiceImpl>();
+services.AddHttpClient<IUserService, UserServiceImpl>();
+services.AddCacheServices();
+
+services.AddPassportVerifierServices();
+
+services.Configure<UsersApiOptions>(Configuration.GetSection("UsersApiOptions"));
+//services.AddHostedService<InitiatorHostedService>();
+
+services.AddScoped<IUsers, Users>();
+services.AddSingleton<INotificationService, DummyNotificationService>();
+
+services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer();
+
+services.AddAuthorization(config =>
+{
+    config.DefaultPolicy = new AuthorizationPolicyBuilder()
+                                .RequireAuthenticatedUser()
+                                .Build();
+});
+
+var app = builder.Build();
+
+//app.UseHttpsRedirection();
+if (builder.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
+
+public partial class Program
+{
+
 }

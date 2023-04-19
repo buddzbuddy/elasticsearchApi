@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace API.Test.Fixtures
+namespace elasticsearchApi.Tests.Fixtures
 {
     public static class MyUserFixtures
     {
