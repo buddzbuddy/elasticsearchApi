@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using elasticsearchApi.Contracts;
+using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
 using elasticsearchApi.Services;
 using elasticsearchApi.Utils;
@@ -18,17 +19,14 @@ namespace elasticsearchApi.Controllers
         private readonly IElasticService _es;
         private readonly IDataService _dataSvc;
         private IServiceContext _context;
-        private readonly IOptions<AppSettings> _appSettings;
-        private readonly IMapper _mapper;
-        public NrszPersonsController(IOptions<AppSettings> appSettings, IMapper mapper, IElasticService es,
-            IDataService dataSvc, IServiceContext context
-            )
+        private readonly IModifyPassportActor _modifyPassportActor;
+        public NrszPersonsController(IElasticService es, IDataService dataSvc, IServiceContext context,
+            IModifyPassportActor modifyPassportActor)
         {
-            _appSettings = appSettings;
-            _mapper = mapper;
             _es = es;
             _dataSvc = dataSvc;
             _context = context;
+            _modifyPassportActor = modifyPassportActor;
         }
         
         [HttpPost]
@@ -168,18 +166,18 @@ namespace elasticsearchApi.Controllers
         [HttpPost]
         public IActionResult ModifyPersonPassport(string iin, [FromBody] modifyPersonPassportDTO person)
         {
+            _context.SuccessFlag = false;
             try
             {
-                _dataSvc.ModifyPersonPassport(iin, person, ref _context);
-                return Ok(_context);
+                _context = _modifyPassportActor.CallModifyPassport(iin, person);
             }
             catch (Exception e)
             {
-                _context.SuccessFlag = false;
                 _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
+                _context.AddErrorMessage("type", "ModifyPassportDataService - Выполнено необработанное исключение");
                 _context.AddErrorMessage("errorTrace", e.StackTrace ?? "");
-                return Ok(_context);
             }
+            return Ok(_context);
         }
     }
 }

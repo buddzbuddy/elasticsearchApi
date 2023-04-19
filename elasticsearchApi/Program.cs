@@ -1,20 +1,13 @@
-﻿
-using elasticsearchApi.Config;
-using elasticsearchApi;
+﻿using elasticsearchApi.Config;
 using elasticsearchApi.Data;
 using elasticsearchApi.Models;
 using elasticsearchApi.Services;
 using elasticsearchApi.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
-using elasticsearchApi.Utils.InitiatorProcesses;
 using elasticsearchApi.Contracts;
-using elasticsearchApi.Contracts.Passport;
-using elasticsearchApi.Services.Passport;
-
 var builder = WebApplication.CreateBuilder(args);
 
 var services = builder.Services;

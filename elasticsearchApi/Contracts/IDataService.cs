@@ -6,6 +6,5 @@ namespace elasticsearchApi.Contracts
     {
         void AddNewPerson(addNewPersonDTO person, int regionNo, int districtNo, ref IServiceContext context);
         void ModifyPersonData(string iin, modifyPersonDataDTO person, ref IServiceContext context);
-        ModifyPersonPassportResult ModifyPersonPassport(string iin, modifyPersonPassportDTO person, ref IServiceContext context);
     }
 }
