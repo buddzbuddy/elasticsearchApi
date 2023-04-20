@@ -14,7 +14,8 @@ namespace elasticsearchApi.Services.Passport
             _passportVerifier = passportVerifier;
             _db = db;
         }
-        public void Execute(string iin, modifyPersonPassportDTO person, IDbTransaction? transaction)
+        public void Execute(string iin, modifyPersonPassportDTO person, IDbTransaction? transaction = null) => Execute(iin, person, ref transaction);
+        public void Execute(string iin, modifyPersonPassportDTO person, ref IDbTransaction? transaction)
         {
             var passportType = person.passporttype;
             var docTypeName = "";
@@ -74,8 +75,8 @@ namespace elasticsearchApi.Services.Passport
                 };
                 
 
-                var insertQuery = _db.Query("Passports").AsInsert(passportInsertObj);
-                var sql = _db.Compiler.Compile(insertQuery).Sql;
+                /*var insertQuery = _db.Query("Passports").AsInsert(passportInsertObj);
+                var sql = _db.Compiler.Compile(insertQuery).Sql;*/
                 var affectedRows = _db.Query("Passports").Insert(passportInsertObj, transaction);
                 if (affectedRows == 0)
                 {

@@ -14,13 +14,13 @@ namespace elasticsearchApi.Services.Passport
         {
             _dataSvc = dataService;
         }
-        public IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person)
+        public IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person, IDbTransaction? transaction = null) => CallModifyPassport(iin, person, ref transaction);
+        public IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person, ref IDbTransaction? transaction)
         {
             IServiceContext context = new ServiceContext();
-            IDbTransaction? transaction = null;
             try
             {
-                _dataSvc.Execute(iin, person, transaction);
+                _dataSvc.Execute(iin, person, ref transaction);
                 context.SuccessFlag = true;
             }
             catch (Exception e) when
