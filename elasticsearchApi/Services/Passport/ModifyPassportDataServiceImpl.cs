@@ -61,17 +61,22 @@ namespace elasticsearchApi.Services.Passport
                     _db.Connection.Open();
                 }
                 transaction ??= _db.Connection.BeginTransaction();
-
-                var affectedRows = _db.Query("Passports").Insert(new
+                var d = personDb.Date_of_Issue;
+                var passportInsertObj = new
                 {
                     PersonId = personDb.Id,
                     personDb.PassportType,
                     personDb.PassportSeries,
                     personDb.PassportNo,
-                    personDb.Date_Of_Issue,
+                    Date_Of_Issue = d,
                     personDb.Issuing_Authority,
-                    personDb.Marital_Status
-                }, transaction);
+                    Marital_Status = personDb.FamilyState
+                };
+                
+
+                var insertQuery = _db.Query("Passports").AsInsert(passportInsertObj);
+                var sql = _db.Compiler.Compile(insertQuery).Sql;
+                var affectedRows = _db.Query("Passports").Insert(passportInsertObj, transaction);
                 if (affectedRows == 0)
                 {
                     throw new PassportArchiveException("Архивация старых паспортных данных не записалась в историю");
