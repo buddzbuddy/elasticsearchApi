@@ -36,10 +36,11 @@ namespace elasticsearchApi.Tests.Systems.Services
             var application = ApplicationHelper.GetWebApplication();
             using var services = application.Services.CreateScope();
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
-            IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, mockPassportVerifier.Object);
+            var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
+            IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, mockPassportVerifier.Object, appTransaction);
             //Act & Assert
 
-            var ex = Assert.Throws<PersonNotFoundException>(() => sut.Execute(iin, new modifyPersonPassportDTO(), null));
+            var ex = Assert.Throws<PersonNotFoundException>(() => sut.Execute(iin, new modifyPersonPassportDTO()));
         }
 
         [Fact]
@@ -64,24 +65,24 @@ namespace elasticsearchApi.Tests.Systems.Services
             var application = ApplicationHelper.GetWebApplication();
             using var services = application.Services.CreateScope();
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
-            IDbTransaction? transaction = null;
-            IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, mockPassportVerifier.Object);
+            var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
+            IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, mockPassportVerifier.Object, appTransaction);
             try
             {
                 _db.Connection.Open();
-                transaction = _db.Connection.BeginTransaction();
-                int affects1 = _db.Query("Persons").Insert(personObj1.Extend(new { iin = iin1 }), transaction);
-                int affects2 = _db.Query("Persons").Insert(personObj2.Extend(new { iin = iin2 }), transaction);
+                appTransaction.Transaction = _db.Connection.BeginTransaction();
+                int affects1 = _db.Query("Persons").Insert(personObj1.Extend(new { iin = iin1 }), appTransaction.Transaction);
+                int affects2 = _db.Query("Persons").Insert(personObj2.Extend(new { iin = iin2 }), appTransaction.Transaction);
 
                 //Act & Assert
                 affects1.Should().Be(1);
                 affects2.Should().Be(1);
-                var ex = Assert.Throws<PassportDuplicateException>(() => sut.Execute(iin2, personObj1, ref transaction));
+                var ex = Assert.Throws<PassportDuplicateException>(() => sut.Execute(iin2, personObj1));
                 _output.WriteLine(ex.Message);
             }
             finally
             {
-                transaction?.Rollback();
+                appTransaction.Transaction?.Rollback();
             }
         }
 
@@ -120,16 +121,17 @@ namespace elasticsearchApi.Tests.Systems.Services
             var application = ApplicationHelper.GetWebApplication();
             using var services = application.Services.CreateScope();
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
+            var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
 
             IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
-            IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, passportVerifier);
+            IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
             //Act & Assert
-            var ex1 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, incorrectModel, null));
-            var ex2 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, correctModel, null));
-            var ex3 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinExisting, duplicateModel, null));
+            var ex1 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, incorrectModel));
+            var ex2 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, correctModel));
+            var ex3 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinExisting, duplicateModel));
 
             Assert.True(ex1 is IReadException and PassportInputErrorException);
             Assert.True(ex2 is IReadException and PersonNotFoundException);
@@ -174,16 +176,17 @@ namespace elasticsearchApi.Tests.Systems.Services
             var application = ApplicationHelper.GetWebApplication();
             using var services = application.Services.CreateScope();
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
+            var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
 
             IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
-            IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, passportVerifier);
+            IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
 
             //Act & Assert
-            var ex1 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, incorrectModel, null));
-            var ex2 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, correctModel, null));
+            var ex1 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, incorrectModel));
+            var ex2 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, correctModel));
 
             Assert.True(ex1 is IWriteException and PassportInputErrorException);
             Assert.True(ex2 is IWriteException and PersonNotFoundException);
@@ -219,6 +222,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var application = ApplicationHelper.GetWebApplication();
             using var services = application.Services.CreateScope();
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
+            var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
 
             var prevPerson = _db.Query("Persons").Where("IIN", iinExisting).FirstOrDefault();
             var prevPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>();
@@ -227,16 +231,16 @@ namespace elasticsearchApi.Tests.Systems.Services
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
-            IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, passportVerifier);
+            IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
             IDbTransaction? transaction = null;
 
             //Act & Assert
             try
             {
-                sut.Execute(iinExisting, correctModel, ref transaction);
+                sut.Execute(iinExisting, correctModel);
 
-                var result = _db.Query("Persons").Where(UtilHelper.ConvertToDictionary(correctModel)).Count<int>(transaction: transaction);
-                var newPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>(transaction: transaction);
+                var result = _db.Query("Persons").Where(UtilHelper.ConvertToDictionary(correctModel)).Count<int>(transaction: appTransaction.Transaction);
+                var newPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>(transaction: appTransaction.Transaction);
 
                 result.Should().Be(1);
                 (newPassportCount - prevPassportCount).Should().Be(1);

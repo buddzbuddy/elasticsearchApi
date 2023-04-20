@@ -39,6 +39,7 @@ services.AddElasticsearch(Configuration);
 
 
 services.AddSqlKataQueryFactory(Configuration);
+services.AddAppTransaction();
 
 services.AddScoped<IElasticService, ElasticServiceImpl>();
 services.AddScoped<IDataService, DataServiceImpl>();

@@ -10,12 +10,14 @@ namespace elasticsearchApi.Services.Passport
     {
         private readonly QueryFactory _db;
         private readonly IPassportVerifier _passportVerifier;
-        public ModifyPassportDataServiceImpl(QueryFactory db, IPassportVerifier passportVerifier) {
+        private readonly AppTransaction appTransaction;
+        public ModifyPassportDataServiceImpl(QueryFactory db, IPassportVerifier passportVerifier, AppTransaction appTransaction)
+        {
             _passportVerifier = passportVerifier;
             _db = db;
+            this.appTransaction = appTransaction;
         }
-        public void Execute(string iin, modifyPersonPassportDTO person, IDbTransaction? transaction = null) => Execute(iin, person, ref transaction);
-        public void Execute(string iin, modifyPersonPassportDTO person, ref IDbTransaction? transaction)
+        public void Execute(string iin, modifyPersonPassportDTO person)
         {
             var passportType = person.passporttype;
             var docTypeName = "";
@@ -37,7 +39,7 @@ namespace elasticsearchApi.Services.Passport
             _passportVerifier.VerifyPassport(person);
 
             var query = _db.Query("Persons").Where("IIN", iin);
-            var personDb = query.FirstOrDefault(transaction);
+            var personDb = query.FirstOrDefault(appTransaction.Transaction);
             if (personDb == null)
             {
                 throw new PersonNotFoundException("Гражданин с таким ПИН не найден в базе НРСЗ");
@@ -49,7 +51,7 @@ namespace elasticsearchApi.Services.Passport
                     query = _db.Query("Persons").Where("PassportType", passportType)
                         .Where("PassportSeries", series).Where("PassportNo", no)
                         .WhereNot("Id", personDb.Id);
-                    var personDb2 = query.FirstOrDefault(transaction);
+                    var personDb2 = query.FirstOrDefault(appTransaction.Transaction);
                     if (personDb2 != null)
                     {
                         var msg = $"Ошибка дублирования данных в документе \"{docTypeName}\"! ПИН: {personDb2.IIN}, ФИО: {personDb2.Last_Name} {personDb2.First_Name} {personDb2.Middle_Name}, \"{docTypeName}\" Номер: {personDb2.PassportNo}, Дата рождения {personDb2.Date_of_Birth}, found personIdByPIN: {personDb.Id}, found personIdByPassport: " + personDb2.Id;
@@ -61,7 +63,7 @@ namespace elasticsearchApi.Services.Passport
                 {
                     _db.Connection.Open();
                 }
-                transaction ??= _db.Connection.BeginTransaction();
+                appTransaction.Transaction ??= _db.Connection.BeginTransaction();
                 var d = personDb.Date_of_Issue;
                 var passportInsertObj = new
                 {
@@ -77,7 +79,7 @@ namespace elasticsearchApi.Services.Passport
 
                 /*var insertQuery = _db.Query("Passports").AsInsert(passportInsertObj);
                 var sql = _db.Compiler.Compile(insertQuery).Sql;*/
-                var affectedRows = _db.Query("Passports").Insert(passportInsertObj, transaction);
+                var affectedRows = _db.Query("Passports").Insert(passportInsertObj, appTransaction.Transaction);
                 if (affectedRows == 0)
                 {
                     throw new PassportArchiveException("Архивация старых паспортных данных не записалась в историю");
@@ -92,7 +94,7 @@ namespace elasticsearchApi.Services.Passport
                         Date_of_Issue = issueDate,
                         Issuing_Authority = authority,
                         FamilyState = familyState
-                    }, transaction);
+                    }, appTransaction.Transaction);
                     if (affectedRows == 0)
                     {
                         throw new PersonUpdateException("Паспортные данные гражданина в НРСЗ не обновлены");

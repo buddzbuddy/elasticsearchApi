@@ -1,5 +1,6 @@
 using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Models;
 using elasticsearchApi.Services;
 using elasticsearchApi.Services.Passport;
 using Humanizer.Configuration;
@@ -94,6 +95,11 @@ namespace elasticsearchApi.Utils
                 return new QueryFactory(connection, compiler);
             });
         }
+    }
+
+    public static class AppTransactionExtensions
+    {
+        public static void AddAppTransaction(this IServiceCollection services) => services.AddScoped((e) => new AppTransaction());
     }
     public static class CacheServiceExtensions
     {
