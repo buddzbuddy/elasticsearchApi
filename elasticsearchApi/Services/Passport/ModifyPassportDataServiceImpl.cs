@@ -60,7 +60,7 @@ namespace elasticsearchApi.Services.Passport
                 {
                     _db.Connection.Open();
                 }
-                transaction = _db.Connection.BeginTransaction();
+                transaction ??= _db.Connection.BeginTransaction();
 
                 var affectedRows = _db.Query("Passports").Insert(new
                 {

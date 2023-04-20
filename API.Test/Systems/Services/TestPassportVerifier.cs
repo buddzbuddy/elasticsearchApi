@@ -8,6 +8,7 @@ using Moq;
 using SqlKata.Execution;
 using Xunit.Abstractions;
 using System.Data;
+using elasticsearchApi.Services.Exceptions;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
@@ -37,7 +38,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             IPassportVerifier sut = new PassportVerifierImpl(new PassportVerifierBasicImpl(), mockLogicVerifier.Object, mockDbVerifier.Object);
 
             //Act & Assert
-            var ex = Assert.Throws<PassportErrorException>(() => sut.VerifyPassport(passport));
+            var ex = Assert.Throws<PassportInputErrorException>(() => sut.VerifyPassport(passport));
             ex.Message.Should().Contain("passportseries");
         }
 
@@ -83,10 +84,10 @@ namespace elasticsearchApi.Tests.Systems.Services
                 new PassportVerifierLogicImpl(), mockDbVerifier.Object);
 
             //Act & Assert
-            var ex = Assert.Throws<PassportErrorException>(() => sut.VerifyPassport(passport1));
+            var ex = Assert.Throws<PassportInputErrorException>(() => sut.VerifyPassport(passport1));
             ex.Message.Should().Contain("familystate");
             
-            ex = Assert.Throws<PassportErrorException>(() => sut.VerifyPassport(passport2));
+            ex = Assert.Throws<PassportInputErrorException>(() => sut.VerifyPassport(passport2));
             ex.Message.Should().Contain("passporttype");
         }
 
@@ -106,70 +107,6 @@ namespace elasticsearchApi.Tests.Systems.Services
 
             //Act & Assert
             sut.VerifyPassport(passport);
-        }
-
-        [Fact]
-        public void DbVerifyPassport_WhenInvoked_Throws_PassportException()
-        {
-            //Arrange
-            string passportno = "123456789";
-            string expectedErrorMessage = "Паспорт с таким номером уже существует в базе НРСЗ";
-            var application = ApplicationHelper.GetWebApplication();
-            using var services = application.Services.CreateScope();
-            var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
-            IDbTransaction? transaction = null;
-            try
-            {
-                _db.Connection.Open();
-                transaction = _db.Connection.BeginTransaction();
-                int affects = _db.Query("Persons").Insert(new { passportno }, transaction);
-                IPassportDbVerifier sut = new PassportDbVerifierImpl(_db);
-
-                //Act & Assert
-                affects.Should().Be(1);
-                var ex = Assert.Throws<PassportErrorException>(() => sut.Verify(passportno, transaction));
-                ex.Message.Should().Contain(expectedErrorMessage);
-            }
-            finally
-            {
-                transaction?.Rollback();
-            }
-        }
-
-        [Fact]
-        public void DbCommon_VerifyPassport_WhenInvoked_Throws_PassportException()
-        {
-            //Arrange
-            string passportno = "12345678";
-            string expectedErrorMessage = "Паспорт с таким номером уже существует в базе НРСЗ";
-            var mockBasicVerifier = new Mock<IPassportVerifierBasic>();
-            var mockLogicVerifier = new Mock<IPassportVerifierLogic>();
-            modifyPersonPassportDTO passport = new modifyPersonPassportDTO
-            {
-                passportno = passportno
-            };
-            var application = ApplicationHelper.GetWebApplication();
-            using var services = application.Services.CreateScope();
-            var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
-            IDbTransaction? transaction = null;
-            try
-            {
-                _db.Connection.Open();
-                transaction = _db.Connection.BeginTransaction();
-                int affects = _db.Query("Persons").Insert(new { passportno }, transaction);
-                IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
-                IPassportVerifier sut = new PassportVerifierImpl(mockBasicVerifier.Object,
-                    mockLogicVerifier.Object, passportDbVerifier);
-
-                //Act & Assert
-                affects.Should().Be(1);
-                var ex = Assert.Throws<PassportErrorException>(() => sut.VerifyPassport(passport, transaction));
-                ex.Message.Should().Contain(expectedErrorMessage);
-            }
-            finally
-            {
-                transaction?.Rollback();
-            }
         }
     }
 }

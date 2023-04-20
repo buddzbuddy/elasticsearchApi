@@ -1,5 +1,6 @@
 ﻿using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Services.Exceptions;
 using SqlKata.Execution;
 using System.Data;
 
@@ -17,7 +18,7 @@ namespace elasticsearchApi.Services.Passport
 
             if(result > 0)
             {
-                throw new PassportErrorException("passportno", "Паспорт с таким номером уже существует в базе НРСЗ");
+                throw new PassportDuplicateException("Паспорт с таким номером уже существует в базе НРСЗ");
             }
         }
     }

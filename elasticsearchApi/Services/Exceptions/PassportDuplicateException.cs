@@ -3,21 +3,11 @@
 namespace elasticsearchApi.Services.Exceptions
 {
     [Serializable]
-    public class PassportDuplicateException : Exception
+    public class PassportDuplicateException : Exception, IReadException
     {
-        public PassportDuplicateException()
-        {
-        }
+        public string ExceptionType { get { return nameof(PassportDuplicateException); } }
 
         public PassportDuplicateException(string? message) : base(message)
-        {
-        }
-
-        public PassportDuplicateException(string? message, Exception? innerException) : base(message, innerException)
-        {
-        }
-
-        protected PassportDuplicateException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
     }

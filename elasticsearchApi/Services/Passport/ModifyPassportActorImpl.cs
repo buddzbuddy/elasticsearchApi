@@ -25,15 +25,15 @@ namespace elasticsearchApi.Services.Passport
             }
             catch (Exception e) when
             (
+            e is PassportInputErrorException ||
             e is PersonNotFoundException ||
             e is PassportDuplicateException ||
-            e is PersonNotFoundException ||
             e is PassportArchiveException ||
             e is PersonUpdateException
             )
             {
                 context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
-                context.AddErrorMessage("type", "Выполнено обработанное исключение");
+                context.AddErrorMessage("type", "ModifyPassportActor - Выполнено обработанное исключение");
             }
             catch (Exception e)
             {
@@ -43,9 +43,16 @@ namespace elasticsearchApi.Services.Passport
             }
             finally
             {
-                if (!context.SuccessFlag && transaction != null)
+                if(transaction != null)
                 {
-                    transaction.Rollback();
+                    if (context.SuccessFlag)
+                    {
+                        transaction.Commit();
+                    }
+                    else
+                    {
+                        transaction.Rollback();
+                    }
                 }
             }
             return context;

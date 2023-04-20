@@ -9,7 +9,7 @@ namespace elasticsearchApi.Tests.Infrastructure
 {
     public abstract class TestUtils
     {
-        public readonly ITestOutputHelper _output;
+        protected readonly ITestOutputHelper _output;
         public TestUtils(ITestOutputHelper output)
         {
             _output = output;

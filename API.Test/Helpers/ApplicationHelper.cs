@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using SqlKata.Execution;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace elasticsearchApi.Tests.Helpers
                 builder.UseEnvironment("Test");
                 builder.ConfigureTestServices(services =>
                 {
-                    services.AddSingleton<ApiContext>();
+                    services.AddScoped<ApiContext>();
 
                     /*services.AddAuthentication()
                             .AddBasicAuthentication(credentials => Task.FromResult(credentials.username == Username && credentials.password == Password));

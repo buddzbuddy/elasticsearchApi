@@ -1,3 +1,14 @@
+Database empty
 docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=P@ssword123" \
-   -p 14331:1433 --name sql_test --hostname sql_test \
-   -d mcr.microsoft.com/mssql/server:2019-latest
+-p 14331:1433 --name sql_empty --hostname sql_empty \
+-d mcr.microsoft.com/mssql/server:2019-latest
+
+
+Database with volume initialized with real data
+docker run -e 'ACCEPT_EULA=Y' -e 'MSSQL_SA_PASSWORD=P@ssword123' \
+-p 14331:1433 --name sql_with_data --hostname sql_with_data \
+-v F:/db/nrsz/mssql/data:/var/opt/mssql/data \
+-v F:/db/nrsz/mssql/log:/var/opt/mssql/log \
+-v F:/db/nrsz/mssql/secrets:/var/opt/mssql/secrets \
+-v F:/db/nrsz/backups:/var/backups \
+-d mcr.microsoft.com/mssql/server:2019-latest

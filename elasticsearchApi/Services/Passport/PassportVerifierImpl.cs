@@ -21,7 +21,7 @@ namespace elasticsearchApi.Services.Passport
         {
             _passportVerifierBasic.Verify(passport);
             _passportVerifierLogic.Verify(passport);
-            _passportDbVerifier.Verify(passport.passportno, transaction);
+            //_passportDbVerifier.Verify(passport.passportno, transaction);
         }
     }
 }

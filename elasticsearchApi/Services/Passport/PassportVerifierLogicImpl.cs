@@ -1,6 +1,7 @@
 ﻿using Elasticsearch.Net;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
+using elasticsearchApi.Services.Exceptions;
 using System;
 
 namespace elasticsearchApi.Services.Passport
@@ -24,14 +25,14 @@ namespace elasticsearchApi.Services.Passport
             if (passport.passporttype != null
                 && !passporttypeList.Contains(passport.passporttype.Value))
             {
-                throw new PassportErrorException(
+                throw new PassportInputErrorException(
                     "passporttype",
                     "Тип удостоверяющего документа не распознан!");
             }
             if (passport.familystate != null
                 && !familystateList.Contains(passport.familystate.Value))
             {
-                throw new PassportErrorException(
+                throw new PassportInputErrorException(
                     "familystate",
                     "Семейное положение не распознано!");
             }
