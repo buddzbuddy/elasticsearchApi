@@ -174,7 +174,7 @@ namespace elasticsearchApi.Controllers
             catch (Exception e)
             {
                 _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
-                _context.AddErrorMessage("type", "ModifyPassportDataService - Выполнено необработанное исключение");
+                _context.AddErrorMessage("type", "ModifyPassportActor - Выполнено необработанное исключение");
                 _context.AddErrorMessage("errorTrace", e.StackTrace ?? "");
             }
             return Ok(_context);
