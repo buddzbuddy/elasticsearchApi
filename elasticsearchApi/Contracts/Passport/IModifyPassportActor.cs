@@ -1,4 +1,5 @@
 ﻿using elasticsearchApi.Models;
+using elasticsearchApi.Services.Passport;
 using System.Data;
 
 namespace elasticsearchApi.Contracts.Passport
@@ -7,5 +8,6 @@ namespace elasticsearchApi.Contracts.Passport
     {
         IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person, IDbTransaction? transaction = null);
         IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person, ref IDbTransaction? transaction);
+        IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person, OnSuccess? onSuccessFlag, OnFailure? onFailure, ref IDbTransaction? transaction);
     }
 }

@@ -12,14 +12,17 @@ using SqlKata.Execution;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 using Xunit.Abstractions;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
+    [Collection("Sequential")]
     public class TestModifyPassportActor : TestUtils
     {
         public TestModifyPassportActor(ITestOutputHelper output) : base(output)
@@ -96,7 +99,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             {
                 passporttype = documentType1,
                 passportseries = "А",
-                passportno = "666777",
+                passportno = "6667771",
                 date_of_issue = DateTime.ParseExact("2009-06-17", "yyyy-MM-dd", CultureInfo.InvariantCulture),
                 familystate = familystate1,
                 issuing_authority = "issuing_authority"
@@ -105,18 +108,61 @@ namespace elasticsearchApi.Tests.Systems.Services
             using var services = application.Services.CreateScope();
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
 
+            var prevPerson = _db.Query("Persons").Where("IIN", iinExisting).FirstOrDefault();
+            var prevPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>();
+
             IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
             IModifyPassportDataService dataSvc = new ModifyPassportDataServiceImpl(_db, passportVerifier);
             IModifyPassportActor sut = new ModifyPassportActorImpl(dataSvc);
-            IDbTransaction? transaction = null;
+            
+            _db.Connection.Open();
+            IDbTransaction? transaction = _db.Connection.BeginTransaction();
 
             //Act & Assert
-            sut.CallModifyPassport(iinExisting, correctModel, transaction);
+            try
+            {
+                var context = sut.CallModifyPassport(iinExisting, correctModel, null, null, ref transaction);
 
-            transaction?.Rollback();
+
+                context.SuccessFlag.Should().BeTrue();
+                var result = _db.Query("Persons").Where(UtilHelper.ConvertToDictionary(correctModel)).Count<int>(transaction: transaction);
+                var newPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>(transaction: transaction);
+
+                result.Should().Be(1);
+                (newPassportCount - prevPassportCount).Should().Be(1);
+            }
+            finally
+            {
+                transaction?.Rollback();
+            }
+        }
+
+        [Fact(Skip = "Nested transactions unsupported")]
+        public void IsSupported_MultiTransactions()
+        {
+            var application = ApplicationHelper.GetWebApplication();
+            using var services = application.Services.CreateScope();
+            var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
+
+            using var scope = new TransactionScope();
+            var conn1 = _db.Connection;
+            if (conn1.State != ConnectionState.Open)
+            {
+                _db.Connection.Open();
+            }
+            IDbTransaction? tran1 = conn1.BeginTransaction();
+
+            var conn2 = new SqlConnection(conn1.ConnectionString + ";Password=P@ssword123;");
+            _db.Connection = conn2;
+            conn2.Open();
+            IDbTransaction? tran2 = conn2.BeginTransaction();
+
+            tran2.Rollback();
+            tran1.Rollback();
+            scope.Complete();
         }
     }
 }

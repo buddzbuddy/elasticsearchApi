@@ -4,9 +4,12 @@ using elasticsearchApi.Models;
 using elasticsearchApi.Services.Exceptions;
 using SqlKata.Execution;
 using System.Data;
+using System.Threading;
 
 namespace elasticsearchApi.Services.Passport
 {
+    public delegate void OnSuccess(IDbTransaction transaction);
+    public delegate void OnFailure(IDbTransaction transaction);
     public class ModifyPassportActorImpl : IModifyPassportActor
     {
         private readonly IModifyPassportDataService _dataSvc;
@@ -17,9 +20,15 @@ namespace elasticsearchApi.Services.Passport
         public IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person, IDbTransaction? transaction = null) => CallModifyPassport(iin, person, ref transaction);
         public IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person, ref IDbTransaction? transaction)
         {
+            return CallModifyPassport(iin, person, Commit, Rollback, ref transaction);
+        }
+        private SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+        public IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person, OnSuccess? onSuccess, OnFailure? onFailure, ref IDbTransaction? transaction)
+        {
             IServiceContext context = new ServiceContext();
             try
             {
+                semaphore.Wait();
                 _dataSvc.Execute(iin, person, ref transaction);
                 context.SuccessFlag = true;
             }
@@ -43,19 +52,33 @@ namespace elasticsearchApi.Services.Passport
             }
             finally
             {
-                if(transaction != null)
+                if (transaction != null)
                 {
                     if (context.SuccessFlag)
                     {
-                        transaction.Commit();
+
+                        //transaction.Commit();
+                        onSuccess?.Invoke(transaction);
                     }
                     else
                     {
-                        transaction.Rollback();
+                        //transaction.Rollback();
+                        onFailure?.Invoke(transaction);
                     }
                 }
+                semaphore.Release();
             }
             return context;
+        }
+
+        private void Commit(IDbTransaction transaction)
+        {
+            transaction.Commit();
+        }
+
+        private void Rollback(IDbTransaction transaction)
+        {
+            transaction.Rollback();
         }
     }
 }
