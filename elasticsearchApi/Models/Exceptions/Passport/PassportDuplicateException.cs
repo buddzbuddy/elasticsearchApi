@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Serialization;
-using elasticsearchApi.Services.Exceptions.Base;
+using elasticsearchApi.Models.Exceptions.Base;
 
-namespace elasticsearchApi.Services.Exceptions.Passport
+namespace elasticsearchApi.Models.Exceptions.Passport
 {
     [Serializable]
     public class PassportDuplicateException : Exception, IReadException

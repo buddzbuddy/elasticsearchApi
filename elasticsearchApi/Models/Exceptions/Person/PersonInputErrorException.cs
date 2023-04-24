@@ -1,8 +1,5 @@
-﻿using elasticsearchApi.Services.Exceptions.Base;
-using elasticsearchApi.Utils;
-using System.Runtime.Serialization;
-
-namespace elasticsearchApi.Services.Exceptions.Passport
+﻿using elasticsearchApi.Models.Exceptions.Passport;
+namespace elasticsearchApi.Models.Exceptions.Person
 {
     public class PersonInputErrorException : PassportInputErrorException
     {

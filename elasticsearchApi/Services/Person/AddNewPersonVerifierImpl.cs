@@ -2,7 +2,6 @@
 using elasticsearchApi.Contracts.Person;
 using elasticsearchApi.Models;
 using elasticsearchApi.Models.Person;
-using elasticsearchApi.Services.Exceptions.Passport;
 using Nest;
 using System;
 
@@ -27,7 +26,7 @@ namespace elasticsearchApi.Services.Person
         {
             _personBasicVerifier.Verify(person);
             _personLogicVerifier.Verify(person);
-            _passportVerifier.Verify(person);
+            _passportVerifier.VerifyPassport(person);
         }
     }
 }

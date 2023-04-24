@@ -9,7 +9,7 @@ using SqlKata.Execution;
 using Xunit.Abstractions;
 using System.Data;
 using elasticsearchApi.Models.Passport;
-using elasticsearchApi.Services.Exceptions.Passport;
+using elasticsearchApi.Models.Exceptions.Person;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
@@ -26,7 +26,6 @@ namespace elasticsearchApi.Tests.Systems.Services
         {
             //Arrange
             var mockLogicVerifier = new Mock<IPassportVerifierLogic>();
-            var mockDbVerifier = new Mock<IPassportDbVerifier>();
             modifyPersonPassportDTO passport = new modifyPersonPassportDTO
             {
                 issuing_authority = "ШВКДн.Ч.Расулов",
@@ -36,7 +35,7 @@ namespace elasticsearchApi.Tests.Systems.Services
                 //passportseries = "А",
                 passporttype = new Guid("A77C7DB9-C27F-4FFC-BFC0-0C6959731B98")
             };
-            IPassportVerifier sut = new PassportVerifierImpl(new PassportVerifierBasicImpl(), mockLogicVerifier.Object, mockDbVerifier.Object);
+            IPassportVerifier sut = new PassportVerifierImpl(new PassportVerifierBasicImpl(), mockLogicVerifier.Object);
 
             //Act & Assert
             var ex = Assert.Throws<PersonInputErrorException>(() => sut.VerifyPassport(passport));
@@ -48,7 +47,6 @@ namespace elasticsearchApi.Tests.Systems.Services
         {
             //Arrange
             var mockLogicVerifier = new Mock<IPassportVerifierLogic>();
-            var mockDbVerifier = new Mock<IPassportDbVerifier>();
             modifyPersonPassportDTO passport = new modifyPersonPassportDTO
             {
                 issuing_authority = "ШВКДн.Ч.Расулов",
@@ -59,7 +57,7 @@ namespace elasticsearchApi.Tests.Systems.Services
                 passporttype = new Guid("A77C7DB9-C27F-4FFC-BFC0-0C6959731B98")
             };
             IPassportVerifier sut = new PassportVerifierImpl(new PassportVerifierBasicImpl(),
-                mockLogicVerifier.Object, mockDbVerifier.Object);
+                mockLogicVerifier.Object);
 
             //Act & Assert
             sut.VerifyPassport(passport);
@@ -69,8 +67,7 @@ namespace elasticsearchApi.Tests.Systems.Services
         public void LogicVerifyPassport_WhenInvoked_Throws_PassportException()
         {
             //Arrange
-            var mockBasicVerifier = new Mock<IPassportVerifier>();
-            var mockDbVerifier = new Mock<IPassportDbVerifier>();
+            var mockBasicVerifier = new Mock<IPassportVerifierBasic>();
             modifyPersonPassportDTO passport1 = new modifyPersonPassportDTO
             {
                 familystate = new Guid("A77C7DB9-C27F-4FFC-BFC0-0C6959731B98"),
@@ -82,7 +79,7 @@ namespace elasticsearchApi.Tests.Systems.Services
                 passporttype = new Guid()
             };
             IPassportVerifier sut = new PassportVerifierImpl(mockBasicVerifier.Object,
-                new PassportVerifierLogicImpl(), mockDbVerifier.Object);
+                new PassportVerifierLogicImpl());
 
             //Act & Assert
             var ex = Assert.Throws<PersonInputErrorException>(() => sut.VerifyPassport(passport1));
@@ -96,15 +93,14 @@ namespace elasticsearchApi.Tests.Systems.Services
         public void LogicVerifyPassport_WhenInvoked_Returns_Empty()
         {
             //Arrange
-            var mockBasicVerifier = new Mock<IPassportVerifier>();
-            var mockDbVerifier = new Mock<IPassportDbVerifier>();
+            var mockBasicVerifier = new Mock<IPassportVerifierBasic>();
             modifyPersonPassportDTO passport = new modifyPersonPassportDTO
             {
                 familystate = new Guid("{6831E05F-9E2F-46DE-AED0-2DE69A8F87D3}"),
                 passporttype = new Guid("A77C7DB9-C27F-4FFC-BFC0-0C6959731B98")
             };
             IPassportVerifier sut = new PassportVerifierImpl(mockBasicVerifier.Object,
-                new PassportVerifierLogicImpl(), mockDbVerifier.Object);
+                new PassportVerifierLogicImpl());
 
             //Act & Assert
             sut.VerifyPassport(passport);

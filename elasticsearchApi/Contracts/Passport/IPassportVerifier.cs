@@ -7,6 +7,6 @@ namespace elasticsearchApi.Contracts.Passport
 {
     public interface IPassportVerifier
     {
-        void VerifyPassport(IPassportData passport, IDbTransaction? transaction = null);
+        void VerifyPassport(IPassportData passport);
     }
 }

@@ -1,7 +1,6 @@
 ﻿using elasticsearchApi.Contracts.Person;
 using elasticsearchApi.Models.Contracts;
-using elasticsearchApi.Models.Person;
-using elasticsearchApi.Services.Exceptions.Passport;
+using elasticsearchApi.Models.Exceptions.Passport;
 using System;
 using System.Text.RegularExpressions;
 

@@ -4,7 +4,7 @@ using elasticsearchApi.Models.Passport;
 
 namespace elasticsearchApi.Contracts.Passport
 {
-    public interface IPassportVerifier
+    public interface IPassportVerifierBasic
     {
         void Verify(IPassportData passport);
     }

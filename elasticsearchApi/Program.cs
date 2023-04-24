@@ -49,9 +49,8 @@ services.AddHttpClient<IUserService, UserServiceImpl>();
 
 services.AddScoped<IModifyPassportActor, ModifyPassportActorImpl>();
 services.AddScoped<IModifyPassportDataService, ModifyPassportDataServiceImpl>();
-//services.AddScoped<IPassportDbVerifier, PassportDbVerifierImpl>();
 services.AddScoped<IPassportVerifier, PassportVerifierImpl>();
-services.AddScoped<IPassportVerifier, PassportVerifierBasicImpl>();
+services.AddScoped<IPassportVerifierBasic, PassportVerifierBasicImpl>();
 
 
 services.AddCacheServices();

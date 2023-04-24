@@ -1,9 +1,9 @@
 ﻿using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Models.Exceptions.Base;
+using elasticsearchApi.Models.Exceptions.Passport;
+using elasticsearchApi.Models.Exceptions.Person;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Models.Passport;
-using elasticsearchApi.Services.Exceptions.Base;
-using elasticsearchApi.Services.Exceptions.Passport;
-using elasticsearchApi.Services.Exceptions.Peron;
 using elasticsearchApi.Services.Passport;
 using elasticsearchApi.Tests.Helpers;
 using elasticsearchApi.Tests.Infrastructure;
@@ -129,10 +129,9 @@ namespace elasticsearchApi.Tests.Systems.Services
             var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
             _db.Connection.Open();
 
-            IPassportVerifier passportVerifierBasic = new PassportVerifierBasicImpl();
+            IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
-            IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
-            IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
+            IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic);
             IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
             //Act & Assert
             var ex1 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, incorrectModel));
@@ -184,10 +183,9 @@ namespace elasticsearchApi.Tests.Systems.Services
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
             var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
 
-            IPassportVerifier passportVerifierBasic = new PassportVerifierBasicImpl();
+            IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
-            IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
-            IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
+            IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic);
             IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
 
             //Act & Assert
@@ -233,10 +231,9 @@ namespace elasticsearchApi.Tests.Systems.Services
             var prevPerson = _db.Query("Persons").Where("IIN", iinExisting).FirstOrDefault();
             var prevPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>();
 
-            IPassportVerifier passportVerifierBasic = new PassportVerifierBasicImpl();
+            IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
-            IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
-            IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
+            IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic);
             IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
             IDbTransaction? transaction = null;
 

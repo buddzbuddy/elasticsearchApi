@@ -1,7 +1,6 @@
 ﻿using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Models.Passport;
-using elasticsearchApi.Services.Exceptions;
 using elasticsearchApi.Services.Passport;
 using elasticsearchApi.Tests.Helpers;
 using elasticsearchApi.Tests.Infrastructure;
@@ -67,10 +66,9 @@ namespace elasticsearchApi.Tests.Systems.Services
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
             var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
 
-            IPassportVerifier passportVerifierBasic = new PassportVerifierBasicImpl();
+            IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
-            IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
-            IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
+            IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic);
             IModifyPassportDataService dataSvc = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
             IModifyPassportActor sut = new ModifyPassportActorImpl(dataSvc, appTransaction);
 
@@ -114,10 +112,9 @@ namespace elasticsearchApi.Tests.Systems.Services
             var prevPerson = _db.Query("Persons").Where("IIN", iinExisting).FirstOrDefault();
             var prevPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>();
 
-            IPassportVerifier passportVerifierBasic = new PassportVerifierBasicImpl();
+            IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
-            IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
-            IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
+            IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic);
             IModifyPassportDataService dataSvc = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
             IModifyPassportActor sut = new ModifyPassportActorImpl(dataSvc, appTransaction);
             

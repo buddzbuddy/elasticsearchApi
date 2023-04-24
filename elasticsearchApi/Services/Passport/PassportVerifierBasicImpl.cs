@@ -2,14 +2,13 @@
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
 using elasticsearchApi.Models.Contracts;
+using elasticsearchApi.Models.Exceptions.Passport;
 using elasticsearchApi.Models.Passport;
-using elasticsearchApi.Services.Exceptions;
-using elasticsearchApi.Services.Exceptions.Passport;
 using System;
 
 namespace elasticsearchApi.Services.Passport
 {
-    public class PassportVerifierBasicImpl : IPassportVerifier
+    public class PassportVerifierBasicImpl : IPassportVerifierBasic
     {
         public void Verify(IPassportData passport)
         {

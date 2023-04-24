@@ -1,9 +1,8 @@
 ﻿using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Models.Exceptions.Passport;
+using elasticsearchApi.Models.Exceptions.Person;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Models.Passport;
-using elasticsearchApi.Services.Exceptions;
-using elasticsearchApi.Services.Exceptions.Passport;
-using elasticsearchApi.Services.Exceptions.Peron;
 using SqlKata.Execution;
 using System.Data;
 
