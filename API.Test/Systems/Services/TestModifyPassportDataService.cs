@@ -37,10 +37,11 @@ namespace elasticsearchApi.Tests.Systems.Services
             using var services = application.Services.CreateScope();
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
             var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
+            _db.Connection.Open();
             IModifyPassportDataService sut = new ModifyPassportDataServiceImpl(_db, mockPassportVerifier.Object, appTransaction);
             //Act & Assert
-
             var ex = Assert.Throws<PersonNotFoundException>(() => sut.Execute(iin, new modifyPersonPassportDTO()));
+            _db.Connection.Close();
         }
 
         [Fact]
@@ -83,6 +84,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             finally
             {
                 appTransaction.Transaction?.Rollback();
+                _db.Connection.Close();
             }
         }
 
@@ -122,6 +124,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             using var services = application.Services.CreateScope();
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
             var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
+            _db.Connection.Open();
 
             IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
@@ -137,7 +140,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             Assert.True(ex2 is IReadException and PersonNotFoundException);
             Assert.True(ex3 is IReadException and PassportDuplicateException);
 
-
+            _db.Connection.Close();
             _output.WriteLine(((IReadException)ex3).ExceptionType);
         }
 
@@ -223,7 +226,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             using var services = application.Services.CreateScope();
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
             var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
-
+            _db.Connection.Open();
             var prevPerson = _db.Query("Persons").Where("IIN", iinExisting).FirstOrDefault();
             var prevPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>();
 
@@ -248,6 +251,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             finally
             {
                 transaction?.Rollback();
+                _db.Connection.Close();
             }
         }
     }

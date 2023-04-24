@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using elasticsearchApi.Contracts;
 using elasticsearchApi.Utils.InitiatorProcesses;
+using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Services.Passport;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,9 +18,7 @@ var services = builder.Services;
 var Configuration = builder.Configuration;
 
 var env = builder.Environment;
-services.AddControllers(options => {
-    options.Filters.Add(new AuthorizeFilter());
-});
+
 var nrsz_connection = Environment.GetEnvironmentVariable("NRSZ_CONNECTION_STRING");
 if (nrsz_connection.IsNullOrEmpty())
 {
@@ -46,6 +46,14 @@ services.AddScoped<IDataService, DataServiceImpl>();
 services.AddScoped<IServiceContext, ServiceContext>();
 services.AddScoped<IUserService, UserServiceImpl>();
 services.AddHttpClient<IUserService, UserServiceImpl>();
+
+services.AddScoped<IModifyPassportActor, ModifyPassportActorImpl>();
+services.AddScoped<IModifyPassportDataService, ModifyPassportDataServiceImpl>();
+//services.AddScoped<IPassportDbVerifier, PassportDbVerifierImpl>();
+services.AddScoped<IPassportVerifier, PassportVerifierImpl>();
+services.AddScoped<IPassportVerifierBasic, PassportVerifierBasicImpl>();
+
+
 services.AddCacheServices();
 
 services.AddPassportVerifierServices();
@@ -55,16 +63,7 @@ services.AddHostedService<InitiatorHostedService>();
 
 services.AddScoped<IUsers, Users>();
 services.AddSingleton<INotificationService, DummyNotificationService>();
-
-services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer();
-
-services.AddAuthorization(config =>
-{
-    config.DefaultPolicy = new AuthorizationPolicyBuilder()
-                                .RequireAuthenticatedUser()
-                                .Build();
-});
+services.AddControllers();
 
 var app = builder.Build();
 
@@ -73,7 +72,6 @@ if (builder.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
 }
-app.UseAuthorization();
 
 app.MapControllers();
 

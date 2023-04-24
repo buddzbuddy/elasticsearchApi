@@ -30,7 +30,7 @@ namespace elasticsearchApi.Tests.Repetition
         //private const string SqlConnectionString = "Server=localhost,14331;Database=nrsz-test;User Id=sa;Password=P@ssword123;Encrypt=False";
         private INotificationService NotificationServiceFake = A.Fake<INotificationService>();
 
-        [Fact]
+        [Fact(Skip = "Disabled Authoriz Filter by Default")]
         public async Task Get_returns_401_Unauthorized_if_not_authenticated()
         {
             var application = GetWebApplication();

@@ -193,6 +193,19 @@ namespace elasticsearchApi.Utils
             return methodBuilder;
         }
     }
+
+    public static class IDictionaryExtensions
+    {
+        public static string ToReadableString(this IDictionary<string, string> dictionary)
+        {
+            if (dictionary == null)
+            {
+                return "";
+            }
+            return string.Join("; ", dictionary.Select(x => $"{x.Key} - {x.Value}"));
+
+        }
+    }
     /*public static class EFExtensions
     {
         public static DbTransaction GetDbTransaction(this IDbContextTransaction source)
