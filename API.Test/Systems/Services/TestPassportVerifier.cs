@@ -8,8 +8,8 @@ using Moq;
 using SqlKata.Execution;
 using Xunit.Abstractions;
 using System.Data;
-using elasticsearchApi.Services.Exceptions;
 using elasticsearchApi.Models.Passport;
+using elasticsearchApi.Services.Exceptions.Passport;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
@@ -39,7 +39,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             IPassportVerifier sut = new PassportVerifierImpl(new PassportVerifierBasicImpl(), mockLogicVerifier.Object, mockDbVerifier.Object);
 
             //Act & Assert
-            var ex = Assert.Throws<PassportInputErrorException>(() => sut.VerifyPassport(passport));
+            var ex = Assert.Throws<PersonInputErrorException>(() => sut.VerifyPassport(passport));
             ex.Message.Should().Contain("passportseries");
         }
 
@@ -69,7 +69,7 @@ namespace elasticsearchApi.Tests.Systems.Services
         public void LogicVerifyPassport_WhenInvoked_Throws_PassportException()
         {
             //Arrange
-            var mockBasicVerifier = new Mock<IPassportVerifierBasic>();
+            var mockBasicVerifier = new Mock<IPassportVerifier>();
             var mockDbVerifier = new Mock<IPassportDbVerifier>();
             modifyPersonPassportDTO passport1 = new modifyPersonPassportDTO
             {
@@ -85,10 +85,10 @@ namespace elasticsearchApi.Tests.Systems.Services
                 new PassportVerifierLogicImpl(), mockDbVerifier.Object);
 
             //Act & Assert
-            var ex = Assert.Throws<PassportInputErrorException>(() => sut.VerifyPassport(passport1));
+            var ex = Assert.Throws<PersonInputErrorException>(() => sut.VerifyPassport(passport1));
             ex.Message.Should().Contain("familystate");
             
-            ex = Assert.Throws<PassportInputErrorException>(() => sut.VerifyPassport(passport2));
+            ex = Assert.Throws<PersonInputErrorException>(() => sut.VerifyPassport(passport2));
             ex.Message.Should().Contain("passporttype");
         }
 
@@ -96,7 +96,7 @@ namespace elasticsearchApi.Tests.Systems.Services
         public void LogicVerifyPassport_WhenInvoked_Returns_Empty()
         {
             //Arrange
-            var mockBasicVerifier = new Mock<IPassportVerifierBasic>();
+            var mockBasicVerifier = new Mock<IPassportVerifier>();
             var mockDbVerifier = new Mock<IPassportDbVerifier>();
             modifyPersonPassportDTO passport = new modifyPersonPassportDTO
             {

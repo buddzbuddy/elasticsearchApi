@@ -1,7 +1,8 @@
-﻿using elasticsearchApi.Utils;
+﻿using elasticsearchApi.Services.Exceptions.Base;
+using elasticsearchApi.Utils;
 using System.Runtime.Serialization;
 
-namespace elasticsearchApi.Services.Exceptions
+namespace elasticsearchApi.Services.Exceptions.Passport
 {
     [Serializable]
     public class PassportInputErrorException : Exception, IReadException

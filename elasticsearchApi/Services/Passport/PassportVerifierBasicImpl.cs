@@ -1,15 +1,17 @@
 ﻿using Elasticsearch.Net;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
+using elasticsearchApi.Models.Contracts;
 using elasticsearchApi.Models.Passport;
 using elasticsearchApi.Services.Exceptions;
+using elasticsearchApi.Services.Exceptions.Passport;
 using System;
 
 namespace elasticsearchApi.Services.Passport
 {
-    public class PassportVerifierBasicImpl : IPassportVerifierBasic
+    public class PassportVerifierBasicImpl : IPassportVerifier
     {
-        public void Verify(modifyPersonPassportDTO passport)
+        public void Verify(IPassportData passport)
         {
             var passportTypeId = new Guid("{A77C7DB9-C27F-4FFC-BFC0-0C6959731B98}");
             var passportType = passport.passporttype;

@@ -67,7 +67,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
             var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
 
-            IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
+            IPassportVerifier passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
@@ -114,7 +114,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var prevPerson = _db.Query("Persons").Where("IIN", iinExisting).FirstOrDefault();
             var prevPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>();
 
-            IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
+            IPassportVerifier passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);

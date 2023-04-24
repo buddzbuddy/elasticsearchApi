@@ -1,7 +1,9 @@
 ﻿using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Models.Passport;
-using elasticsearchApi.Services.Exceptions;
+using elasticsearchApi.Services.Exceptions.Base;
+using elasticsearchApi.Services.Exceptions.Passport;
+using elasticsearchApi.Services.Exceptions.Peron;
 using elasticsearchApi.Services.Passport;
 using elasticsearchApi.Tests.Helpers;
 using elasticsearchApi.Tests.Infrastructure;
@@ -127,7 +129,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
             _db.Connection.Open();
 
-            IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
+            IPassportVerifier passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
@@ -137,7 +139,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var ex2 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, correctModel));
             var ex3 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinExisting, duplicateModel));
 
-            Assert.True(ex1 is IReadException and PassportInputErrorException);
+            Assert.True(ex1 is IReadException and PersonInputErrorException);
             Assert.True(ex2 is IReadException and PersonNotFoundException);
             Assert.True(ex3 is IReadException and PassportDuplicateException);
 
@@ -182,7 +184,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
             var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
 
-            IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
+            IPassportVerifier passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
@@ -192,7 +194,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var ex1 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, incorrectModel));
             var ex2 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, correctModel));
 
-            Assert.True(ex1 is IWriteException and PassportInputErrorException);
+            Assert.True(ex1 is IWriteException and PersonInputErrorException);
             Assert.True(ex2 is IWriteException and PersonNotFoundException);
 
 
@@ -231,7 +233,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var prevPerson = _db.Query("Persons").Where("IIN", iinExisting).FirstOrDefault();
             var prevPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>();
 
-            IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
+            IPassportVerifier passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);

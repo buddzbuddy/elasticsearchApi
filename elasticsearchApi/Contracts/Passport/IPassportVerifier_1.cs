@@ -1,10 +1,11 @@
 ﻿using elasticsearchApi.Models;
+using elasticsearchApi.Models.Contracts;
 using elasticsearchApi.Models.Passport;
 
 namespace elasticsearchApi.Contracts.Passport
 {
-    public interface IPassportVerifierBasic
+    public interface IPassportVerifier
     {
-        void Verify(modifyPersonPassportDTO passport);
+        void Verify(IPassportData passport);
     }
 }

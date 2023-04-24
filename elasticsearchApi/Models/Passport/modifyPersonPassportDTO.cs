@@ -1,6 +1,8 @@
-﻿namespace elasticsearchApi.Models.Passport
+﻿using elasticsearchApi.Models.Contracts;
+
+namespace elasticsearchApi.Models.Passport
 {
-    public class modifyPersonPassportDTO
+    public class modifyPersonPassportDTO: IPassportData
     {
         public Guid? passporttype { get; set; }
         public string? passportseries { get; set; }

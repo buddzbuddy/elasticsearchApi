@@ -2,6 +2,8 @@
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Models.Passport;
 using elasticsearchApi.Services.Exceptions;
+using elasticsearchApi.Services.Exceptions.Passport;
+using elasticsearchApi.Services.Exceptions.Peron;
 using SqlKata.Execution;
 using System.Data;
 

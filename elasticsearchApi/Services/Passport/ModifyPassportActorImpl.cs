@@ -2,7 +2,8 @@
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Models.Passport;
-using elasticsearchApi.Services.Exceptions;
+using elasticsearchApi.Services.Exceptions.Passport;
+using elasticsearchApi.Services.Exceptions.Peron;
 using SqlKata.Execution;
 using System.Data;
 using System.Threading;
@@ -30,7 +31,7 @@ namespace elasticsearchApi.Services.Passport
             }
             catch (Exception e) when
             (
-            e is PassportInputErrorException ||
+            e is PersonInputErrorException ||
             e is PersonNotFoundException ||
             e is PassportDuplicateException ||
             e is PassportArchiveException ||

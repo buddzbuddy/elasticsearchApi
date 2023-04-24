@@ -1,8 +1,10 @@
 ﻿using Elasticsearch.Net;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
+using elasticsearchApi.Models.Contracts;
 using elasticsearchApi.Models.Passport;
 using elasticsearchApi.Services.Exceptions;
+using elasticsearchApi.Services.Exceptions.Passport;
 using System;
 
 namespace elasticsearchApi.Services.Passport
@@ -21,7 +23,7 @@ namespace elasticsearchApi.Services.Passport
             new Guid("{A77C7DB9-C27F-4FFC-BFC0-0C6959731B98}"),//Passport
             new Guid("{A52BE3AF-5DFA-405B-A4E6-18A64C24F9A5}"),//BirthCertificate
         };
-        public void Verify(modifyPersonPassportDTO passport)
+        public void Verify(IPassportData passport)
         {
             if (passport.passporttype != null
                 && !passporttypeList.Contains(passport.passporttype.Value))
