@@ -8,28 +8,23 @@ using System.Threading;
 
 namespace elasticsearchApi.Services.Passport
 {
-    public delegate void OnSuccess(IDbTransaction transaction);
-    public delegate void OnFailure(IDbTransaction transaction);
     public class ModifyPassportActorImpl : IModifyPassportActor
     {
+        private readonly AppTransaction appTransaction;
         private readonly IModifyPassportDataService _dataSvc;
-        public ModifyPassportActorImpl(IModifyPassportDataService dataService)
+        public ModifyPassportActorImpl(IModifyPassportDataService dataService, AppTransaction appTransaction)
         {
             _dataSvc = dataService;
+            this.appTransaction = appTransaction;
         }
-        public IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person, IDbTransaction? transaction = null) => CallModifyPassport(iin, person, ref transaction);
-        public IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person, ref IDbTransaction? transaction)
-        {
-            return CallModifyPassport(iin, person, Commit, Rollback, ref transaction);
-        }
-        private SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
-        public IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person, OnSuccess? onSuccess, OnFailure? onFailure, ref IDbTransaction? transaction)
+        private SemaphoreSlim semaphore = new (1, 1);
+        public IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person)
         {
             IServiceContext context = new ServiceContext();
             try
             {
                 semaphore.Wait();
-                _dataSvc.Execute(iin, person, ref transaction);
+                _dataSvc.Execute(iin, person);
                 context.SuccessFlag = true;
             }
             catch (Exception e) when
@@ -52,18 +47,15 @@ namespace elasticsearchApi.Services.Passport
             }
             finally
             {
-                if (transaction != null)
+                if (appTransaction.Transaction != null)
                 {
                     if (context.SuccessFlag)
                     {
-
-                        //transaction.Commit();
-                        onSuccess?.Invoke(transaction);
+                        appTransaction.OnCommit?.Invoke();
                     }
                     else
                     {
-                        //transaction.Rollback();
-                        onFailure?.Invoke(transaction);
+                        appTransaction.OnRollback?.Invoke();
                     }
                 }
                 semaphore.Release();

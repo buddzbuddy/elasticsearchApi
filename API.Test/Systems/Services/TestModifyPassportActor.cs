@@ -64,13 +64,14 @@ namespace elasticsearchApi.Tests.Systems.Services
             var application = ApplicationHelper.GetWebApplication();
             using var services = application.Services.CreateScope();
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
+            var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
 
             IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
-            IModifyPassportDataService dataSvc = new ModifyPassportDataServiceImpl(_db, passportVerifier);
-            IModifyPassportActor sut = new ModifyPassportActorImpl(dataSvc);
+            IModifyPassportDataService dataSvc = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
+            IModifyPassportActor sut = new ModifyPassportActorImpl(dataSvc, appTransaction);
 
             //Act & Assert
             var context1 = sut.CallModifyPassport(iinIncorrect, incorrectModel);
@@ -107,6 +108,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var application = ApplicationHelper.GetWebApplication();
             using var services = application.Services.CreateScope();
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
+            var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
 
             var prevPerson = _db.Query("Persons").Where("IIN", iinExisting).FirstOrDefault();
             var prevPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>();
@@ -115,28 +117,32 @@ namespace elasticsearchApi.Tests.Systems.Services
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportDbVerifier passportDbVerifier = new PassportDbVerifierImpl(_db);
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic, passportDbVerifier);
-            IModifyPassportDataService dataSvc = new ModifyPassportDataServiceImpl(_db, passportVerifier);
-            IModifyPassportActor sut = new ModifyPassportActorImpl(dataSvc);
+            IModifyPassportDataService dataSvc = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
+            IModifyPassportActor sut = new ModifyPassportActorImpl(dataSvc, appTransaction);
             
             _db.Connection.Open();
-            IDbTransaction? transaction = _db.Connection.BeginTransaction();
+            appTransaction.Transaction = _db.Connection.BeginTransaction();
+            
+            /*DISABLE COMMITS TO DATABASE*/
+            appTransaction.OnCommit = null;
+            appTransaction.OnRollback = null;
 
             //Act & Assert
             try
             {
-                var context = sut.CallModifyPassport(iinExisting, correctModel, null, null, ref transaction);
+                var context = sut.CallModifyPassport(iinExisting, correctModel);
 
 
                 context.SuccessFlag.Should().BeTrue();
-                var result = _db.Query("Persons").Where(UtilHelper.ConvertToDictionary(correctModel)).Count<int>(transaction: transaction);
-                var newPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>(transaction: transaction);
+                var result = _db.Query("Persons").Where(UtilHelper.ConvertToDictionary(correctModel)).Count<int>(transaction: appTransaction.Transaction);
+                var newPassportCount = _db.Query("Passports").Where("PersonId", (int)prevPerson.Id).Count<int>(transaction: appTransaction.Transaction);
 
                 result.Should().Be(1);
                 (newPassportCount - prevPassportCount).Should().Be(1);
             }
             finally
             {
-                transaction?.Rollback();
+                appTransaction.Transaction?.Rollback();
             }
         }
 

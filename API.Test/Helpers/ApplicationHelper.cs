@@ -1,14 +1,18 @@
 ﻿using Bazinga.AspNetCore.Authentication.Basic;
 using elasticsearchApi.Data;
+using elasticsearchApi.Models;
+using elasticsearchApi.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using SqlKata.Compilers;
 using SqlKata.Execution;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
@@ -18,25 +22,20 @@ namespace elasticsearchApi.Tests.Helpers
 {
     public static class ApplicationHelper
     {
-        private const string Username = "Test";
-        private const string Password = "test";
         public static WebApplicationFactory<Program> GetWebApplication()
             => new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
             {
                 builder.UseEnvironment("Test");
                 builder.ConfigureTestServices(services =>
                 {
-                    services.AddScoped<ApiContext>();
-
-                    /*services.AddAuthentication()
-                            .AddBasicAuthentication(credentials => Task.FromResult(credentials.username == Username && credentials.password == Password));
-
-                    services.AddAuthorization(config =>
+                    services.AddSingleton<ApiContext>();
+                    services.AddSingleton<AppTransaction>();
+                    services.AddSingleton((e) =>
                     {
-                        config.DefaultPolicy = new AuthorizationPolicyBuilder(config.DefaultPolicy)
-                                                    .AddAuthenticationSchemes(BasicAuthenticationDefaults.AuthenticationScheme)
-                                                    .Build();
-                    });*/
+                        SqlConnection connection = new("Server=192.168.2.150,14331;Database=nrsz-test;User Id=sa;Password=P@ssword123;Encrypt=False");
+                        SqlServerCompiler compiler = new();
+                        return new QueryFactory(connection, compiler);
+                    });
                 });
             });
 
@@ -60,15 +59,5 @@ namespace elasticsearchApi.Tests.Helpers
             var data = new StringContent(dataJson, Encoding.UTF8, "application/json");
             return data;
         }
-
-        /*public static AuthResponseDto? LoginUser(this WebApplicationFactory<Program> application, string username, string password)
-        {
-            var loginClient = application.CreateHttpClientJson();
-            var loginCredData = CreateBodyContent(new { username, password });
-
-            var loginResultResponse = loginClient.PostAsync("api/Users/Login", loginCredData).Result;
-            var loginResultJson = loginResultResponse.Content.ReadAsStringAsync().Result;
-            return JsonConvert.DeserializeObject<AuthResponseDto>(loginResultJson);
-        }*/
     }
 }

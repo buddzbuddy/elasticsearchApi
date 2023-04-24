@@ -1,5 +1,6 @@
 using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Models;
 using elasticsearchApi.Services;
 using elasticsearchApi.Services.Passport;
 using Humanizer.Configuration;
@@ -95,6 +96,11 @@ namespace elasticsearchApi.Utils
             });
         }
     }
+
+    public static class AppTransactionExtensions
+    {
+        public static void AddAppTransaction(this IServiceCollection services) => services.AddScoped((e) => new AppTransaction());
+    }
     public static class CacheServiceExtensions
     {
         public static void AddCacheServices(this IServiceCollection services)
@@ -185,6 +191,19 @@ namespace elasticsearchApi.Utils
             var methodBuilder = typeBuilder.DefineMethod(methodName, METHOD_ATTRIBUTES, propertyType, parameterTypes);
             bodyWriter(methodBuilder.GetILGenerator());
             return methodBuilder;
+        }
+    }
+
+    public static class IDictionaryExtensions
+    {
+        public static string ToReadableString(this IDictionary<string, string> dictionary)
+        {
+            if (dictionary == null)
+            {
+                return "";
+            }
+            return string.Join("; ", dictionary.Select(x => $"{x.Key} - {x.Value}"));
+
         }
     }
     /*public static class EFExtensions
