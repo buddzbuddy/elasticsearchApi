@@ -213,12 +213,12 @@ namespace elasticsearchApi.Tests.Systems.Services
                 familystate2 = new Guid("{3C58D432-147C-491A-A34A-4A88B2CCBCB5}"),//Single
                 familystate3 = new Guid("{2900D318-9207-4241-9CD0-A0B6D6DBC75F}"),//Widower/Widow
                 familystate4 = new Guid("{EF783D94-0418-4ABA-B653-6DB2A10E4B92}");//Divorced
-            string iinExisting = "50680002220";
+            string iinExisting = "30470000214";
             var correctModel = new modifyPersonPassportDTO
             {
                 passporttype = documentType1,
                 passportseries = "А",
-                passportno = "666777",
+                passportno = "6667773",
                 date_of_issue = DateTime.ParseExact("2009-06-17", "yyyy-MM-dd", CultureInfo.InvariantCulture),
                 familystate = familystate1,
                 issuing_authority = "issuing_authority"
