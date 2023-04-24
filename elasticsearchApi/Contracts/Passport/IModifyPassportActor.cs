@@ -1,4 +1,5 @@
-﻿using elasticsearchApi.Models;
+﻿using elasticsearchApi.Models.Infrastructure;
+using elasticsearchApi.Models.Passport;
 using elasticsearchApi.Services.Passport;
 using System.Data;
 

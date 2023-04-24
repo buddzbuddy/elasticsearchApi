@@ -1,6 +1,6 @@
 ﻿using Bazinga.AspNetCore.Authentication.Basic;
 using elasticsearchApi.Data;
-using elasticsearchApi.Models;
+using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;

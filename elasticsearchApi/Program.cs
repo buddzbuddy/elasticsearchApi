@@ -1,6 +1,5 @@
 ﻿using elasticsearchApi.Config;
 using elasticsearchApi.Data;
-using elasticsearchApi.Models;
 using elasticsearchApi.Services;
 using elasticsearchApi.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,6 +10,7 @@ using elasticsearchApi.Contracts;
 using elasticsearchApi.Utils.InitiatorProcesses;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Services.Passport;
+using elasticsearchApi.Models.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -3,7 +3,7 @@ using Nest;
 using System;
 using System.Collections.Generic;
 
-namespace elasticsearchApi.Models
+namespace elasticsearchApi.Models.Infrastructure
 {
     public interface IServiceContext
     {
@@ -14,7 +14,7 @@ namespace elasticsearchApi.Models
         void AddErrorMessage(string key, string errorMessage);
         void PatchFromDictionary(IDictionary<string, string> erros);
     }
-    public class ServiceContext: IServiceContext
+    public class ServiceContext : IServiceContext
     {
         public bool SuccessFlag { get; set; } = false;
 

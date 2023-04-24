@@ -2,7 +2,8 @@
 using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Data.Entities;
-using elasticsearchApi.Models;
+using elasticsearchApi.Models.Infrastructure;
+using elasticsearchApi.Models.Person;
 using elasticsearchApi.Utils;
 using SqlKata.Execution;
 using System;

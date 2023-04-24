@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 
-namespace elasticsearchApi.Models
+namespace elasticsearchApi.Models.Person
 {
     public class inputPersonDTO
     {
@@ -32,32 +28,6 @@ namespace elasticsearchApi.Models
         [Description("Issuing_Authority")]
         public string? issuing_authority { get; set; }
         [Description("FamilyState")]
-        public Guid? familystate { get; set; }
-    }
-
-    public class outPersonDTO : inputPersonDTO
-    {
-        public int id { get; set; }
-    }
-
-    public class addNewPersonDTO : inputPersonDTO
-    {
-    }
-    public class modifyPersonDataDTO
-    {
-        public string? last_name { get; set; }
-        public string? first_name { get; set; }
-        public string? middle_name { get; set; }
-        public DateTime? date_of_birth { get; set; }
-        public Guid? sex { get; set; }
-    }
-    public class modifyPersonPassportDTO
-    {
-        public Guid? passporttype { get; set; }
-        public string? passportseries { get; set; }
-        public string? passportno { get; set; }
-        public DateTime? date_of_issue { get; set; }
-        public string? issuing_authority { get; set; }
         public Guid? familystate { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Elasticsearch.Net;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
+using elasticsearchApi.Models.Passport;
 using elasticsearchApi.Services.Exceptions;
 using System;
 

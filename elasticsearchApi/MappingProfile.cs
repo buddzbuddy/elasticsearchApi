@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using elasticsearchApi.Controllers;
 using elasticsearchApi.Models;
+using elasticsearchApi.Models.Person;
 
 namespace Web
 {

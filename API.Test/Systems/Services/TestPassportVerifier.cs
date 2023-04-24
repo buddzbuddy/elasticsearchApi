@@ -9,6 +9,7 @@ using SqlKata.Execution;
 using Xunit.Abstractions;
 using System.Data;
 using elasticsearchApi.Services.Exceptions;
+using elasticsearchApi.Models.Passport;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {

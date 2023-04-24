@@ -1,4 +1,5 @@
 ﻿using elasticsearchApi.Models;
+using elasticsearchApi.Models.Passport;
 using System.Data;
 
 namespace elasticsearchApi.Contracts.Passport

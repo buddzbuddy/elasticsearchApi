@@ -7,6 +7,8 @@ using Nest;
 using Elasticsearch.Net;
 using elasticsearchApi.Utils;
 using elasticsearchApi.Contracts;
+using elasticsearchApi.Models.Person;
+using elasticsearchApi.Models.Infrastructure;
 
 namespace elasticsearchApi.Services
 {

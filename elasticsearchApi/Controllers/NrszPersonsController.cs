@@ -2,6 +2,9 @@
 using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
+using elasticsearchApi.Models.Infrastructure;
+using elasticsearchApi.Models.Passport;
+using elasticsearchApi.Models.Person;
 using elasticsearchApi.Services;
 using elasticsearchApi.Utils;
 using Microsoft.AspNetCore.Mvc;

@@ -1,6 +1,7 @@
 using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
+using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Services;
 using elasticsearchApi.Services.Passport;
 using Humanizer.Configuration;

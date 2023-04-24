@@ -1,4 +1,6 @@
 ﻿using elasticsearchApi.Models;
+using elasticsearchApi.Models.Infrastructure;
+using elasticsearchApi.Models.Person;
 
 namespace elasticsearchApi.Contracts
 {

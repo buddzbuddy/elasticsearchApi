@@ -1,5 +1,6 @@
 ﻿using elasticsearchApi.Contracts.Passport;
-using elasticsearchApi.Models;
+using elasticsearchApi.Models.Infrastructure;
+using elasticsearchApi.Models.Passport;
 using elasticsearchApi.Services.Passport;
 using elasticsearchApi.Tests.Helpers;
 using elasticsearchApi.Tests.Infrastructure;

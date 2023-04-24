@@ -1,13 +1,14 @@
 ﻿using SqlKata.Execution;
 using System.Data;
 
-namespace elasticsearchApi.Models
+namespace elasticsearchApi.Models.Infrastructure
 {
     public delegate void OnCommit();
     public delegate void OnRollback();
     public class AppTransaction
     {
-        public AppTransaction() {
+        public AppTransaction()
+        {
             OnCommit = Commit;
             OnRollback = Rollback;
             Created = DateTime.Now;
@@ -57,6 +58,6 @@ namespace elasticsearchApi.Models
             Transaction?.Rollback();
             Transaction = null;
         }
-        
+
     }
 }
