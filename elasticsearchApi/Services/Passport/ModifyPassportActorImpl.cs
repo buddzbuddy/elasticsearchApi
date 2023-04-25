@@ -31,7 +31,7 @@ namespace elasticsearchApi.Services.Passport
             }
             catch (Exception e) when
             (
-            e is PersonInputErrorException ||
+            e is PassportInputErrorException ||
             e is PersonNotFoundException ||
             e is PassportDuplicateException ||
             e is PassportArchiveException ||
@@ -63,16 +63,6 @@ namespace elasticsearchApi.Services.Passport
                 semaphore.Release();
             }
             return context;
-        }
-
-        private void Commit(IDbTransaction transaction)
-        {
-            transaction.Commit();
-        }
-
-        private void Rollback(IDbTransaction transaction)
-        {
-            transaction.Rollback();
         }
     }
 }

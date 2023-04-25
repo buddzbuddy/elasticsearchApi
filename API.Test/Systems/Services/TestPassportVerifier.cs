@@ -10,6 +10,7 @@ using Xunit.Abstractions;
 using System.Data;
 using elasticsearchApi.Models.Passport;
 using elasticsearchApi.Models.Exceptions.Person;
+using elasticsearchApi.Models.Exceptions.Passport;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
@@ -38,7 +39,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             IPassportVerifier sut = new PassportVerifierImpl(new PassportVerifierBasicImpl(), mockLogicVerifier.Object);
 
             //Act & Assert
-            var ex = Assert.Throws<PersonInputErrorException>(() => sut.VerifyPassport(passport));
+            var ex = Assert.Throws<PassportInputErrorException>(() => sut.VerifyPassport(passport));
             ex.Message.Should().Contain("passportseries");
         }
 
@@ -82,10 +83,10 @@ namespace elasticsearchApi.Tests.Systems.Services
                 new PassportVerifierLogicImpl());
 
             //Act & Assert
-            var ex = Assert.Throws<PersonInputErrorException>(() => sut.VerifyPassport(passport1));
+            var ex = Assert.Throws<PassportInputErrorException>(() => sut.VerifyPassport(passport1));
             ex.Message.Should().Contain("familystate");
             
-            ex = Assert.Throws<PersonInputErrorException>(() => sut.VerifyPassport(passport2));
+            ex = Assert.Throws<PassportInputErrorException>(() => sut.VerifyPassport(passport2));
             ex.Message.Should().Contain("passporttype");
         }
 

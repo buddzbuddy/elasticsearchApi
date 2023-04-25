@@ -138,7 +138,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var ex2 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinIncorrect, correctModel));
             var ex3 = Assert.ThrowsAny<Exception>(() => sut.Execute(iinExisting, duplicateModel));
 
-            Assert.True(ex1 is IReadException and PersonInputErrorException);
+            Assert.True(ex1 is IReadException and PassportInputErrorException);
             Assert.True(ex2 is IReadException and PersonNotFoundException);
             Assert.True(ex3 is IReadException and PassportDuplicateException);
 
