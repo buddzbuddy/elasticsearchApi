@@ -16,11 +16,6 @@ namespace elasticsearchApi.Services
             _cacheProvider = cacheProvider;
         }
 
-        public void ClearCache()
-        {
-            _cacheProvider.ClearCache(CacheKeys.RegCounters);
-        }
-
         public IDictionary<int, int> GetRegCounters()
         {
             return _cacheProvider.GetFromCache<IDictionary<int, int>>(CacheKeys.RegCounters);
@@ -45,5 +40,6 @@ namespace elasticsearchApi.Services
     {
         public const string RegCounters = "_RegCounters";
         public const string ADDRESS_REFS_KEY = "_ADDRESS_REFS_KEY";
+        public const string TEMP_PERSONS = "_TEMP_PERSONS";
     }
 }

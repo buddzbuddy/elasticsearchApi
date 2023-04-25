@@ -4,7 +4,7 @@
     {
         IDictionary<int, int> GetRegCounters();
         void UpdateRegCounters(IDictionary<int, int> regCounters);
-        void ClearCache();
+        //void ClearCache();
 
         object GetObject(string key);
         void UpdateObject(string key, object obj);
