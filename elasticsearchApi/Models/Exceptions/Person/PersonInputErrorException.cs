@@ -6,5 +6,6 @@ namespace elasticsearchApi.Models.Exceptions.Person
         public PersonInputErrorException(string key, string message) : base(key, message)
         {
         }
+        public override string ExceptionType => nameof(PersonInputErrorException);
     }
 }

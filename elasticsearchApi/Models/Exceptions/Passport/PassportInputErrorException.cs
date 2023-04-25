@@ -7,6 +7,7 @@ namespace elasticsearchApi.Models.Exceptions.Passport
     [Serializable]
     public class PassportInputErrorException : Exception, IReadException
     {
+        public PassportInputErrorException() { }
         private string? _key;
         public PassportInputErrorException(string key, string message)
             : base(message)
@@ -16,6 +17,6 @@ namespace elasticsearchApi.Models.Exceptions.Passport
 
         public override string Message => !_key.IsNullOrEmpty() ? $"{_key} - {base.Message}" : base.Message;
 
-        public string ExceptionType => nameof(PassportInputErrorException);
+        public virtual string ExceptionType => nameof(PassportInputErrorException);
     }
 }
