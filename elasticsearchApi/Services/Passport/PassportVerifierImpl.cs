@@ -1,5 +1,6 @@
 ﻿using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
+using elasticsearchApi.Models.Contracts;
 using elasticsearchApi.Models.Passport;
 using System.Data;
 
@@ -9,20 +10,16 @@ namespace elasticsearchApi.Services.Passport
     {
         private IPassportVerifierBasic _passportVerifierBasic;
         private IPassportVerifierLogic _passportVerifierLogic;
-        private IPassportDbVerifier _passportDbVerifier;
         public PassportVerifierImpl(IPassportVerifierBasic passportVerifierBasic,
-            IPassportVerifierLogic passportVerifierLogic,
-            IPassportDbVerifier passportDbVerifier)
+            IPassportVerifierLogic passportVerifierLogic)
         {
             _passportVerifierBasic = passportVerifierBasic;
             _passportVerifierLogic = passportVerifierLogic;
-            _passportDbVerifier = passportDbVerifier;
         }
-        public void VerifyPassport(modifyPersonPassportDTO passport, IDbTransaction? transaction = null)
+        public void VerifyPassport(IPassportData passport)
         {
             _passportVerifierBasic.Verify(passport);
             _passportVerifierLogic.Verify(passport);
-            //_passportDbVerifier.Verify(passport.passportno, transaction);
         }
     }
 }

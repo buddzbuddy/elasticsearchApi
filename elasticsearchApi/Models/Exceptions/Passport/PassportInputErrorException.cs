@@ -1,11 +1,13 @@
-﻿using elasticsearchApi.Utils;
+﻿using elasticsearchApi.Models.Exceptions.Base;
+using elasticsearchApi.Utils;
 using System.Runtime.Serialization;
 
-namespace elasticsearchApi.Services.Exceptions
+namespace elasticsearchApi.Models.Exceptions.Passport
 {
     [Serializable]
     public class PassportInputErrorException : Exception, IReadException
     {
+        public PassportInputErrorException() { }
         private string? _key;
         public PassportInputErrorException(string key, string message)
             : base(message)
@@ -15,6 +17,6 @@ namespace elasticsearchApi.Services.Exceptions
 
         public override string Message => !_key.IsNullOrEmpty() ? $"{_key} - {base.Message}" : base.Message;
 
-        public string ExceptionType => nameof(PassportInputErrorException);
+        public virtual string ExceptionType => nameof(PassportInputErrorException);
     }
 }

@@ -5,6 +5,6 @@ namespace elasticsearchApi.Contracts.Person
 {
     public interface IAddNewPersonDataService
     {
-        void AddNewPerson(addNewPersonDTO dto);
+        void AddNewPerson(addNewPersonDTO dto, int regionNo, int districtNo);
     }
 }
