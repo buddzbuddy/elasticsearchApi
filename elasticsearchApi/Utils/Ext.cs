@@ -1,6 +1,7 @@
 using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
+using elasticsearchApi.Models.Filters;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Services;
 using elasticsearchApi.Services.Passport;
@@ -206,6 +207,16 @@ namespace elasticsearchApi.Utils
 
         }
     }
+    public static class TypeExtensions
+    {
+        public static PropertyInfo[] GetFilteredProperties(this Type type)
+        {
+            return type.GetProperties()
+                  .Where(pi => !Attribute.IsDefined(pi, typeof(SkipPropertyAttribute)))
+                  .ToArray();
+        }
+    }
+
     /*public static class EFExtensions
     {
         public static DbTransaction GetDbTransaction(this IDbContextTransaction source)

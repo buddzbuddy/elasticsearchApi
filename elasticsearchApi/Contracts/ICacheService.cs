@@ -8,5 +8,6 @@
 
         object GetObject(string key);
         void UpdateObject(string key, object obj);
+        void UpdateObject(string key, object obj, DateTimeOffset expirationAbsoluteTime);
     }
 }

@@ -1,9 +1,11 @@
-﻿namespace elasticsearchApi.Models.Contracts
+﻿using elasticsearchApi.Models.Filters;
+
+namespace elasticsearchApi.Models.Contracts
 {
     public interface IBaseEntity
     {
         object? this[string key] { get; set; }
 
-        bool AreEquals(IDictionary<string, object?> filter);
+        bool Equals(IDictionary<string, object?> filter);
     }
 }

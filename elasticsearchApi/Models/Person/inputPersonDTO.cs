@@ -1,4 +1,5 @@
 ﻿using elasticsearchApi.Models.Contracts;
+using elasticsearchApi.Models.Filters;
 using elasticsearchApi.Models.Passport;
 using System.ComponentModel;
 
@@ -19,6 +20,7 @@ namespace elasticsearchApi.Models.Person
         public string? issuing_authority { get; set; }
         public Guid? familystate { get; set; }
 
+        [SkipProperty]
         public object? this[string key]
         {
             get
@@ -39,7 +41,7 @@ namespace elasticsearchApi.Models.Person
             }
         }
 
-        public bool AreEquals(IDictionary<string, object?> filter)
+        public bool Equals(IDictionary<string, object?> filter)
         {
             bool equals = false;
             foreach (var filterField in filter)

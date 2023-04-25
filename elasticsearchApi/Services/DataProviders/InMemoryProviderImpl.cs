@@ -25,7 +25,7 @@ namespace elasticsearchApi.Services.DataProviders
             {
                 foreach (var p in allPersons)
                 {
-                    if(p.AreEquals(filter)) filteredPersons.Add(p);
+                    if(p.Equals(filter)) filteredPersons.Add(p);
                 }
             }
 
@@ -37,6 +37,13 @@ namespace elasticsearchApi.Services.DataProviders
             var allPersons = _cacheSvc.GetObject(CacheKeys.TEMP_PERSONS) as HashSet<outPersonDTO> ?? new HashSet<outPersonDTO>();
             if (allPersons.Add(personDTO))
                 _cacheSvc.UpdateObject(CacheKeys.TEMP_PERSONS, allPersons);
+        }
+
+        public void Save(outPersonDTO personDTO, DateTimeOffset expirationAbsoluteTime)
+        {
+            var allPersons = _cacheSvc.GetObject(CacheKeys.TEMP_PERSONS) as HashSet<outPersonDTO> ?? new HashSet<outPersonDTO>();
+            if (allPersons.Add(personDTO))
+                _cacheSvc.UpdateObject(CacheKeys.TEMP_PERSONS, allPersons, expirationAbsoluteTime);
         }
     }
 }

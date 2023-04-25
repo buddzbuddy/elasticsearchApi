@@ -14,7 +14,7 @@ namespace elasticsearchApi.Services
         public static IDictionary<string, object> ModelToDict<T>(T obj)
         {
             Dictionary<string, object> dict = new();
-            foreach (var propInfo in typeof(T).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase))
+            foreach (var propInfo in typeof(T).GetFilteredProperties())
             {
                 var field_name = propInfo.Name.ToLower();
                 var fieldVal = propInfo.GetValue(obj);
