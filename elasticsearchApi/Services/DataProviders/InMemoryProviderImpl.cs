@@ -11,11 +11,14 @@ namespace elasticsearchApi.Services.DataProviders
         {
             _cacheSvc = cacheSvc;
         }
+
+        public const int MAX_DURATION_IN_MINUTES = 6;
+        public const int MAX_DURATION_IN_SECONDS = MAX_DURATION_IN_MINUTES * 60;
         public outPersonDTO[]? Fetch(IDictionary<string, object?> filter)
         {
             var allPersons = _cacheSvc.GetObject(CacheKeys.TEMP_PERSONS) as HashSet<outPersonDTO> ?? new HashSet<outPersonDTO>();
 
-            if(filter == null)
+            if(filter == null || filter.Count == 0)
             {
                 return allPersons.ToArray();
             }
@@ -32,14 +35,9 @@ namespace elasticsearchApi.Services.DataProviders
             return filteredPersons.ToArray();
         }
 
-        public void Save(outPersonDTO personDTO)
-        {
-            var allPersons = _cacheSvc.GetObject(CacheKeys.TEMP_PERSONS) as HashSet<outPersonDTO> ?? new HashSet<outPersonDTO>();
-            if (allPersons.Add(personDTO))
-                _cacheSvc.UpdateObject(CacheKeys.TEMP_PERSONS, allPersons);
-        }
+        public void Save(outPersonDTO personDTO, int? lifetimeInSeconds = null) => _save(personDTO, DateTimeOffset.UtcNow.AddSeconds(lifetimeInSeconds ?? MAX_DURATION_IN_SECONDS));
 
-        public void Save(outPersonDTO personDTO, DateTimeOffset expirationAbsoluteTime)
+        private void _save(outPersonDTO personDTO, DateTimeOffset expirationAbsoluteTime)
         {
             var allPersons = _cacheSvc.GetObject(CacheKeys.TEMP_PERSONS) as HashSet<outPersonDTO> ?? new HashSet<outPersonDTO>();
             if (allPersons.Add(personDTO))

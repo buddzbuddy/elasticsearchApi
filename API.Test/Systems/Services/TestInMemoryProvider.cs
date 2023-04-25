@@ -71,7 +71,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             IInMemoryProvider sut = new InMemoryProviderImpl(cacheSvc);
 
             //Act
-            sut.Save(personDto, DateTimeOffset.UtcNow.AddSeconds(cache_lifetime_secs));
+            sut.Save(personDto, cache_lifetime_secs);
 
             //Assert
             var allPersons = sut.Fetch(filter);

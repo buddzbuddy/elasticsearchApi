@@ -1,8 +1,10 @@
 ﻿using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Models.Contracts;
 using elasticsearchApi.Models.Exceptions.Passport;
 using elasticsearchApi.Models.Exceptions.Person;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Models.Passport;
+using elasticsearchApi.Models.Person;
 using SqlKata.Execution;
 using System.Data;
 
@@ -19,7 +21,7 @@ namespace elasticsearchApi.Services.Passport
             _db = db;
             _appTransaction = appTransaction;
         }
-        public void Execute(string iin, modifyPersonPassportDTO person)
+        public void Execute(string iin, modifyPersonPassportDTO person, outPersonDTO? personFullData = null)
         {
             var passportType = person.passporttype;
             var docTypeName = "";
@@ -60,13 +62,24 @@ namespace elasticsearchApi.Services.Passport
                         throw new PassportDuplicateException(msg);
                     }
                 }
-
+                
                 if (_db.Connection.State != ConnectionState.Open)
                 {
                     _db.Connection.Open();
                 }
                 _appTransaction.Transaction ??= _db.Connection.BeginTransaction();
+
                 var d = personDb.Date_of_Issue;
+
+                //PREPARE OUT DATA
+                personFullData ??= new outPersonDTO();
+                personFullData.date_of_birth = d;
+                personFullData.iin = iin;
+                personFullData.last_name = personDb.Last_Name;
+                personFullData.first_name = personDb.First_Name;
+                personFullData.middle_name = personDb.Middle_Name;
+                personFullData.sex = personDb.Sex;
+
                 var passportInsertObj = new
                 {
                     PersonId = personDb.Id,

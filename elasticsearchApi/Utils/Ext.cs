@@ -1,9 +1,11 @@
 using elasticsearchApi.Contracts;
+using elasticsearchApi.Contracts.DataProviders;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
 using elasticsearchApi.Models.Filters;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Services;
+using elasticsearchApi.Services.DataProviders;
 using elasticsearchApi.Services.Passport;
 using Humanizer.Configuration;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -110,6 +112,7 @@ namespace elasticsearchApi.Utils
             services.AddMemoryCache();
             services.AddScoped<ICacheService, CacheServiceImpl>();
             services.AddScoped<ICacheProvider, CacheProviderImpl>();
+            services.AddScoped<IInMemoryProvider, InMemoryProviderImpl>();
         }
     }
     public static class DataVerifierExtensions
