@@ -17,8 +17,9 @@ namespace elasticsearchApi.Services
             foreach (var propInfo in typeof(T).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.IgnoreCase))
             {
                 var field_name = propInfo.Name.ToLower();
-                if (/*field_name != "id" && */propInfo.GetValue(obj) != null && !string.IsNullOrEmpty(propInfo.GetValue(obj).ToString()))
-                    dict.Add(field_name, propInfo.GetValue(obj));
+                var fieldVal = propInfo.GetValue(obj);
+                if (/*field_name != "id" && */fieldVal != null && !string.IsNullOrEmpty(fieldVal.ToString()))
+                    dict.Add(field_name, fieldVal);
             }
             return dict;
         }
@@ -38,30 +39,31 @@ namespace elasticsearchApi.Services
                 }
                 else
                 {
-                    var attr = new attributeDTO { name = (propInfo.GetCustomAttributes(true)[0] as DescriptionAttribute).Description, value = v };
+                    var attr = new attributeDTO { name = (propInfo.GetCustomAttributes(true)[0] as DescriptionAttribute)?.Description, value = v };
                     res.attributes = res.attributes.Append(attr);
                 }
             }
             return res;
         }
-        public static bool DocumentToDict(documentDTO obj, out IDictionary<string, object> dict, out string[] errorMessages)
+        public static bool DocumentToDict(documentDTO obj, out IDictionary<string, object?> dict, out string[] errorMessages)
         {
             errorMessages = Array.Empty<string>();
-            dict = new Dictionary<string, object>();
+            dict = new Dictionary<string, object?>();
             if (obj != null)
             {
                 if (obj.id != null) dict["id"] = obj.id;
+                if(obj.attributes != null)
                 foreach (var attr in obj.attributes)
                 {
-                    if (attr.value.IsNullOrEmpty()) continue;
-                    var attrname = attr.name.ToLower();
+                    if (attr.value.IsNullOrEmpty() || attr.name.IsNullOrEmpty()) continue;
+                    var attrname = attr?.name?.ToLower();
                     if (!dict.ContainsKey(attrname))
                     {
-                        dict[attrname] = attr.value.ToString();
+                        dict[attrname] = attr?.value?.ToString();
                     }
                     else
                     {
-                        errorMessages = errorMessages.Append($"Поле {attr.name} дублируется в теле запроса! Дубликаты полей недопустимы!").ToArray();
+                        errorMessages = errorMessages.Append($"Поле {attr?.name} дублируется в теле запроса! Дубликаты полей недопустимы!").ToArray();
                     }
                 }
             }

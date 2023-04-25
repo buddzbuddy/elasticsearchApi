@@ -1,8 +1,9 @@
 ﻿using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Models.Exceptions.Passport;
+using elasticsearchApi.Models.Exceptions.Person;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Models.Passport;
-using elasticsearchApi.Services.Exceptions;
 using SqlKata.Execution;
 using System.Data;
 using System.Threading;
@@ -62,16 +63,6 @@ namespace elasticsearchApi.Services.Passport
                 semaphore.Release();
             }
             return context;
-        }
-
-        private void Commit(IDbTransaction transaction)
-        {
-            transaction.Commit();
-        }
-
-        private void Rollback(IDbTransaction transaction)
-        {
-            transaction.Rollback();
         }
     }
 }

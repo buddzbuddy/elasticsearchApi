@@ -118,7 +118,6 @@ namespace elasticsearchApi.Utils
             services.AddScoped<IPassportVerifier, PassportVerifierImpl>();
             services.AddScoped<IPassportVerifierBasic, PassportVerifierBasicImpl>();
             services.AddScoped<IPassportVerifierLogic, PassportVerifierLogicImpl>();
-            services.AddScoped<IPassportDbVerifier, PassportDbVerifierImpl>();
         }
     }
 

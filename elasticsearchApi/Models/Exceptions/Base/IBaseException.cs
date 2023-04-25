@@ -1,4 +1,4 @@
-﻿namespace elasticsearchApi.Services.Exceptions.Base
+﻿namespace elasticsearchApi.Models.Exceptions.Base
 {
     public interface IBaseException
     {
