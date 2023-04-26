@@ -30,16 +30,16 @@ namespace elasticsearchApi.Models.Person
 
         public bool Equals(IDictionary<string, object?> filter)
         {
-            bool equals = false;
+            var equals = new List<bool>();
             foreach (var filterField in filter)
             {
                 var val = this[filterField.Key];
-                if (filterField.Value != null && val != null)
+                if (filterField.Value != null)
                 {
-                    equals = val.Equals(filterField.Value);
+                    equals.Add(val?.Equals(filterField.Value) ?? false);
                 }
             }
-            return equals;
+            return equals.All(x => x);
         }
     }
 }

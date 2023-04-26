@@ -9,20 +9,21 @@ namespace elasticsearchApi.Services.CheckExisting
     public class CheckFacadeImpl : ICheckFacade
     {
         private readonly ICheckService _checkService;
-        private readonly IInMemoryProvider _inMemoryProvider;
-        private readonly IElasticService _elasticService;
-        public CheckFacadeImpl(ICheckService checkService, IInMemoryProvider inMemoryProvider, IElasticService elasticService)
+        private readonly CheckProviderMemoryImpl _checkProviderMemory;
+        private readonly CheckProviderElasticImpl _checkProviderElastic;
+        public CheckFacadeImpl(ICheckService checkService, CheckProviderMemoryImpl checkProviderMemory,
+            CheckProviderElasticImpl checkProviderElastic)
         {
             _checkService = checkService;
-            _inMemoryProvider = inMemoryProvider;
-            _elasticService = elasticService;
+            _checkProviderMemory = checkProviderMemory;
+            _checkProviderElastic = checkProviderElastic;
         }
         public outPersonDTO? CallCheck(IDictionary<string, object?> filter)
         {
-            var data = _checkService.CheckExisting(new CheckProviderMemoryImpl(_inMemoryProvider), filter);
+            var data = _checkService.CheckExisting(_checkProviderMemory, filter);
             if(data == null)
             {
-                data = _checkService.CheckExisting(new CheckProviderElasticImpl(_elasticService), filter);
+                data = _checkService.CheckExisting(_checkProviderElastic, filter);
             }
             return data;
         }

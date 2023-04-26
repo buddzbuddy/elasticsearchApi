@@ -5,6 +5,7 @@ using elasticsearchApi.Models;
 using elasticsearchApi.Models.Filters;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Services;
+using elasticsearchApi.Services.CheckExisting.Providers;
 using elasticsearchApi.Services.DataProviders;
 using elasticsearchApi.Services.Passport;
 using Humanizer.Configuration;
@@ -113,6 +114,10 @@ namespace elasticsearchApi.Utils
             services.AddScoped<ICacheService, CacheServiceImpl>();
             services.AddScoped<ICacheProvider, CacheProviderImpl>();
             services.AddScoped<IInMemoryProvider, InMemoryProviderImpl>();
+
+            //Register CheckProviders
+            services.AddSingleton<CheckProviderMemoryImpl>();
+            services.AddSingleton<CheckProviderElasticImpl>();
         }
     }
     public static class DataVerifierExtensions

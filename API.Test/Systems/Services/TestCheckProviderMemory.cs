@@ -30,9 +30,8 @@ namespace elasticsearchApi.Tests.Systems.Services
             //Arrange
             var application = ApplicationHelper.GetWebApplication();
             using var services = application.Services.CreateScope();
-            var cacheSvc1 = services.ServiceProvider.GetRequiredService<ICacheService>();
-            var cacheSvc2 = services.ServiceProvider.GetRequiredService<ICacheService>();
-
+            var checkProviderMemory = services.ServiceProvider.GetRequiredService<CheckProviderMemoryImpl>();
+            var inMemoryProvider = services.ServiceProvider.GetRequiredService<IInMemoryProvider>();
             int cache_lifetime_secs = 2;
 
             var personDto = new outPersonDTO
@@ -41,18 +40,15 @@ namespace elasticsearchApi.Tests.Systems.Services
                 first_name = "first_name1"
             };
             var filter = BaseService.ModelToDict(personDto);
-
-            IInMemoryProvider inMemProvider = new InMemoryProviderImpl(cacheSvc1);
-            inMemProvider.Save(personDto, cache_lifetime_secs);
-
-            ICheckProvider sut = new CheckProviderMemoryImpl(inMemProvider);
+            inMemoryProvider.Save(personDto, cache_lifetime_secs);
+            ICheckProvider sut = checkProviderMemory;
             
             //Act & Assert
 
             var result = sut.FetchData(filter);
             result.Should().NotBeNullOrEmpty();
 
-            Task.Delay(cache_lifetime_secs * 1000).Wait();
+            Task.Delay(cache_lifetime_secs * 1001).Wait();
 
             result = sut.FetchData(filter);
             result.Should().BeNullOrEmpty();

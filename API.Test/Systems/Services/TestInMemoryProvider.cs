@@ -77,7 +77,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var allPersons = sut.Fetch(filter);
             allPersons.Should().NotBeNullOrEmpty();
 
-            Task.Delay(cache_lifetime_secs * 1000).Wait();
+            Task.Delay(cache_lifetime_secs * 1001).Wait();
 
             allPersons = sut.Fetch(filter);
             allPersons.Should().BeNullOrEmpty();
