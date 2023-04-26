@@ -2,6 +2,6 @@
 {
     public interface IPinGenerator
     {
-        string GenerateNewPin(in int regionNo, in int districtNo);
+        string GenerateNewPin(in int regCode);
     }
 }
