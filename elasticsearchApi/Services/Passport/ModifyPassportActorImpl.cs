@@ -1,9 +1,13 @@
 ﻿using elasticsearchApi.Contracts;
+using elasticsearchApi.Contracts.DataProviders;
 using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Models.Contracts;
 using elasticsearchApi.Models.Exceptions.Passport;
 using elasticsearchApi.Models.Exceptions.Person;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Models.Passport;
+using elasticsearchApi.Models.Person;
+using elasticsearchApi.Utils;
 using SqlKata.Execution;
 using System.Data;
 using System.Threading;
@@ -12,21 +16,34 @@ namespace elasticsearchApi.Services.Passport
 {
     public class ModifyPassportActorImpl : IModifyPassportActor
     {
-        private readonly AppTransaction appTransaction;
+        private readonly AppTransaction _appTransaction;
         private readonly IModifyPassportDataService _dataSvc;
-        public ModifyPassportActorImpl(IModifyPassportDataService dataService, AppTransaction appTransaction)
+        private readonly IInMemoryProvider _inMemoryProvider;
+        public ModifyPassportActorImpl(IModifyPassportDataService dataService, AppTransaction appTransaction,
+            IInMemoryProvider inMemoryProvider)
         {
             _dataSvc = dataService;
-            this.appTransaction = appTransaction;
+            _appTransaction = appTransaction;
+            _inMemoryProvider = inMemoryProvider;
         }
         private SemaphoreSlim semaphore = new (1, 1);
         public IServiceContext CallModifyPassport(string iin, modifyPersonPassportDTO person)
         {
             IServiceContext context = new ServiceContext();
+            var personOut = new outPersonDTO
+            {
+                passportno = person.passportno,
+                passportseries= person.passportseries,
+                passporttype= person.passporttype,
+                date_of_issue= person.date_of_issue,
+                issuing_authority = person.issuing_authority,
+                familystate= person.familystate,
+                iin= iin
+            };
             try
             {
                 semaphore.Wait();
-                _dataSvc.Execute(iin, person);
+                _dataSvc.Execute(iin, person, personOut);
                 context.SuccessFlag = true;
             }
             catch (Exception e) when
@@ -49,15 +66,16 @@ namespace elasticsearchApi.Services.Passport
             }
             finally
             {
-                if (appTransaction.Transaction != null)
+                if (_appTransaction.Transaction != null)
                 {
                     if (context.SuccessFlag)
                     {
-                        appTransaction.OnCommit?.Invoke();
+                        _inMemoryProvider.Save(personOut);
+                        _appTransaction.OnCommit?.Invoke();
                     }
                     else
                     {
-                        appTransaction.OnRollback?.Invoke();
+                        _appTransaction.OnRollback?.Invoke();
                     }
                 }
                 semaphore.Release();

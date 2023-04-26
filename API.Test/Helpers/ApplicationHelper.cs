@@ -1,6 +1,8 @@
 ﻿using Bazinga.AspNetCore.Authentication.Basic;
+using elasticsearchApi.Contracts;
 using elasticsearchApi.Data;
 using elasticsearchApi.Models.Infrastructure;
+using elasticsearchApi.Services;
 using elasticsearchApi.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -36,6 +38,16 @@ namespace elasticsearchApi.Tests.Helpers
                         SqlServerCompiler compiler = new();
                         return new QueryFactory(connection, compiler);
                     });
+                });
+            });
+        public static WebApplicationFactory<Program> GetWebApplicationForCache()
+            => new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment("Test");
+                builder.ConfigureTestServices(services =>
+                {
+                    services.AddTransient<ICacheService, CacheServiceImpl>();
+                    services.AddTransient<ICacheProvider, CacheProviderImpl>();
                 });
             });
 

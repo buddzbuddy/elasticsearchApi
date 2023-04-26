@@ -1,8 +1,12 @@
 using elasticsearchApi.Contracts;
+using elasticsearchApi.Contracts.DataProviders;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models;
+using elasticsearchApi.Models.Filters;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Services;
+using elasticsearchApi.Services.CheckExisting.Providers;
+using elasticsearchApi.Services.DataProviders;
 using elasticsearchApi.Services.Passport;
 using Humanizer.Configuration;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -109,6 +113,11 @@ namespace elasticsearchApi.Utils
             services.AddMemoryCache();
             services.AddScoped<ICacheService, CacheServiceImpl>();
             services.AddScoped<ICacheProvider, CacheProviderImpl>();
+            services.AddScoped<IInMemoryProvider, InMemoryProviderImpl>();
+
+            //Register CheckProviders
+            services.AddSingleton<CheckProviderMemoryImpl>();
+            services.AddSingleton<CheckProviderElasticImpl>();
         }
     }
     public static class DataVerifierExtensions
@@ -206,6 +215,16 @@ namespace elasticsearchApi.Utils
 
         }
     }
+    public static class TypeExtensions
+    {
+        public static PropertyInfo[] GetFilteredProperties(this Type type)
+        {
+            return type.GetProperties()
+                  .Where(pi => !Attribute.IsDefined(pi, typeof(SkipPropertyAttribute)))
+                  .ToArray();
+        }
+    }
+
     /*public static class EFExtensions
     {
         public static DbTransaction GetDbTransaction(this IDbContextTransaction source)

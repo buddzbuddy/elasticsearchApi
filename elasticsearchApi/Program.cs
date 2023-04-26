@@ -11,6 +11,8 @@ using elasticsearchApi.Utils.InitiatorProcesses;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Services.Passport;
 using elasticsearchApi.Models.Infrastructure;
+using elasticsearchApi.Contracts.CheckProviders;
+using elasticsearchApi.Services.CheckExisting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +53,9 @@ services.AddScoped<IModifyPassportActor, ModifyPassportActorImpl>();
 services.AddScoped<IModifyPassportDataService, ModifyPassportDataServiceImpl>();
 services.AddScoped<IPassportVerifier, PassportVerifierImpl>();
 services.AddScoped<IPassportVerifierBasic, PassportVerifierBasicImpl>();
+
+services.AddScoped<ICheckService, CheckServiceImpl>();
+services.AddScoped<ICheckFacade, CheckFacadeImpl>();
 
 
 services.AddCacheServices();

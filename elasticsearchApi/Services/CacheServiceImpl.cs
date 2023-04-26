@@ -11,14 +11,10 @@ namespace elasticsearchApi.Services
     {
         private readonly ICacheProvider _cacheProvider;
 
+        private const int MAX_DURATION_DAYS = 100;
         public CacheServiceImpl(ICacheProvider cacheProvider)
         {
             _cacheProvider = cacheProvider;
-        }
-
-        public void ClearCache()
-        {
-            _cacheProvider.ClearCache(CacheKeys.RegCounters);
         }
 
         public IDictionary<int, int> GetRegCounters()
@@ -38,12 +34,18 @@ namespace elasticsearchApi.Services
 
         public void UpdateObject(string key, object obj)
         {
-            _cacheProvider.SetCache(key, obj, DateTimeOffset.UtcNow.AddDays(100));
+            UpdateObject(key, obj, DateTimeOffset.UtcNow.AddDays(MAX_DURATION_DAYS));
+        }
+
+        public void UpdateObject(string key, object obj, DateTimeOffset expirationAbsoluteTime)
+        {
+            _cacheProvider.SetCache(key, obj, expirationAbsoluteTime);
         }
     }
     public class CacheKeys
     {
         public const string RegCounters = "_RegCounters";
         public const string ADDRESS_REFS_KEY = "_ADDRESS_REFS_KEY";
+        public const string TEMP_PERSONS = "_TEMP_PERSONS";
     }
 }
