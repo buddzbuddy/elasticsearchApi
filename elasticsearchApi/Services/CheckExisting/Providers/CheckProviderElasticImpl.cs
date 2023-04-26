@@ -8,10 +8,10 @@ using System;
 
 namespace elasticsearchApi.Services.CheckExisting.Providers
 {
-    public class CheckElastic : ICheckProvider
+    public class CheckProviderElasticImpl : ICheckProvider
     {
         private readonly IElasticService _es;
-        public CheckElastic(IElasticService es)
+        public CheckProviderElasticImpl(IElasticService es)
         {
             _es = es;
         }

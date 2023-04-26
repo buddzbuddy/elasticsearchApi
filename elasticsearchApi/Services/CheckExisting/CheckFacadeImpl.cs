@@ -19,10 +19,10 @@ namespace elasticsearchApi.Services.CheckExisting
         }
         public outPersonDTO? CallCheck(IDictionary<string, object?> filter)
         {
-            var data = _checkService.CheckExisting(new CheckMemory(_inMemoryProvider), filter);
+            var data = _checkService.CheckExisting(new CheckProviderMemoryImpl(_inMemoryProvider), filter);
             if(data == null)
             {
-                data = _checkService.CheckExisting(new CheckElastic(_elasticService), filter);
+                data = _checkService.CheckExisting(new CheckProviderElasticImpl(_elasticService), filter);
             }
             return data;
         }

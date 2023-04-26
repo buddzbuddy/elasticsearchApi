@@ -5,10 +5,10 @@ using elasticsearchApi.Models.Person;
 
 namespace elasticsearchApi.Services.CheckExisting.Providers
 {
-    public class CheckMemory : ICheckProvider
+    public class CheckProviderMemoryImpl : ICheckProvider
     {
         private readonly IInMemoryProvider _inMemorySvc;
-        public CheckMemory(IInMemoryProvider inMemorySvc)
+        public CheckProviderMemoryImpl(IInMemoryProvider inMemorySvc)
         {
             _inMemorySvc = inMemorySvc;
         }
