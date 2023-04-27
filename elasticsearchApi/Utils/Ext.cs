@@ -8,6 +8,7 @@ using elasticsearchApi.Services;
 using elasticsearchApi.Services.CheckExisting.Providers;
 using elasticsearchApi.Services.DataProviders;
 using elasticsearchApi.Services.Passport;
+using elasticsearchApi.Services.PinGenerator.MaxCalculatorProviders;
 using Humanizer.Configuration;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -222,6 +223,14 @@ namespace elasticsearchApi.Utils
             return type.GetProperties()
                   .Where(pi => !Attribute.IsDefined(pi, typeof(SkipPropertyAttribute)))
                   .ToArray();
+        }
+    }
+
+    public static class PinGeneratorExtensions
+    {
+        public static void AddPinServices(this IServiceCollection services)
+        {
+            services.AddScoped<DatabaseMaxCalculatorProviderImpl>();
         }
     }
 

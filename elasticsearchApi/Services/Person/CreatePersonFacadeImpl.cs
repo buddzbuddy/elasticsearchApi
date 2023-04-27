@@ -1,4 +1,5 @@
-﻿using elasticsearchApi.Contracts.Person;
+﻿using elasticsearchApi.Contracts.Infrastructure;
+using elasticsearchApi.Contracts.Person;
 using elasticsearchApi.Contracts.PinGenerator;
 using elasticsearchApi.Models.Person;
 using System.Collections.Concurrent;
@@ -9,14 +10,17 @@ namespace elasticsearchApi.Services.Person
     {
         private readonly IPinGenerator _pinGenerator;
         private readonly IPersonCreator _personCreator;
-        public CreatePersonFacadeImpl(IPinGenerator pinGenerator, IPersonCreator personCreator)
+        private readonly IAddressRefsVerifier _addressRefsVerifier;
+        public CreatePersonFacadeImpl(IPinGenerator pinGenerator, IPersonCreator personCreator, IAddressRefsVerifier addressRefsVerifier)
         {
             _pinGenerator = pinGenerator;
             _personCreator = personCreator;
+            _addressRefsVerifier = addressRefsVerifier;
         }
         private static readonly ConcurrentDictionary<int, Lazy<SemaphoreSlim>> _semaphore = new();
         public outPersonDTO CreateNewPerson(addNewPersonDTO dto, in int regionNo, in int districtNo)
         {
+            _addressRefsVerifier.Verify(regionNo, districtNo);
             var regCode = regionNo * 1000 + districtNo;
             var sem = _semaphore.GetOrAdd(regCode, _ => new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1))).Value;
             sem.Wait();
