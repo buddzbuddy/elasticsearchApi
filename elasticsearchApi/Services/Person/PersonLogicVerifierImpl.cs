@@ -1,7 +1,9 @@
 ﻿using elasticsearchApi.Contracts.Person;
+using elasticsearchApi.Models;
 using elasticsearchApi.Models.Contracts;
 using elasticsearchApi.Models.Exceptions.Passport;
 using elasticsearchApi.Models.Exceptions.Person;
+using elasticsearchApi.Utils;
 using System;
 using System.Text.RegularExpressions;
 
@@ -9,11 +11,9 @@ namespace elasticsearchApi.Services.Person
 {
     public class PersonLogicVerifierImpl : IPersonLogicVerifier
     {
-        private readonly Guid[] genders = new[]
-        {
-            new Guid("74C6C7FE-53C6-4492-A62F-65A7A49AB644"),//Male
-            new Guid("56E07640-5B5B-47FA-832D-A6639F36EB71"),//Female
-        };
+        private readonly Guid?[] genders
+            = StaticReferences.getEnumItems<Genders>()
+            .Select(x => x.id).ToArray();
         public void Verify(IPersonData person)
         {
             var nameRegex = new Regex("[0-9]");
@@ -35,7 +35,7 @@ namespace elasticsearchApi.Services.Person
                     throw new PersonInputErrorException("IIN", "Ошибка в формате номера ПИН! Должны быть только цифры");
             }
 
-            if (person.sex != null && !genders.Contains(person.sex.Value))
+            if (person.sex != null && !genders.Contains(person.sex))
                 throw new PersonInputErrorException("Sex",
                     $"Пол ({person.sex}) выбран некорректно! Доступны только 2 варианта (муж=74C6C7FE-53C6-4492-A62F-65A7A49AB644, жен=56E07640-5B5B-47FA-832D-A6639F36EB71)");
 
