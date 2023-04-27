@@ -286,6 +286,7 @@ namespace elasticsearchApi.Utils
         public static void AddPersonServices(this IServiceCollection services)
         {
             services.AddScoped<IPersonCreator, PersonCreatorImpl>();
+            services.AddScoped<ICreatePersonFacade, CreatePersonFacadeImpl>();
         }
     }
 
