@@ -1,6 +1,7 @@
 using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.DataProviders;
 using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Contracts.Person;
 using elasticsearchApi.Contracts.PinGenerator;
 using elasticsearchApi.Models;
 using elasticsearchApi.Models.Filters;
@@ -9,6 +10,7 @@ using elasticsearchApi.Services;
 using elasticsearchApi.Services.CheckExisting.Providers;
 using elasticsearchApi.Services.DataProviders;
 using elasticsearchApi.Services.Passport;
+using elasticsearchApi.Services.Person;
 using elasticsearchApi.Services.PinGenerator;
 using elasticsearchApi.Services.PinGenerator.MaxCalculatorProviders;
 using Humanizer.Configuration;
@@ -235,6 +237,14 @@ namespace elasticsearchApi.Utils
             services.AddScoped<DatabaseMaxCalculatorProviderImpl>();
             services.AddScoped<IPinCalculator, PinCalculatorImpl>();
             services.AddScoped<IPinGenerator, PinGeneratorImpl>();
+        }
+    }
+
+    public static class AddPersonExtensions
+    {
+        public static void AddPersonServices(this IServiceCollection services)
+        {
+            services.AddScoped<IPersonCreator, PersonCreatorImpl>();
         }
     }
 

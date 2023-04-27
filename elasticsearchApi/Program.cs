@@ -62,6 +62,8 @@ services.AddScoped<IAddressRefsVerifier, AddressRefsVerifierImpl>();
 
 services.AddPinServices();
 
+services.AddPersonServices();
+
 services.AddCacheServices();
 
 services.AddPassportVerifierServices();
