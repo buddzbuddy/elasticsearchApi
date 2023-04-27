@@ -21,6 +21,7 @@ using Xunit.Abstractions;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
+    [Collection("Sequential")]
     public class TestPersonCreator : TestUtils
     {
         public TestPersonCreator(ITestOutputHelper output) : base(output)

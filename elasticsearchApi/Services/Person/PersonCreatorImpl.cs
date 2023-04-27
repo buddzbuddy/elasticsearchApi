@@ -20,19 +20,7 @@ namespace elasticsearchApi.Services.Person
         public int CreateNewPerson(addNewPersonDTO dto, string newIin)
         {
             dto.iin = newIin;
-            int newPersonId = 0;
-            try
-            {
-                newPersonId = _queryFactory.Query("Persons").InsertGetId<int>(dto, _appTransaction.Transaction);
-                _appTransaction.OnCommit?.Invoke();
-            }
-            catch (Exception e)
-            {
-                _appTransaction.OnRollback?.Invoke();
-                throw new PersonInsertException($"Ошибка при попытке сохранить гражданина в базу данных! {e.GetBaseException().Message}", e);
-            }
-
-            return newPersonId;
+            return _queryFactory.Query("Persons").InsertGetId<int>(dto, _appTransaction.Transaction);
         }
     }
 }
