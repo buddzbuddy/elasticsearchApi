@@ -1,6 +1,8 @@
 using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.DataProviders;
 using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Contracts.Person;
+using elasticsearchApi.Contracts.PinGenerator;
 using elasticsearchApi.Models;
 using elasticsearchApi.Models.Filters;
 using elasticsearchApi.Models.Infrastructure;
@@ -8,6 +10,9 @@ using elasticsearchApi.Services;
 using elasticsearchApi.Services.CheckExisting.Providers;
 using elasticsearchApi.Services.DataProviders;
 using elasticsearchApi.Services.Passport;
+using elasticsearchApi.Services.Person;
+using elasticsearchApi.Services.PinGenerator;
+using elasticsearchApi.Services.PinGenerator.MaxCalculatorProviders;
 using Humanizer.Configuration;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -62,6 +67,47 @@ namespace elasticsearchApi.Utils
                 }
             }
             return value?.ToString();
+        }
+        public static string? GetValueText(this Enum value)
+        {
+            Type type = value.GetType();
+            string? name = Enum.GetName(type, value);
+            if (name != null)
+            {
+                var field = type.GetField(name);
+                if (field != null)
+                {
+                    var attr =
+                           Attribute.GetCustomAttribute(field,
+                             typeof(EnumValueAttribute)) as EnumValueAttribute;
+                    if (attr != null)
+                    {
+                        return attr.Text;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public static Guid? GetValueId(this Enum value)
+        {
+            Type type = value.GetType();
+            string? name = Enum.GetName(type, value);
+            if (name != null)
+            {
+                var field = type.GetField(name);
+                if (field != null)
+                {
+                    var attr =
+                           Attribute.GetCustomAttribute(field,
+                             typeof(EnumValueAttribute)) as EnumValueAttribute;
+                    if (attr != null)
+                    {
+                        return attr.ValueId;
+                    }
+                }
+            }
+            return null;
         }
     }
     public static class ElasticsearchExtensions
@@ -222,6 +268,25 @@ namespace elasticsearchApi.Utils
             return type.GetProperties()
                   .Where(pi => !Attribute.IsDefined(pi, typeof(SkipPropertyAttribute)))
                   .ToArray();
+        }
+    }
+
+    public static class PinGeneratorExtensions
+    {
+        public static void AddPinServices(this IServiceCollection services)
+        {
+            services.AddScoped<DatabaseMaxCalculatorProviderImpl>();
+            services.AddScoped<IPinCalculator, PinCalculatorImpl>();
+            services.AddScoped<IPinGenerator, PinGeneratorImpl>();
+        }
+    }
+
+    public static class AddPersonExtensions
+    {
+        public static void AddPersonServices(this IServiceCollection services)
+        {
+            services.AddScoped<IPersonCreator, PersonCreatorImpl>();
+            services.AddScoped<ICreatePersonFacade, CreatePersonFacadeImpl>();
         }
     }
 

@@ -2,15 +2,17 @@
 using System.Linq;
 using System.Reflection;
 using System;
+using elasticsearchApi.Models.Filters;
+using System.ComponentModel;
 
 namespace elasticsearchApi.Utils
 {
     public class StaticReferences
     {
-        public static IEnumerable<object> getEnumItems<T>() where T : Enum
+        public static IEnumerable<myEnumItem> getEnumItems<T>() where T : Enum
         {
             var items = (T[])Enum.GetValues(typeof(T));
-            return items.Select(x => new { id = (int)Convert.ChangeType(x, TypeCode.Int32), name = x.GetDescription() });
+            return items.Select(x => new myEnumItem { id = x.GetValueId(), text = x.GetValueText() });
         }
         public static bool IsAnyNullOrEmpty(object myObject, out string[] nullFields, params string[] specFieds)
         {
@@ -43,5 +45,11 @@ namespace elasticsearchApi.Utils
             }
             return output;
         }
+    }
+
+    public class myEnumItem
+    {
+        public Guid? id { get; set; }
+        public string? text { get; set; }
     }
 }
