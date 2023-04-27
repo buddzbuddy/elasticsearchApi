@@ -1,4 +1,5 @@
 ﻿using elasticsearchApi.Contracts.PinGenerator;
+using elasticsearchApi.Services.PinGenerator.MaxCalculatorProviders;
 using Nest;
 using SqlKata.Execution;
 
@@ -6,18 +7,16 @@ namespace elasticsearchApi.Services.PinGenerator
 {
     public class PinGeneratorImpl : IPinGenerator
     {
-        private readonly QueryFactory _queryFactory;
-
-        public PinGeneratorImpl(QueryFactory queryFactory)
+        private readonly IPinCalculator _pinCalculator;
+        private readonly DatabaseMaxCalculatorProviderImpl _databaseMaxCalculator;
+        public PinGeneratorImpl(IPinCalculator pinCalculator, DatabaseMaxCalculatorProviderImpl databaseMaxCalculator)
         {
-            _queryFactory = queryFactory;
+            _pinCalculator = pinCalculator;
+            _databaseMaxCalculator = databaseMaxCalculator;
         }
         public string GenerateNewPin(in int regCode)
         {
-            var maxPin = _queryFactory.Query("Persons").WhereLike("IIN", regCode + "__________").Max<long?>("IIN") ?? 0;
-
-            if (maxPin == 0) maxPin = regCode * 10000000000;
-
+            long maxPin = _pinCalculator.CalculateMaxIIN(regCode, _databaseMaxCalculator);
             var newPin = (maxPin + 1).ToString();
             return newPin;
         }
