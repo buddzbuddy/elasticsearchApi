@@ -68,6 +68,47 @@ namespace elasticsearchApi.Utils
             }
             return value?.ToString();
         }
+        public static string? GetValueText(this Enum value)
+        {
+            Type type = value.GetType();
+            string? name = Enum.GetName(type, value);
+            if (name != null)
+            {
+                var field = type.GetField(name);
+                if (field != null)
+                {
+                    var attr =
+                           Attribute.GetCustomAttribute(field,
+                             typeof(EnumValueAttribute)) as EnumValueAttribute;
+                    if (attr != null)
+                    {
+                        return attr.Text;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public static Guid? GetValueId(this Enum value)
+        {
+            Type type = value.GetType();
+            string? name = Enum.GetName(type, value);
+            if (name != null)
+            {
+                var field = type.GetField(name);
+                if (field != null)
+                {
+                    var attr =
+                           Attribute.GetCustomAttribute(field,
+                             typeof(EnumValueAttribute)) as EnumValueAttribute;
+                    if (attr != null)
+                    {
+                        return attr.ValueId;
+                    }
+                }
+            }
+            return null;
+        }
     }
     public static class ElasticsearchExtensions
     {

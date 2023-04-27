@@ -21,13 +21,9 @@ namespace elasticsearchApi.Services.Person
         {
             dto.iin = newIin;
             int newPersonId = 0;
-            if(_appTransaction.Transaction != null)
-            {
-                _appTransaction.Transaction = _queryFactory.Connection.BeginTransaction();
-            }
             try
             {
-                newPersonId = _queryFactory.Query("Persons").InsertGetId<int>(dto);
+                newPersonId = _queryFactory.Query("Persons").InsertGetId<int>(dto, _appTransaction.Transaction);
                 _appTransaction.OnCommit?.Invoke();
             }
             catch (Exception e)
