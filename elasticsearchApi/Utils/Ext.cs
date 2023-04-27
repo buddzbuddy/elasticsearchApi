@@ -234,6 +234,7 @@ namespace elasticsearchApi.Utils
         {
             services.AddScoped<DatabaseMaxCalculatorProviderImpl>();
             services.AddScoped<IPinCalculator, PinCalculatorImpl>();
+            services.AddScoped<IPinGenerator, PinGeneratorImpl>();
         }
     }
 
