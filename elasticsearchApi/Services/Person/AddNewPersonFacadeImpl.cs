@@ -14,14 +14,12 @@ namespace elasticsearchApi.Services.Person
     public class AddNewPersonFacadeImpl : IAddNewPersonFacade
     {
         private readonly IAddNewPersonVerifier _personVerifier;
-        private readonly IAddressRefsVerifier _addressRefsVerifier;
         private readonly ICheckFacade _checkFacade;
         private readonly ICreatePersonFacade _createPersonFacade;
-        public AddNewPersonFacadeImpl(IAddNewPersonVerifier personVerifier, IAddressRefsVerifier addressRefsVerifier,
+        public AddNewPersonFacadeImpl(IAddNewPersonVerifier personVerifier,
             ICheckFacade checkFacade, ICreatePersonFacade createPersonFacade)
         {
             _personVerifier = personVerifier;
-            _addressRefsVerifier = addressRefsVerifier;
             _checkFacade = checkFacade;
             _createPersonFacade = createPersonFacade;
         }
@@ -29,7 +27,6 @@ namespace elasticsearchApi.Services.Person
         {
             var context = new ServiceContext();
             _personVerifier.VerifyPerson(dto);
-            _addressRefsVerifier.Verify(regionNo, districtNo);
 
             var existingPerson = _checkFacade.CallCheck(BaseService.ModelToDict(dto));
             if(existingPerson != null)

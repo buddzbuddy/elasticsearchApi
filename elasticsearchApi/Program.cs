@@ -13,6 +13,8 @@ using elasticsearchApi.Services.Passport;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Contracts.CheckProviders;
 using elasticsearchApi.Services.CheckExisting;
+using elasticsearchApi.Services.Infrastructure;
+using elasticsearchApi.Contracts.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,7 +58,9 @@ services.AddScoped<IPassportVerifierBasic, PassportVerifierBasicImpl>();
 
 services.AddScoped<ICheckService, CheckServiceImpl>();
 services.AddScoped<ICheckFacade, CheckFacadeImpl>();
+services.AddScoped<IAddressRefsVerifier, AddressRefsVerifierImpl>();
 
+services.AddPinServices();
 
 services.AddCacheServices();
 
