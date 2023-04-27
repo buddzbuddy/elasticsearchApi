@@ -1,6 +1,7 @@
 using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.DataProviders;
 using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Contracts.PinGenerator;
 using elasticsearchApi.Models;
 using elasticsearchApi.Models.Filters;
 using elasticsearchApi.Models.Infrastructure;
@@ -8,6 +9,7 @@ using elasticsearchApi.Services;
 using elasticsearchApi.Services.CheckExisting.Providers;
 using elasticsearchApi.Services.DataProviders;
 using elasticsearchApi.Services.Passport;
+using elasticsearchApi.Services.PinGenerator;
 using elasticsearchApi.Services.PinGenerator.MaxCalculatorProviders;
 using Humanizer.Configuration;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -231,6 +233,7 @@ namespace elasticsearchApi.Utils
         public static void AddPinServices(this IServiceCollection services)
         {
             services.AddScoped<DatabaseMaxCalculatorProviderImpl>();
+            services.AddScoped<IPinCalculator, PinCalculatorImpl>();
         }
     }
 
