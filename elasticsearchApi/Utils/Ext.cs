@@ -169,8 +169,8 @@ namespace elasticsearchApi.Utils
             services.AddScoped<IInMemoryProvider, InMemoryProviderImpl>();
 
             //Register CheckProviders
-            services.AddSingleton<CheckProviderMemoryImpl>();
-            services.AddSingleton<CheckProviderElasticImpl>();
+            services.AddScoped<CheckProviderMemoryImpl>();
+            services.AddScoped<CheckProviderElasticImpl>();
         }
     }
     public static class DataVerifierExtensions

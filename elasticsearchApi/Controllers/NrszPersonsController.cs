@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.Passport;
+using elasticsearchApi.Contracts.Person;
 using elasticsearchApi.Models;
 using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Models.Passport;
@@ -23,13 +24,15 @@ namespace elasticsearchApi.Controllers
         private readonly IDataService _dataSvc;
         private IServiceContext _context;
         private readonly IModifyPassportActor _modifyPassportActor;
+        private readonly IAddNewPersonFacade _addNewPersonFacade;
         public NrszPersonsController(IElasticService es, IDataService dataSvc, IServiceContext context,
-            IModifyPassportActor modifyPassportActor)
+            IModifyPassportActor modifyPassportActor, IAddNewPersonFacade addNewPersonFacade)
         {
             _es = es;
             _dataSvc = dataSvc;
             _context = context;
             _modifyPassportActor = modifyPassportActor;
+            _addNewPersonFacade = addNewPersonFacade;
         }
         
         [HttpPost]
@@ -117,6 +120,21 @@ namespace elasticsearchApi.Controllers
             catch (Exception e)
             {
                 _context.SuccessFlag = false;
+                _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
+                _context.AddErrorMessage("errorTrace", e.StackTrace ?? "");
+                return Ok(_context);
+            }
+        }
+        [HttpPost]
+        public IActionResult AddNewPersonV2([FromBody] addNewPersonDTO person, int regionNo, int districtNo)
+        {
+            _context.SuccessFlag = false;
+            try
+            {
+                return Ok(_addNewPersonFacade.AddNewPerson(person, regionNo, districtNo));
+            }
+            catch (Exception e)
+            {
                 _context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
                 _context.AddErrorMessage("errorTrace", e.StackTrace ?? "");
                 return Ok(_context);

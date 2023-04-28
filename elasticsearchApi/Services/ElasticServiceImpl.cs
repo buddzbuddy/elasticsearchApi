@@ -154,6 +154,9 @@ namespace elasticsearchApi.Services
         {
             errorMessages = Array.Empty<string>();
             data = Array.Empty<outPersonDTO>();
+
+
+
             totalCount = 0;
             var filters = new List<Func<QueryContainerDescriptor<outPersonDTO>, QueryContainer>>();
             foreach (var f in filter)

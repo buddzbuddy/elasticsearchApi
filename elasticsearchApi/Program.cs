@@ -81,6 +81,16 @@ if (builder.Environment.IsDevelopment())
 
 app.MapControllers();
 
+app.UseHttpsRedirection();
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    options.RoutePrefix = string.Empty;
+});
+
+app.UseRouting();
+
 app.Run();
 
 public partial class Program

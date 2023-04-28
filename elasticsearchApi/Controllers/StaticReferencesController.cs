@@ -9,14 +9,17 @@ namespace elasticsearchApi.Controllers
     [ApiController]
     public class StaticReferencesController : ControllerBase
     {
+        [HttpGet]
         public IActionResult Genders()
         {
             return Ok(StaticReferences.getEnumItems<Genders>());
         }
+        [HttpGet]
         public IActionResult FamilyStates()
         {
             return Ok(StaticReferences.getEnumItems<FamilyStates>());
         }
+        [HttpGet]
         public IActionResult PassportTypes()
         {
             return Ok(StaticReferences.getEnumItems<PassportTypes>());
