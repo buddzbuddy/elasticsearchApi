@@ -19,6 +19,10 @@ using Microsoft.Extensions.DependencyInjection;
 using elasticsearchApi.Utils;
 using Newtonsoft.Json;
 using System.Globalization;
+using elasticsearchApi.Models.Passport;
+using elasticsearchApi.Models.Exceptions.Base;
+using elasticsearchApi.Models.Exceptions.Passport;
+using elasticsearchApi.Models.Exceptions.Person;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
@@ -223,6 +227,73 @@ namespace elasticsearchApi.Tests.Systems.Services
                 isNewObj.Should().NotBeNull();
                 var isNew = isNewObj as bool?;
                 isNew?.Should().BeFalse();
+            }
+            finally
+            {
+                appTransaction.Transaction?.Rollback();
+                queryFactory.Connection.Close();
+            }
+        }
+
+        [Fact]
+        public void AddNewPerson_WhenCalled_Returns_Throws_InputExceptions()
+        {
+            //Arrange
+            var application = ApplicationHelper.GetWebApplication();
+            using var services = application.Services.CreateScope();
+            var addressRefsVerifier = services.ServiceProvider.GetRequiredService<IAddressRefsVerifier>();
+            var databaseMaxCalculator = services.ServiceProvider.GetRequiredService<DatabaseMaxCalculatorProviderImpl>();
+            var pinCalculator = services.ServiceProvider.GetRequiredService<IPinCalculator>();
+
+            int regionNo = 3, districtNo = 27;
+            var personInputErrorModel = new addNewPersonDTO
+            {
+                passporttype = PassportTypes.PASSPORT.GetValueId(),
+                passportseries = "А",
+                passportno = $"52350112", //to be found
+                issuing_authority = $"not found",
+                date_of_issue = DateTime.ParseExact("2013-06-07", "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                familystate = FamilyStates.MARRIED.GetValueId(),
+            };
+            var passportInputErrorModel = new addNewPersonDTO
+            {
+                last_name = $"not found",
+                first_name = $"not found",
+                middle_name = $"not found",
+                sex = Genders.MALE.GetValueId(),
+                date_of_birth = DateTime.ParseExact("1952-07-29", "yyyy-MM-dd", CultureInfo.InvariantCulture),
+            };
+
+            var passportDuplicateModel = new addNewPersonDTO
+            {
+                last_name = $"not found",
+                first_name = $"not found",
+                middle_name = $"not found",
+                sex = Genders.MALE.GetValueId(),
+                date_of_birth = DateTime.ParseExact("1952-07-29", "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                passporttype = PassportTypes.PASSPORT.GetValueId(),
+                passportseries = "А",
+                passportno = $"52350112", //to be found
+                issuing_authority = $"not found",
+                date_of_issue = DateTime.ParseExact("2013-06-07", "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                familystate = FamilyStates.MARRIED.GetValueId(),
+            };
+
+            var sut = services.ServiceProvider.GetRequiredService<IAddNewPersonFacade>();
+
+            var queryFactory = services.ServiceProvider.GetRequiredService<QueryFactory>();
+            var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
+
+            appTransaction.DisableCommitRollback();
+            queryFactory.Connection.Open();
+            appTransaction.Transaction = queryFactory.Connection.BeginTransaction();
+
+            try
+            {
+                //Act & Assert
+                Assert.Throws<PersonInputErrorException>(() => sut.AddNewPerson(personInputErrorModel, in regionNo, in districtNo));
+                Assert.Throws<PassportInputErrorException>(() => sut.AddNewPerson(passportInputErrorModel, in regionNo, in districtNo));
+                Assert.Throws<PassportDuplicateException>(() => sut.AddNewPerson(passportDuplicateModel, in regionNo, in districtNo));
             }
             finally
             {
