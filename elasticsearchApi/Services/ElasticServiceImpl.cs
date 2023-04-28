@@ -163,30 +163,36 @@ namespace elasticsearchApi.Services
 
                 //predefined excpectations
                 //DateTime Cases
+                var valStr = val.ToString();
+                if (val is DateTime valDate)
+                {
+                    valStr = valDate.ToString("yyyy-MM-dd");
+                }
+                
                 if (f.Key.ToLower().Contains("date") || f.Key.EndsWith("At") || f.Key.ToLower().Contains("time"))
                 {
-                    val = val.ToString().Split('T')[0].Split(' ')[0];
+                    val = valStr.Split('T')[0].Split(' ')[0];
                 }
                 //Convert input date to UTC date like in ES
-                if (DateTime.TryParseExact(val.ToString(), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime d)
+                if (DateTime.TryParseExact(valStr, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime d)
                     ||
-                    DateTime.TryParseExact(val.ToString(), "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out d))
+                    DateTime.TryParseExact(valStr, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out d))
                 {
                     //Console.WriteLine(d.ToString());
                     //var utcDate = d.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ");
                     //Console.WriteLine(utcDate);
                     filters.Add(fq => fq.Match(m => m.Field(f.Key).Query(d.ToString("yyyy-MM-dd"))));
                 }
-                else if (Guid.TryParse(val.ToString(), out Guid g) && g != Guid.Empty)
+                else if (Guid.TryParse(valStr, out Guid g) && g != Guid.Empty)
                 {
-                    filters.Add(fq => fq.MatchPhrase(tq => tq.Field(f.Key).Query(val.ToString())));
+                    filters.Add(fq => fq.MatchPhrase(tq => tq.Field(f.Key).Query(valStr)));
                 }
                 else
                 {
                     if (fuzzy)
                         filters.Add(fq => fq.Fuzzy(fz =>
                                 fz.Field(f.Key)
-                                .Value(val.ToString())
+                                .Value(valStr)
                                 .Fuzziness(Fuzziness.Auto)
                                 .MaxExpansions(50)
                                 .PrefixLength(0)
@@ -194,7 +200,7 @@ namespace elasticsearchApi.Services
                                 .Rewrite(MultiTermQueryRewrite.ConstantScore)
                                 ));
                     else
-                        filters.Add(fq => fq.Match(m => m.Field(f.Key).Query(val.ToString())));
+                        filters.Add(fq => fq.Match(m => m.Field(f.Key).Query(valStr)));
                 }
             }
 

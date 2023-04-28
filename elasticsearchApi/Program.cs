@@ -51,14 +51,10 @@ services.AddScoped<IServiceContext, ServiceContext>();
 services.AddScoped<IUserService, UserServiceImpl>();
 services.AddHttpClient<IUserService, UserServiceImpl>();
 
-services.AddScoped<IModifyPassportActor, ModifyPassportActorImpl>();
-services.AddScoped<IModifyPassportDataService, ModifyPassportDataServiceImpl>();
-services.AddScoped<IPassportVerifier, PassportVerifierImpl>();
-services.AddScoped<IPassportVerifierBasic, PassportVerifierBasicImpl>();
+services.AddModifyPassportServices();
 
 services.AddScoped<ICheckService, CheckServiceImpl>();
 services.AddScoped<ICheckFacade, CheckFacadeImpl>();
-services.AddScoped<IAddressRefsVerifier, AddressRefsVerifierImpl>();
 
 services.AddPinServices();
 

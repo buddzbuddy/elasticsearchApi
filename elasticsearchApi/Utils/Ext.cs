@@ -1,5 +1,6 @@
 using elasticsearchApi.Contracts;
 using elasticsearchApi.Contracts.DataProviders;
+using elasticsearchApi.Contracts.Infrastructure;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Contracts.Person;
 using elasticsearchApi.Contracts.PinGenerator;
@@ -9,6 +10,7 @@ using elasticsearchApi.Models.Infrastructure;
 using elasticsearchApi.Services;
 using elasticsearchApi.Services.CheckExisting.Providers;
 using elasticsearchApi.Services.DataProviders;
+using elasticsearchApi.Services.Infrastructure;
 using elasticsearchApi.Services.Passport;
 using elasticsearchApi.Services.Person;
 using elasticsearchApi.Services.PinGenerator;
@@ -49,6 +51,11 @@ namespace elasticsearchApi.Utils
         public static string ToStringJoin(this string[] @this, string separator = ",")
         {
             return @this == null ? "" : string.Join(separator, @this);
+        }
+
+        public static string ToStringJoin(this IDictionary<string, string> @this, string separator = ",")
+        {
+            return @this == null ? "" : string.Join(separator, @this.Select(x => $"{x.Key} - {x.Value}"));
         }
         public static string? GetDescription(this Enum value)
         {
@@ -127,7 +134,7 @@ namespace elasticsearchApi.Utils
             if (!string.IsNullOrEmpty(defaultIndex))
                 settings = settings.DefaultIndex(defaultIndex);
             var client = new ElasticClient(settings);
-            services.AddSingleton<IElasticClient>(client);
+            services.AddScoped<IElasticClient>(e => client);
         }
     }
     public static class SqlKataExtensions
@@ -173,6 +180,10 @@ namespace elasticsearchApi.Utils
             services.AddScoped<IPassportVerifier, PassportVerifierImpl>();
             services.AddScoped<IPassportVerifierBasic, PassportVerifierBasicImpl>();
             services.AddScoped<IPassportVerifierLogic, PassportVerifierLogicImpl>();
+            services.AddScoped<IPersonBasicVerifier, PersonBasicVerifierImpl>();
+            services.AddScoped<IPersonLogicVerifier, PersonLogicVerifierImpl>();
+            services.AddScoped<IAddNewPersonVerifier, AddNewPersonVerifierImpl>();
+            services.AddScoped<IAddressRefsVerifier, AddressRefsVerifierImpl>();
         }
     }
 
@@ -271,6 +282,14 @@ namespace elasticsearchApi.Utils
         }
     }
 
+    public static class ModifyPassportExtensions
+    {
+        public static void AddModifyPassportServices(this IServiceCollection services)
+        {
+            services.AddScoped<IModifyPassportActor, ModifyPassportActorImpl>();
+            services.AddScoped<IModifyPassportDataService, ModifyPassportDataServiceImpl>();
+        }
+    }
     public static class PinGeneratorExtensions
     {
         public static void AddPinServices(this IServiceCollection services)
@@ -285,6 +304,7 @@ namespace elasticsearchApi.Utils
     {
         public static void AddPersonServices(this IServiceCollection services)
         {
+            services.AddScoped<IAddNewPersonFacade, AddNewPersonFacadeImpl>();
             services.AddScoped<IPersonCreator, PersonCreatorImpl>();
             services.AddScoped<ICreatePersonFacade, CreatePersonFacadeImpl>();
         }

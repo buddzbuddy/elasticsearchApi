@@ -34,6 +34,7 @@ namespace elasticsearchApi.Services.Person
                 context["NewPIN"] = existingPerson.iin ?? "";
                 context["Result"] = existingPerson;
                 context["ResultPIN"] = existingPerson.iin ?? "";
+                context["IsNew"] = false;
                 context.SuccessFlag = true;
                 return context;
             }
@@ -46,7 +47,8 @@ namespace elasticsearchApi.Services.Person
             context["NewPIN"] = newPin;
             context["Result"] = newPerson;
             context["ResultPIN"] = newPin;
-
+            context["IsNew"] = true;
+            context.SuccessFlag = true;
             return context;
         }
     }
