@@ -12,104 +12,71 @@ namespace elasticsearchApi.Services.Passport
 {
     public class ModifyPassportDataServiceImpl : IModifyPassportDataService
     {
-        private readonly QueryFactory _db;
+        private readonly QueryFactory _queryFactory;
         private readonly IPassportVerifier _passportVerifier;
         private readonly AppTransaction _appTransaction;
-        public ModifyPassportDataServiceImpl(QueryFactory db, IPassportVerifier passportVerifier, AppTransaction appTransaction)
+        private readonly IExistingPassportVerifier _existingPassportVerifier;
+        public ModifyPassportDataServiceImpl(QueryFactory queryFactory, IPassportVerifier passportVerifier,
+            AppTransaction appTransaction, IExistingPassportVerifier existingPassportVerifier)
         {
             _passportVerifier = passportVerifier;
-            _db = db;
+            _queryFactory = queryFactory;
             _appTransaction = appTransaction;
+            _existingPassportVerifier= existingPassportVerifier;
         }
         public void Execute(string iin, modifyPersonPassportDTO person, outPersonDTO? personFullData = null)
         {
-            var passportType = person.passporttype;
-            var docTypeName = "";
-            if ((passportType ?? Guid.Empty) != Guid.Empty)
-            {
-                docTypeName = passportType.ToString();
-            }
-
-            var v = person.passportseries;
-            var series = v != null ? v.ToString().Trim() : string.Empty;
-            v = person.passportno;
-            var no = v != null ? v.ToString().Trim() : string.Empty;
-            var pDate = person.date_of_issue;
-            var issueDate = pDate;
-            v = person.issuing_authority;
-            var authority = v != null ? v.ToString().Trim() : string.Empty;
-            var familyState = person.familystate;
-
             _passportVerifier.VerifyPassport(person);
 
-            var query = _db.Query("Persons").Where("IIN", iin);
-            var personDb = query.FirstOrDefault(_appTransaction.Transaction);
-            if (personDb == null)
+            var query = _queryFactory.Query("Persons").Where("IIN", iin);
+            var existingPersonByIIN = query.FirstOrDefault(_appTransaction.Transaction);
+            if (existingPersonByIIN == null)
             {
                 throw new PersonNotFoundException("Гражданин с таким ПИН не найден в базе НРСЗ");
             }
             else
             {
-                if (!string.IsNullOrEmpty(no) && !string.IsNullOrEmpty(series))
-                {
-                    query = _db.Query("Persons")./*Where("PassportType", passportType)
-                        .Where("PassportSeries", series).*/Where("PassportNo", no)
-                        .WhereNot("Id", personDb.Id);
-                    var personDb2 = query.FirstOrDefault(_appTransaction.Transaction);
-                    if (personDb2 != null)
-                    {
-                        var msg = $"Ошибка дублирования данных в документе \"{docTypeName}\"! ПИН: {personDb2.IIN}, ФИО: {personDb2.Last_Name} {personDb2.First_Name} {personDb2.Middle_Name}, \"{docTypeName}\" Номер: {personDb2.PassportNo}, Дата рождения {personDb2.Date_of_Birth}, found personIdByPIN: {personDb.Id}, found personIdByPassport: " + personDb2.Id;
-                        throw new PassportDuplicateException(msg);
-                    }
-                }
-                
-                if (_db.Connection.State != ConnectionState.Open)
-                {
-                    _db.Connection.Open();
-                }
-                _appTransaction.Transaction ??= _db.Connection.BeginTransaction();
+                _existingPassportVerifier.CheckExistingPassportByNo(person.passportno, existingPersonByIIN.id);
 
-                var d = personDb.Date_of_Issue;
+                if (_queryFactory.Connection.State != ConnectionState.Open)
+                {
+                    _queryFactory.Connection.Open();
+                }
+                _appTransaction.Transaction ??= _queryFactory.Connection.BeginTransaction();
+
+                var d = existingPersonByIIN.Date_of_Issue;
 
                 //PREPARE OUT DATA
                 personFullData ??= new outPersonDTO();
                 personFullData.date_of_birth = d;
                 personFullData.iin = iin;
-                personFullData.last_name = personDb.Last_Name;
-                personFullData.first_name = personDb.First_Name;
-                personFullData.middle_name = personDb.Middle_Name;
-                personFullData.sex = personDb.Sex;
+                personFullData.last_name = existingPersonByIIN.Last_Name;
+                personFullData.first_name = existingPersonByIIN.First_Name;
+                personFullData.middle_name = existingPersonByIIN.Middle_Name;
+                personFullData.sex = existingPersonByIIN.Sex;
 
                 var passportInsertObj = new
                 {
-                    PersonId = personDb.Id,
-                    personDb.PassportType,
-                    personDb.PassportSeries,
-                    personDb.PassportNo,
+                    PersonId = existingPersonByIIN.Id,
+                    existingPersonByIIN.PassportType,
+                    existingPersonByIIN.PassportSeries,
+                    existingPersonByIIN.PassportNo,
                     Date_Of_Issue = d,
-                    personDb.Issuing_Authority,
-                    Marital_Status = personDb.FamilyState
+                    existingPersonByIIN.Issuing_Authority,
+                    Marital_Status = existingPersonByIIN.FamilyState
                 };
                 
 
                 /*var insertQuery = _db.Query("Passports").AsInsert(passportInsertObj);
                 var sql = _db.Compiler.Compile(insertQuery).Sql;*/
-                var affectedRows = _db.Query("Passports").Insert(passportInsertObj, _appTransaction.Transaction);
+                var affectedRows = _queryFactory.Query("Passports").Insert(passportInsertObj, _appTransaction.Transaction);
                 if (affectedRows == 0)
                 {
                     throw new PassportArchiveException("Архивация старых паспортных данных не записалась в историю");
                 }
                 else
                 {
-                    affectedRows = _db.Query("Persons").Where("Id", (int)personDb.Id).Update(new
-                    {
-                        PassportType = passportType,
-                        PassportSeries = series,
-                        PassportNo = no,
-                        Date_of_Issue = issueDate,
-                        Issuing_Authority = authority,
-                        FamilyState = familyState
-                    }, _appTransaction.Transaction);
+                    affectedRows = _queryFactory.Query("Persons").Where("Id", (int)existingPersonByIIN.Id).Update(person, _appTransaction.Transaction);
                     if (affectedRows == 0)
                     {
                         throw new PersonUpdateException("Паспортные данные гражданина в НРСЗ не обновлены");

@@ -1,5 +1,6 @@
 ﻿using elasticsearchApi.Contracts.CheckProviders;
 using elasticsearchApi.Contracts.Infrastructure;
+using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Contracts.Person;
 using elasticsearchApi.Models;
 using elasticsearchApi.Models.Exceptions.PIN;
@@ -16,12 +17,15 @@ namespace elasticsearchApi.Services.Person
         private readonly IAddNewPersonVerifier _personVerifier;
         private readonly ICheckFacade _checkFacade;
         private readonly ICreatePersonFacade _createPersonFacade;
+        private readonly IExistingPassportVerifier _existingPassportVerifier;
         public AddNewPersonFacadeImpl(IAddNewPersonVerifier personVerifier,
-            ICheckFacade checkFacade, ICreatePersonFacade createPersonFacade)
+            ICheckFacade checkFacade, ICreatePersonFacade createPersonFacade,
+            IExistingPassportVerifier existingPassportVerifier)
         {
             _personVerifier = personVerifier;
             _checkFacade = checkFacade;
             _createPersonFacade = createPersonFacade;
+            _existingPassportVerifier = existingPassportVerifier;
         }
         public IServiceContext AddNewPerson(addNewPersonDTO dto, in int regionNo, in int districtNo)
         {
@@ -38,6 +42,8 @@ namespace elasticsearchApi.Services.Person
                 context.SuccessFlag = true;
                 return context;
             }
+
+            _existingPassportVerifier.CheckExistingPassportByNo(dto.passportno);
 
             var newPerson = _createPersonFacade.CreateNewPerson(dto, regionNo, districtNo);
             var newPin = newPerson.iin;

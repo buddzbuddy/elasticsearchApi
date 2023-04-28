@@ -70,10 +70,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var _db = services.ServiceProvider.GetRequiredService<QueryFactory>();
             var appTransaction = services.ServiceProvider.GetRequiredService<AppTransaction>();
 
-            IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
-            IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
-            IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic);
-            IModifyPassportDataService dataSvc = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
+            var dataSvc = services.ServiceProvider.GetRequiredService<IModifyPassportDataService>();
             var mockInMemoryProvider = new Mock<IInMemoryProvider>();
             IModifyPassportActor sut = new ModifyPassportActorImpl(dataSvc, appTransaction, mockInMemoryProvider.Object);
 
@@ -120,7 +117,8 @@ namespace elasticsearchApi.Tests.Systems.Services
             IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic);
-            IModifyPassportDataService dataSvc = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
+            var mockExistingPassportVerifier = new Mock<IExistingPassportVerifier>();
+            IModifyPassportDataService dataSvc = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction, mockExistingPassportVerifier.Object);
             var mockInMemoryProvider = new Mock<IInMemoryProvider>();
             IModifyPassportActor sut = new ModifyPassportActorImpl(dataSvc, appTransaction, mockInMemoryProvider.Object);
             
@@ -184,7 +182,8 @@ namespace elasticsearchApi.Tests.Systems.Services
             IPassportVerifierBasic passportVerifierBasic = new PassportVerifierBasicImpl();
             IPassportVerifierLogic passportVerifierLogic = new PassportVerifierLogicImpl();
             IPassportVerifier passportVerifier = new PassportVerifierImpl(passportVerifierBasic, passportVerifierLogic);
-            IModifyPassportDataService dataSvc = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction);
+            var mockExistingPassportVerifier = new Mock<IExistingPassportVerifier>();
+            IModifyPassportDataService dataSvc = new ModifyPassportDataServiceImpl(_db, passportVerifier, appTransaction, mockExistingPassportVerifier.Object);
             
             IModifyPassportActor sut = new ModifyPassportActorImpl(dataSvc, appTransaction, inMemoryProvider);
 

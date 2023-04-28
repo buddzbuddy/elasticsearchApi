@@ -184,6 +184,7 @@ namespace elasticsearchApi.Utils
             services.AddScoped<IPersonLogicVerifier, PersonLogicVerifierImpl>();
             services.AddScoped<IAddNewPersonVerifier, AddNewPersonVerifierImpl>();
             services.AddScoped<IAddressRefsVerifier, AddressRefsVerifierImpl>();
+            services.AddScoped<IExistingPassportVerifier, ExistingPassportVerifierImpl>();
         }
     }
 

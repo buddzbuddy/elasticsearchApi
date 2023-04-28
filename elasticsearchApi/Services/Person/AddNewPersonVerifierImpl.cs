@@ -12,7 +12,8 @@ namespace elasticsearchApi.Services.Person
         private readonly IPersonBasicVerifier _personBasicVerifier;
         private readonly IPersonLogicVerifier _personLogicVerifier;
         private readonly IPassportVerifier _passportVerifier;
-        public AddNewPersonVerifierImpl(IPersonBasicVerifier personBasicVerifier, IPersonLogicVerifier personLogicVerifier, IPassportVerifier passportVerifier)
+        public AddNewPersonVerifierImpl(IPersonBasicVerifier personBasicVerifier, IPersonLogicVerifier personLogicVerifier,
+            IPassportVerifier passportVerifier)
         {
             _personBasicVerifier = personBasicVerifier;
             _personLogicVerifier = personLogicVerifier;
