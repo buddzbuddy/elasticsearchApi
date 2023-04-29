@@ -48,7 +48,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             var checkMemoryProvider = services.ServiceProvider.GetRequiredService<CheckProviderMemoryImpl>();
 
             var mockCheckElasticProvider = new Mock<CheckProviderElasticImpl>();
-            mockCheckElasticProvider.Setup(svc => svc.FetchData(filter3)).Returns(new[] { new outPersonDTO { id = 99 } });
+            mockCheckElasticProvider.Setup(svc => svc.FetchData(filter3, null)).Returns(new[] { new outPersonDTO { id = 99 } });
 
             ICheckService checkSvc = services.ServiceProvider.GetRequiredService<ICheckService>();
 
@@ -67,7 +67,7 @@ namespace elasticsearchApi.Tests.Systems.Services
             //Assert
             result1.Should().NotBeNull();
             result2.Should().BeNull();
-            mockCheckElasticProvider.Verify(svc => svc.FetchData(filter3), Times.Once);
+            mockCheckElasticProvider.Verify(svc => svc.FetchData(filter3, null), Times.Once);
             result3.id.Should().Be(99);
         }
     }

@@ -238,6 +238,115 @@ namespace elasticsearchApi.Services
                 return false;
             }
         }
+
+
+
+
+        public bool FilterESWithExclude(IDictionary<string, object> filter, IDictionary<string, object>? excludeFilter, out outPersonDTO[] data, out string[] errorMessages, out long totalCount, bool fuzzy = false, int page = 1, int size = 10)
+        {
+            errorMessages = Array.Empty<string>();
+            data = Array.Empty<outPersonDTO>();
+            var excludeFieldName = "id";
+            int? excludeFieldVal = null;
+            if(excludeFilter!= null && excludeFilter.ContainsKey(excludeFieldName))
+            {
+                excludeFieldVal = excludeFilter[excludeFieldName] as int?;
+            }
+
+
+            totalCount = 0;
+            var filters = new List<Func<QueryContainerDescriptor<outPersonDTO>, QueryContainer>>();
+            foreach (var f in filter)
+            {
+                var val = f.Value;
+                if (val == null || string.IsNullOrEmpty(val.ToString())) continue;
+
+                //predefined excpectations
+                //DateTime Cases
+                var valStr = val.ToString();
+                if (val is DateTime valDate)
+                {
+                    valStr = valDate.ToString("yyyy-MM-dd");
+                }
+
+                if (f.Key.ToLower().Contains("date") || f.Key.EndsWith("At") || f.Key.ToLower().Contains("time"))
+                {
+                    val = valStr.Split('T')[0].Split(' ')[0];
+                }
+                //Convert input date to UTC date like in ES
+                if (DateTime.TryParseExact(valStr, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime d)
+                    ||
+                    DateTime.TryParseExact(valStr, "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out d))
+                {
+                    //Console.WriteLine(d.ToString());
+                    //var utcDate = d.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ");
+                    //Console.WriteLine(utcDate);
+                    filters.Add(fq => fq.Match(m => m.Field(f.Key).Query(d.ToString("yyyy-MM-dd"))));
+                }
+                else if (Guid.TryParse(valStr, out Guid g) && g != Guid.Empty)
+                {
+                    filters.Add(fq => fq.MatchPhrase(tq => tq.Field(f.Key).Query(valStr)));
+                }
+                else
+                {
+                    if (fuzzy)
+                        filters.Add(fq => fq.Fuzzy(fz =>
+                                fz.Field(f.Key)
+                                .Value(valStr)
+                                .Fuzziness(Fuzziness.Auto)
+                                .MaxExpansions(50)
+                                .PrefixLength(0)
+                                .Transpositions(true)
+                                .Rewrite(MultiTermQueryRewrite.ConstantScore)
+                                ));
+                    else
+                        filters.Add(fq => fq.Match(m => m.Field(f.Key).Query(valStr)));
+                }
+            }
+
+            //TODO: Make combined query
+            //filters.Add(fq => fq.Match(m => m.Field(excludeFieldName).));
+
+
+            if (filters.Count == 0)
+            {
+                errorMessages = errorMessages.Append("Пустой поиск запрещен!").ToArray();
+                return false;
+            }
+            var searchDescriptor = new SearchDescriptor<outPersonDTO>()
+            .From(page - 1)
+            .Size(size)
+            .Query(q => q.Bool(b => b.Must(filters)));
+
+            if (_appSettings.log_enabled ?? false)
+            {
+                var json = _client.RequestResponseSerializer.SerializeToString(searchDescriptor);
+                WriteLog($"[{nameof(ElasticServiceImpl)}]-[{nameof(FilterES)}] at [{DateTime.Now}]:\n{json}", _appSettings.logpath);
+            }
+
+            var searchResponse = _client.Search<outPersonDTO>(searchDescriptor);
+
+            var persons = searchResponse.Documents;
+            if (searchResponse.IsValid)
+            {
+                data = persons.ToArray();
+                totalCount = searchResponse.HitsMetadata.Total.Value;
+
+                //TODO: TEMP SOLUTION, LATER MAKE LEGACY
+                if(excludeFieldVal != null && data.Any(x => x.id != excludeFieldVal.Value))
+                {
+                    data = data.Where(x => x.id != excludeFieldVal.Value).ToArray();
+                    totalCount--;
+                }
+
+                return true;
+            }
+            else
+            {
+                errorMessages = errorMessages.Append(searchResponse.OriginalException.Message).ToArray();
+                return false;
+            }
+        }
         public bool FilterDocumentES(documentDTO filter, out IEnumerable<documentDTO> data, out string[] errorMessages, bool fuzzy = false, int page = 1, int size = 10)
         {
             _ = Array.Empty<string>();

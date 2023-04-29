@@ -12,9 +12,9 @@ namespace elasticsearchApi.Services.CheckExisting.Providers
         {
             _inMemorySvc = inMemorySvc;
         }
-        public outPersonDTO[] FetchData(IDictionary<string, object?> filter)
+        public outPersonDTO[] FetchData(IDictionary<string, object?> filter, IDictionary<string, object?>? excludeFilter = null)
         {
-            return _inMemorySvc.Fetch(filter) ?? Array.Empty<outPersonDTO>();
+            return _inMemorySvc.Fetch(filter, excludeFilter) ?? Array.Empty<outPersonDTO>();
         }
     }
 }

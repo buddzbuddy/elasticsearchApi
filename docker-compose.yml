@@ -17,4 +17,3 @@ services:
     environment:
       - ES_HOST=http://localhost:9200
       - NRSZ_CONNECTION_STRING=Data Source=localhost;Initial Catalog=nrsz;Password=WestWood-911;Persist Security Info=True;User ID=sa;MultipleActiveResultSets=True;Max Pool Size=3500;Connect Timeout=300;
-      - ASIST_DATA_CONNECTION_STRING=Data Source=192.168.0.66;Initial Catalog=nrsz-data;Password=WestWood-911;Persist Security Info=True;User ID=sa;MultipleActiveResultSets=True;Max Pool Size=3500;Connect Timeout=300;

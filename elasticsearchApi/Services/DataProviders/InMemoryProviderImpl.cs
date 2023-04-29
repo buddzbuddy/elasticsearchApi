@@ -14,7 +14,7 @@ namespace elasticsearchApi.Services.DataProviders
 
         public const int MAX_DURATION_IN_MINUTES = 6;
         public const int MAX_DURATION_IN_SECONDS = MAX_DURATION_IN_MINUTES * 60;
-        public outPersonDTO[]? Fetch(IDictionary<string, object?> filter)
+        public outPersonDTO[]? Fetch(IDictionary<string, object?> filter, IDictionary<string, object?>? excludeFilter = null)
         {
             var allPersons = _cacheSvc.GetObject(CacheKeys.TEMP_PERSONS) as HashSet<outPersonDTO> ?? new HashSet<outPersonDTO>();
 
@@ -28,7 +28,15 @@ namespace elasticsearchApi.Services.DataProviders
             {
                 foreach (var p in allPersons)
                 {
-                    if(p.Equals(filter)) filteredPersons.Add(p);
+                    if (p.Equals(filter))
+                    {
+                        if (excludeFilter != null)
+                        {
+                            if (!p.Equals(excludeFilter)) filteredPersons.Add(p);
+                        }
+                        else
+                            filteredPersons.Add(p);
+                    }
                 }
             }
 

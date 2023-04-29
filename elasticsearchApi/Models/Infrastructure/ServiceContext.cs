@@ -22,7 +22,7 @@ namespace elasticsearchApi.Models.Infrastructure
 
         public void AddErrorMessage(string key, string errorMessage)
         {
-            Console.Write($"{key}-{errorMessage}");
+            Console.WriteLine($"{key}-{errorMessage}");
             if (!ErrorMessages.ContainsKey(key))
                 ErrorMessages.Add(key, errorMessage);
             else

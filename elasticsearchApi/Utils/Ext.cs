@@ -130,11 +130,11 @@ namespace elasticsearchApi.Utils
             var defaultIndex = configuration["ElasticsearchSettings:defaultIndex"];
             var elasticUser = configuration["ElasticsearchSettings:elasticUser"];
             var elasticPass = configuration["ElasticsearchSettings:elasticPass"];
-            settings = settings.BasicAuthentication(elasticUser, elasticPass);
+            settings = settings.BasicAuthentication(elasticUser, elasticPass).EnableApiVersioningHeader();
             if (!string.IsNullOrEmpty(defaultIndex))
                 settings = settings.DefaultIndex(defaultIndex);
             var client = new ElasticClient(settings);
-            services.AddScoped<IElasticClient>(e => client);
+            services.AddTransient<IElasticClient>(e => client);
         }
     }
     public static class SqlKataExtensions
@@ -164,27 +164,28 @@ namespace elasticsearchApi.Utils
         public static void AddCacheServices(this IServiceCollection services)
         {
             services.AddMemoryCache();
-            services.AddScoped<ICacheService, CacheServiceImpl>();
-            services.AddScoped<ICacheProvider, CacheProviderImpl>();
-            services.AddScoped<IInMemoryProvider, InMemoryProviderImpl>();
+            services.AddTransient<ICacheService, CacheServiceImpl>();
+            services.AddTransient<ICacheProvider, CacheProviderImpl>();
+            services.AddTransient<IInMemoryProvider, InMemoryProviderImpl>();
 
             //Register CheckProviders
-            services.AddScoped<CheckProviderMemoryImpl>();
-            services.AddScoped<CheckProviderElasticImpl>();
+            services.AddTransient<CheckProviderMemoryImpl>();
+            services.AddTransient<CheckProviderElasticImpl>();
         }
     }
     public static class DataVerifierExtensions
     {
         public static void AddPassportVerifierServices(this IServiceCollection services)
         {
-            services.AddScoped<IPassportVerifier, PassportVerifierImpl>();
-            services.AddScoped<IPassportVerifierBasic, PassportVerifierBasicImpl>();
-            services.AddScoped<IPassportVerifierLogic, PassportVerifierLogicImpl>();
-            services.AddScoped<IPersonBasicVerifier, PersonBasicVerifierImpl>();
-            services.AddScoped<IPersonLogicVerifier, PersonLogicVerifierImpl>();
-            services.AddScoped<IAddNewPersonVerifier, AddNewPersonVerifierImpl>();
-            services.AddScoped<IAddressRefsVerifier, AddressRefsVerifierImpl>();
-            services.AddScoped<IExistingPassportVerifier, ExistingPassportVerifierImpl>();
+            services.AddTransient<IPassportVerifier, PassportVerifierImpl>();
+            services.AddTransient<IPassportVerifierBasic, PassportVerifierBasicImpl>();
+            services.AddTransient<IPassportVerifierLogic, PassportVerifierLogicImpl>();
+            services.AddTransient<IPersonBasicVerifier, PersonBasicVerifierImpl>();
+            services.AddTransient<IPersonLogicVerifier, PersonLogicVerifierImpl>();
+            services.AddTransient<IAddNewPersonVerifier, AddNewPersonVerifierImpl>();
+            services.AddTransient<IAddressRefsVerifier, AddressRefsVerifierImpl>();
+            services.AddTransient<IExistingPassportVerifier, ExistingPassportMemEsVerifierImpl>();
+            //services.AddScoped<IExistingPassportVerifier, ExistingPassportDbVerifierImpl>();
         }
     }
 

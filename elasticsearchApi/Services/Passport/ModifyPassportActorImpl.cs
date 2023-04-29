@@ -40,9 +40,9 @@ namespace elasticsearchApi.Services.Passport
                 familystate= person.familystate,
                 iin= iin
             };
+            semaphore.Wait();
             try
             {
-                semaphore.Wait();
                 _dataSvc.Execute(iin, person, personOut);
                 context.SuccessFlag = true;
             }
@@ -66,17 +66,14 @@ namespace elasticsearchApi.Services.Passport
             }
             finally
             {
-                if (_appTransaction.Transaction != null)
+                if (context.SuccessFlag)
                 {
-                    if (context.SuccessFlag)
-                    {
-                        _inMemoryProvider.Save(personOut);
-                        _appTransaction.OnCommit?.Invoke();
-                    }
-                    else
-                    {
-                        _appTransaction.OnRollback?.Invoke();
-                    }
+                    _inMemoryProvider.Save(personOut);
+                    _appTransaction.OnCommit?.Invoke();
+                }
+                else
+                {
+                    _appTransaction.OnRollback?.Invoke();
                 }
                 semaphore.Release();
             }

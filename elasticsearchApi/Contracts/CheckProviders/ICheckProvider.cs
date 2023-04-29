@@ -4,6 +4,6 @@ namespace elasticsearchApi.Contracts.CheckProviders
 {
     public interface ICheckProvider
     {
-        outPersonDTO[] FetchData(IDictionary<string, object?> filter);
+        outPersonDTO[] FetchData(IDictionary<string, object?> filter, IDictionary<string, object?>? excludeFilter = null);
     }
 }

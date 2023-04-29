@@ -16,9 +16,9 @@ namespace elasticsearchApi.Services.CheckExisting.Providers
         {
             _es = es;
         }
-        public virtual outPersonDTO[] FetchData(IDictionary<string, object> filter)
+        public virtual outPersonDTO[] FetchData(IDictionary<string, object> filter, IDictionary<string, object?>? excludeFilter = null)
         {
-            if (_es.FilterES(filter, out outPersonDTO[] es_data, out string[] errorMessages, out _))
+            if (_es.FilterESWithExclude(filter, excludeFilter, out outPersonDTO[] es_data, out string[] errorMessages, out _))
             {
                 return es_data;
             }

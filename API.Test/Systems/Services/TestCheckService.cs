@@ -54,13 +54,13 @@ namespace elasticsearchApi.Tests.Systems.Services
             var result2 = sut.CheckExisting(checkMemoryProvider, filter2);
 
             var mockCheckElasticProvider = new Mock<CheckProviderElasticImpl>();
-            mockCheckElasticProvider.Setup(svc => svc.FetchData(It.IsAny<IDictionary<string, object>>())).Returns(new[] { new outPersonDTO { id = 99 } });
+            mockCheckElasticProvider.Setup(svc => svc.FetchData(It.IsAny<IDictionary<string, object>>(), null)).Returns(new[] { new outPersonDTO { id = 99 } });
             var result3 = sut.CheckExisting(mockCheckElasticProvider.Object, filter2);
 
             //Assert
             result1.Should().NotBeNull();
             result2.Should().BeNull();
-            mockCheckElasticProvider.Verify(svc => svc.FetchData(It.IsAny<IDictionary<string, object>>()), Times.Once);
+            mockCheckElasticProvider.Verify(svc => svc.FetchData(It.IsAny<IDictionary<string, object>>(), null), Times.Once);
             result3.id.Should().Be(99);
         }
     }

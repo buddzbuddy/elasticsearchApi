@@ -4,6 +4,6 @@ namespace elasticsearchApi.Contracts.CheckProviders
 {
     public interface ICheckService
     {
-        outPersonDTO? CheckExisting(ICheckProvider provider, IDictionary<string, object?> filter);
+        outPersonDTO? CheckExisting(ICheckProvider provider, IDictionary<string, object?> filter, IDictionary<string, object?>? excludeFilter = null);
     }
 }

@@ -38,11 +38,11 @@ namespace elasticsearchApi.Services.Person
             var regCode = regionNo * 1000 + districtNo;
             var sem = _semaphore.GetOrAdd(regCode, _ => new Lazy<SemaphoreSlim>(() => new SemaphoreSlim(1, 1))).Value;
             sem.Wait();
-            if(_queryFactory.Connection.State != System.Data.ConnectionState.Open)
+            /*if(_queryFactory.Connection.State != System.Data.ConnectionState.Open)
             {
                 _queryFactory.Connection.Open();
             }
-            _appTransaction.Transaction ??= _queryFactory.Connection.BeginTransaction();
+            _appTransaction.Transaction ??= _queryFactory.Connection.BeginTransaction();*/
             try
             {
                 var newIin = _pinGenerator.GenerateNewPin(regCode);

@@ -50,6 +50,11 @@ namespace elasticsearchApi.Tests.Helpers
                     services.AddTransient<ICacheProvider, CacheProviderImpl>();
                 });
             });
+        public static WebApplicationFactory<Program> GetWebApplicationStandard()
+            => new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment("Test");
+            });
 
         public static HttpClient CreateHttpClientJson(this WebApplicationFactory<Program> application)
         {

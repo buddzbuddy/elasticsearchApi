@@ -4,6 +4,6 @@ namespace elasticsearchApi.Contracts.CheckProviders
 {
     public interface ICheckFacade
     {
-        outPersonDTO? CallCheck(IDictionary<string, object?> filter);
+        outPersonDTO? CallCheck(IDictionary<string, object?> filter, IDictionary<string, object?>? excludeFilter = null);
     }
 }

@@ -18,12 +18,12 @@ namespace elasticsearchApi.Services.CheckExisting
             _checkProviderMemory = checkProviderMemory;
             _checkProviderElastic = checkProviderElastic;
         }
-        public outPersonDTO? CallCheck(IDictionary<string, object?> filter)
+        public outPersonDTO? CallCheck(IDictionary<string, object?> filter, IDictionary<string, object?>? excludeFilter = null)
         {
-            var data = _checkService.CheckExisting(_checkProviderMemory, filter);
+            var data = _checkService.CheckExisting(_checkProviderMemory, filter, excludeFilter);
             if(data == null)
             {
-                data = _checkService.CheckExisting(_checkProviderElastic, filter);
+                data = _checkService.CheckExisting(_checkProviderElastic, filter, excludeFilter);
             }
             return data;
         }
