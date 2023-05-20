@@ -16,9 +16,9 @@ using Xunit.Abstractions;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
-    public class TestInMemoryProvider : TestUtils
+    public class InMemoryProviderTests : TestUtils
     {
-        public TestInMemoryProvider(ITestOutputHelper output) : base(output)
+        public InMemoryProviderTests(ITestOutputHelper output) : base(output)
         {
         }
 

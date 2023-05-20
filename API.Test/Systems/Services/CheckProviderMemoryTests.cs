@@ -18,9 +18,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
-    public class TestCheckProviderMemory : TestUtils
+    public class CheckProviderMemoryTests : TestUtils
     {
-        public TestCheckProviderMemory(ITestOutputHelper output) : base(output)
+        public CheckProviderMemoryTests(ITestOutputHelper output) : base(output)
         {
         }
 

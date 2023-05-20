@@ -19,9 +19,9 @@ using Xunit.Abstractions;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
-    public class TestCheckService : TestUtils
+    public class CheckServiceTests : TestUtils
     {
-        public TestCheckService(ITestOutputHelper output) : base(output)
+        public CheckServiceTests(ITestOutputHelper output) : base(output)
         {
         }
 

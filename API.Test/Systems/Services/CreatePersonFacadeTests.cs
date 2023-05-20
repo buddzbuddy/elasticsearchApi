@@ -24,9 +24,9 @@ using elasticsearchApi.Services;
 namespace elasticsearchApi.Tests.Systems.Services
 {
     [Collection("Sequential")]
-    public class TestCreatePersonFacade : TestUtils
+    public class CreatePersonFacadeTests : TestUtils
     {
-        public TestCreatePersonFacade(ITestOutputHelper output) : base(output)
+        public CreatePersonFacadeTests(ITestOutputHelper output) : base(output)
         {
         }
 

@@ -25,9 +25,9 @@ using Xunit.Abstractions;
 namespace elasticsearchApi.Tests.Systems.Services
 {
     [Collection("Sequential")]
-    public class TestModifyPassportDataService : TestUtils
+    public class ModifyPassportDataServiceTests : TestUtils
     {
-        public TestModifyPassportDataService(ITestOutputHelper output) : base(output)
+        public ModifyPassportDataServiceTests(ITestOutputHelper output) : base(output)
         {
         }
 

@@ -19,9 +19,9 @@ using Xunit.Abstractions;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
-    public class TestAddNewPersonVerifier : TestUtils
+    public class AddNewPersonVerifierTests : TestUtils
     {
-        public TestAddNewPersonVerifier(ITestOutputHelper output) : base(output)
+        public AddNewPersonVerifierTests(ITestOutputHelper output) : base(output)
         {
         }
 

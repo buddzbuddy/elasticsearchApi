@@ -73,6 +73,7 @@ namespace elasticsearchApi.Services.Person
             {
                 context.AddErrorMessage("errorMessage", e.GetBaseException().Message);
                 context.AddErrorMessage("type", "AddNewPersonFacade - Выполнено обработанное исключение");
+                context.AddErrorMessage("exceptionType", e.GetType().Name);
                 context.AddErrorMessage("errorTrace", e.StackTrace ?? "");
 
             }

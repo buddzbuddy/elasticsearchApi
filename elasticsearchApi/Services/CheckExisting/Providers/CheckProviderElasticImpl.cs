@@ -10,8 +10,7 @@ namespace elasticsearchApi.Services.CheckExisting.Providers
 {
     public class CheckProviderElasticImpl : ICheckProvider
     {
-        private readonly IElasticService _es = null;
-        public CheckProviderElasticImpl() { }
+        private readonly IElasticService _es;
         public CheckProviderElasticImpl(IElasticService es)
         {
             _es = es;

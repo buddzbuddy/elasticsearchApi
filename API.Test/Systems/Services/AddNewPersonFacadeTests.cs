@@ -27,9 +27,9 @@ using elasticsearchApi.Models.Exceptions.Person;
 namespace elasticsearchApi.Tests.Systems.Services
 {
     [Collection("Sequential")]
-    public class TestAddNewPersonFacade : TestUtils
+    public class AddNewPersonFacadeTests : TestUtils
     {
-        public TestAddNewPersonFacade(ITestOutputHelper output) : base(output)
+        public AddNewPersonFacadeTests(ITestOutputHelper output) : base(output)
         {
         }
 
@@ -236,7 +236,7 @@ namespace elasticsearchApi.Tests.Systems.Services
         }
 
         [Fact]
-        public void AddNewPerson_WhenCalled_Returns_Throws_InputExceptions()
+        public void AddNewPerson_WhenCalled_Returns_Context_With_ExceptionTypes()
         {
             //Arrange
             var application = ApplicationHelper.GetWebApplication();
@@ -291,9 +291,12 @@ namespace elasticsearchApi.Tests.Systems.Services
             try
             {
                 //Act & Assert
-                Assert.Throws<PersonInputErrorException>(() => sut.AddNewPerson(personInputErrorModel, in regionNo, in districtNo));
-                Assert.Throws<PassportInputErrorException>(() => sut.AddNewPerson(passportInputErrorModel, in regionNo, in districtNo));
-                Assert.Throws<PassportDuplicateException>(() => sut.AddNewPerson(passportDuplicateModel, in regionNo, in districtNo));
+                var context = sut.AddNewPerson(personInputErrorModel, in regionNo, in districtNo);
+                context.ErrorMessages["exceptionType"].Should().Be(nameof(PersonInputErrorException));
+                context = sut.AddNewPerson(passportInputErrorModel, in regionNo, in districtNo);
+                context.ErrorMessages["exceptionType"].Should().Be(nameof(PassportInputErrorException));
+                context = sut.AddNewPerson(passportDuplicateModel, in regionNo, in districtNo);
+                context.ErrorMessages["exceptionType"].Should().Be(nameof(PassportDuplicateException));
             }
             finally
             {

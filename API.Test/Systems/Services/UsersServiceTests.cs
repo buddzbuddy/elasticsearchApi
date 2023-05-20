@@ -18,7 +18,7 @@ using static System.Net.WebRequestMethods;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
-    public class TestUsersService
+    public class UsersServiceTests
     {
         [Fact]
         public async Task GetAllUsers_WhenCalled_InvokesHttpGetRequest()

@@ -14,10 +14,10 @@ using elasticsearchApi.Models.Exceptions.Passport;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
-    public class TestPassportVerifier
+    public class PassportVerifierTests
     {
         private readonly ITestOutputHelper _output;
-        public TestPassportVerifier(ITestOutputHelper output)
+        public PassportVerifierTests(ITestOutputHelper output)
         {
             _output = output;
         }

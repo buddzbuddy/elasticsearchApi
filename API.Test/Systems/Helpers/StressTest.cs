@@ -33,7 +33,7 @@ namespace elasticsearchApi.Tests.Systems.Helpers
         public StressTest(ITestOutputHelper output) : base(output)
         {
         }
-        [Fact/*(Skip = "Not yet ready. Should be implemented properly")*/]
+        [Fact(Skip = "Not yet ready. Should be implemented properly")]
         public void StressAddNewPerson()
         {
             /*
@@ -43,6 +43,7 @@ namespace elasticsearchApi.Tests.Systems.Helpers
              * 2 - run test individual
              * 3 - restore backup without tail-log, with overwrite existing database and DONT USE SINGLE USER MODE (leave false in Close all existing connections) (if restore do not works - kill connections from nrsz-test)
              * KILL CONNECTIONS from NRSZ-TEST:
+             * use [master]
              * SELECT request_session_id FROM sys.dm_tran_locks 
              * WHERE resource_database_id = DB_ID('nrsz-test')
              * 

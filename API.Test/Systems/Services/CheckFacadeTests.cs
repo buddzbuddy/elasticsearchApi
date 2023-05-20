@@ -18,9 +18,9 @@ using FluentAssertions;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
-    public class TestCheckFacade : TestUtils
+    public class CheckFacadeTests : TestUtils
     {
-        public TestCheckFacade(ITestOutputHelper output) : base(output)
+        public CheckFacadeTests(ITestOutputHelper output) : base(output)
         {
         }
 

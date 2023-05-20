@@ -15,9 +15,9 @@ using Xunit.Abstractions;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
-    public class TestPinGenerator : TestUtils
+    public class PinGeneratorTests : TestUtils
     {
-        public TestPinGenerator(ITestOutputHelper output) : base(output)
+        public PinGeneratorTests(ITestOutputHelper output) : base(output)
         {
         }
 
