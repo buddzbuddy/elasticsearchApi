@@ -1,5 +1,7 @@
 using elasticsearchApi.Contracts;
+using elasticsearchApi.Contracts.CheckProviders;
 using elasticsearchApi.Contracts.DataProviders;
+using elasticsearchApi.Contracts.Delegates;
 using elasticsearchApi.Contracts.Infrastructure;
 using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Contracts.Person;
@@ -167,10 +169,6 @@ namespace elasticsearchApi.Utils
             services.AddTransient<ICacheService, CacheServiceImpl>();
             services.AddTransient<ICacheProvider, CacheProviderImpl>();
             services.AddTransient<IInMemoryProvider, InMemoryProviderImpl>();
-
-            //Register CheckProviders
-            services.AddTransient<CheckProviderMemoryImpl>();
-            services.AddTransient<CheckProviderElasticImpl>();
         }
     }
     public static class DataVerifierExtensions
@@ -309,6 +307,30 @@ namespace elasticsearchApi.Utils
             services.AddScoped<IAddNewPersonFacade, AddNewPersonFacadeImpl>();
             services.AddScoped<IPersonCreator, PersonCreatorImpl>();
             services.AddScoped<ICreatePersonFacade, CreatePersonFacadeImpl>();
+        }
+    }
+
+    public static class DelegateServiceResolversExtensions
+    {
+        public static void AddResolverServices(this IServiceCollection services)
+        {
+            services.AddScoped<CheckProviderDatabaseImpl>();
+            services.AddScoped<CheckProviderElasticImpl>();
+            services.AddScoped<CheckProviderMemoryImpl>();
+            services.AddScoped<ExistingPassportVerifierResolver>((svc) => (token) =>
+            {
+                switch (token)
+                {
+                    case "Memory":
+                        return svc.GetRequiredService<CheckProviderMemoryImpl>();
+                    case "Elastic":
+                        return svc.GetRequiredService<CheckProviderElasticImpl>();
+                    case "Database":
+                        return svc.GetRequiredService<CheckProviderDatabaseImpl>();
+                    default:
+                        throw new InvalidOperationException();
+                }
+            });
         }
     }
 

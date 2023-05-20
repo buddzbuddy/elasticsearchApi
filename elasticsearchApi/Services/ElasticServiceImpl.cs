@@ -242,7 +242,7 @@ namespace elasticsearchApi.Services
 
 
 
-        public bool FilterESWithExclude(IDictionary<string, object> filter, IDictionary<string, object>? excludeFilter, out outPersonDTO[] data, out string[] errorMessages, out long totalCount, bool fuzzy = false, int page = 1, int size = 10)
+        public bool FilterESWithExclude(IDictionary<string, object> filter, IDictionary<string, object?>? excludeFilter, out outPersonDTO[] data, out string[] errorMessages, out long totalCount, bool fuzzy = false, int page = 1, int size = 10)
         {
             errorMessages = Array.Empty<string>();
             data = Array.Empty<outPersonDTO>();

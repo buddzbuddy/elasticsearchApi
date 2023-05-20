@@ -16,7 +16,7 @@ namespace elasticsearchApi.Services.Passport
             _queryFactory = queryFactory;
             _appTransaction = appTransaction;
         }
-        private static object lockObj = new object();
+        readonly object lockObj = new ();
         public void CheckExistingPassportByNo(string passportNo, int? excludePersonId = null)
         {
             string sql = string.Format(CheckExistingPassportSql, passportNo);

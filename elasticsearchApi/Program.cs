@@ -63,6 +63,7 @@ services.AddPersonServices();
 services.AddCacheServices();
 
 services.AddPassportVerifierServices();
+services.AddResolverServices();
 
 services.Configure<UsersApiOptions>(Configuration.GetSection("UsersApiOptions"));
 services.AddHostedService<InitiatorHostedService>();

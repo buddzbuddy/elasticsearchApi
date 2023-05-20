@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Xunit.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using FluentAssertions;
+using elasticsearchApi.Contracts.Delegates;
 
 namespace elasticsearchApi.Tests.Systems.Services
 {
@@ -50,9 +51,13 @@ namespace elasticsearchApi.Tests.Systems.Services
             var mockCheckElasticProvider = new Mock<CheckProviderElasticImpl>();
             mockCheckElasticProvider.Setup(svc => svc.FetchData(filter3, null)).Returns(new[] { new outPersonDTO { id = 99 } });
 
-            ICheckService checkSvc = services.ServiceProvider.GetRequiredService<ICheckService>();
+            var checkSvc = services.ServiceProvider.GetRequiredService<ICheckService>();
+            var mockExistingPassportResolver = new Mock<ExistingPassportVerifierResolver>();
+            mockExistingPassportResolver.Setup(d => d("Memory")).Returns(checkMemoryProvider);
+            mockExistingPassportResolver.Setup(d => d("Elastic")).Returns(mockCheckElasticProvider.Object);
+            mockExistingPassportResolver.Setup(d => d("Database")).Returns(services.ServiceProvider.GetRequiredService<CheckProviderDatabaseImpl>());
 
-            ICheckFacade sut = new CheckFacadeImpl(checkSvc, checkMemoryProvider, mockCheckElasticProvider.Object);
+            ICheckFacade sut = new CheckFacadeImpl(checkSvc, mockExistingPassportResolver.Object);
 
 
             inMemoryProvider.Save(personDto);
