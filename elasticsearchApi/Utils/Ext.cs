@@ -182,8 +182,8 @@ namespace elasticsearchApi.Utils
             services.AddTransient<IPersonLogicVerifier, PersonLogicVerifierImpl>();
             services.AddTransient<IAddNewPersonVerifier, AddNewPersonVerifierImpl>();
             services.AddTransient<IAddressRefsVerifier, AddressRefsVerifierImpl>();
-            services.AddTransient<IExistingPassportVerifier, ExistingPassportMemEsVerifierImpl>();
-            //services.AddScoped<IExistingPassportVerifier, ExistingPassportDbVerifierImpl>();
+            //services.AddTransient<IExistingPassportVerifier, ExistingPassportMemEsVerifierImpl>();
+            services.AddScoped<IExistingPassportVerifier, ExistingPassportDbVerifierImpl>();
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using elasticsearchApi.Contracts.Passport;
 using elasticsearchApi.Models.Exceptions.Passport;
 using elasticsearchApi.Models.Infrastructure;
+using elasticsearchApi.Utils;
 using SqlKata.Execution;
 using System;
 using System.Data.SqlClient;
@@ -11,10 +12,13 @@ namespace elasticsearchApi.Services.Passport
     {
         private readonly QueryFactory _queryFactory;
         private readonly AppTransaction _appTransaction;
-        public ExistingPassportDbVerifierImpl(QueryFactory queryFactory, AppTransaction appTransaction)
+        private readonly IConfiguration configuration;
+
+        public ExistingPassportDbVerifierImpl(QueryFactory queryFactory, AppTransaction appTransaction, IConfiguration configuration)
         {
             _queryFactory = queryFactory;
             _appTransaction = appTransaction;
+            this.configuration = configuration;
         }
         readonly object lockObj = new ();
         public void CheckExistingPassportByNo(string passportNo, int? excludePersonId = null)
@@ -22,10 +26,14 @@ namespace elasticsearchApi.Services.Passport
             string sql = string.Format(CheckExistingPassportSql, passportNo);
             if (excludePersonId != null && excludePersonId > 0)
                 sql = string.Format(CheckExistingPassportWithExcludedIdSql, passportNo, excludePersonId);
-            var connectionString = "Server=192.168.2.150,14331;Database=nrsz-test;User Id=sa;Password=P@ssword123;Encrypt=False";
+            var nrsz_connection = Environment.GetEnvironmentVariable("NRSZ_CONNECTION_STRING");
+            if (nrsz_connection.IsNullOrEmpty())
+            {
+                nrsz_connection = configuration["SqlKataSettings:connectionString"];
+            }
             lock (lockObj)
             {
-                using SqlConnection connection = new(connectionString);
+                using SqlConnection connection = new(nrsz_connection);
                 connection.Open();
                 //connection.EnlistTransaction((System.Transactions.Transaction?)_appTransaction.Transaction);
                 using SqlCommand cmd = connection.CreateCommand();
@@ -51,7 +59,7 @@ SELECT [IIN]
       ,[Last_Name]
       ,[First_Name]
       ,[Middle_Name]
-  FROM [nrsz-test].[dbo].[Persons]
+  FROM [Persons]
 where [deleted] = 0 and [PassportNo] = N'{0}'
 ";
         private const string CheckExistingPassportWithExcludedIdSql = @"
@@ -72,7 +80,7 @@ SELECT [Id]
       ,[CreatedAt]
       ,[ModifiedAt]
       ,[deleted]
-FROM [nrsz-test].[dbo].[Persons]
+FROM [dbo].[Persons]
 where [deleted] = 0 and [PassportNo] = N'{0}' and Id <> {1}
 ";
     }

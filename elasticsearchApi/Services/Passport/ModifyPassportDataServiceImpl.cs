@@ -28,7 +28,7 @@ namespace elasticsearchApi.Services.Passport
         {
             _passportVerifier.VerifyPassport(person);
 
-            var query = _queryFactory.Query("Persons").Where("IIN", iin);
+            var query = _queryFactory.Query("Persons").Where("IIN", iin).Where("deleted", 0);
             var existingPersonByIIN = query.FirstOrDefault(_appTransaction.Transaction);
             if (existingPersonByIIN == null)
             {
@@ -36,7 +36,7 @@ namespace elasticsearchApi.Services.Passport
             }
             else
             {
-                _existingPassportVerifier.CheckExistingPassportByNo(person.passportno, existingPersonByIIN.id);
+                _existingPassportVerifier.CheckExistingPassportByNo(person.passportno, existingPersonByIIN.Id);
 
                 if (_queryFactory.Connection.State != ConnectionState.Open)
                 {
