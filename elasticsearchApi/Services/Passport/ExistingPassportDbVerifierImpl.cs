@@ -42,6 +42,7 @@ namespace elasticsearchApi.Services.Passport
                 using SqlDataReader reader = cmd.ExecuteReader();
                 if (reader.Read())
                 {
+                    var iinObj = reader.GetValue(0);
                     var IIN = reader.IsDBNull(0) ? "пин отсутствует" : reader.GetString(0);
                     var Last_Name = reader.IsDBNull(1) ? "" : reader.GetString(1);
                     var First_Name = reader.IsDBNull(2) ? "" : reader.GetString(2);
@@ -63,8 +64,7 @@ SELECT [IIN]
 where [deleted] = 0 and [PassportNo] = N'{0}'
 ";
         private const string CheckExistingPassportWithExcludedIdSql = @"
-SELECT [Id]
-      ,[IIN]
+SELECT [IIN]
       ,[SIN]
       ,[Last_Name]
       ,[First_Name]
@@ -81,7 +81,7 @@ SELECT [Id]
       ,[ModifiedAt]
       ,[deleted]
 FROM [dbo].[Persons]
-where [deleted] = 0 and [PassportNo] = N'{0}' and Id <> {1}
+where [deleted] = 0 and [PassportNo] = N'{0}' and [Id] <> {1}
 ";
     }
 }
